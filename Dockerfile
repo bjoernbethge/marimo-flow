@@ -19,12 +19,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv lock && \
     uv sync --locked --no-install-project
 
-# Copy application code
-COPY . .
-
-# Install the project itself
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked
 
 # Production stage - minimal runtime image
 FROM python:3.11-slim-bookworm
