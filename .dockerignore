@@ -5,6 +5,7 @@
 .svn/
 
 # 2. Python artifacts
+__marimo__/
 __pycache__/
 *.pyc
 *.pyo
@@ -80,6 +81,8 @@ local/
 data/mlflow/artifacts/
 data/mlflow/db/
 data/mlflow/prompts/
+
+mlruns/
 
 # Exclude lock files from ignore (explicitly allowed)
 !*.lock

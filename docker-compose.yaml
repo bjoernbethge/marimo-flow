@@ -1,42 +1,47 @@
-
 services:
   marimo-flow:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: marimo_flow_server
+    container_name: marimo-flow-server
     ports:
-      - "2718:2718"  # Marimo default port
-      - "5000:5000"  # MLflow port
+      - "2718:2718" # Marimo default port
+      - "5000:5000" # MLflow port
     volumes:
       # Mount local directory for SQLite database and artifacts storage
       - ./data/mlflow:/mlflow
     environment:
-      # SQLite backend store configuration
-      - MLFLOW_BACKEND_STORE_URI=sqlite:////db/mlflow.db
-      # Local artifacts root directory
+      # MLflow server configuration
+      - MLFLOW_BACKEND_STORE_URI=sqlite:////mlflow/db/mlflow.db
       - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
-      - MLFLOW_DEFAULT_MODEL_ROOT=/mlflow/models
-      - MLFLOW_DEFAULT_EXPERIMENT_ROOT=/mlflow/experiments
-      - MLFLOW_DEFAULT_RUN_ROOT=/mlflow/runs
-      - MLFLOW_DEFAULT_PROMPT_ROOT=/mlflow/prompts
+      - MLFLOW_SERVE_ARTIFACTS=true
       # Server host binding (allows external access)
       - MLFLOW_HOST=0.0.0.0
       - MLFLOW_PORT=5000
-   
+      # Optional: Additional MLflow settings
+      - MLFLOW_TRACKING_USERNAME=
+      - MLFLOW_TRACKING_PASSWORD=
+    command: >
+      sh -c "
+        uv run mlflow server 
+        --backend-store-uri sqlite:////mlflow/db/mlflow.db 
+        --default-artifact-root /mlflow/artifacts 
+        --host 0.0.0.0 
+        --port 5000 
+        --serve-artifacts
+      "
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-
   # Optional: MinIO for S3-compatible artifact storage (alternative to local storage)
   # Uncomment if you prefer S3-compatible storage over local file system
   # minio:
   #   image: minio/minio:latest
-  #   container_name: marimo_flow_minio
+  #   container_name: marimo-flow-minio
   #   ports:
   #     - "9000:9000"
   #     - "9001:9001"
@@ -47,11 +52,16 @@ services:
   #     - MINIO_ROOT_PASSWORD=minioadmin123
   #   command: server /data --console-address ":9001"
   #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
-# volumes:
-#   minio_data:
+  # volumes:
+  #   minio_data:
 
-# Networks (optional - uses default bridge network)
+  # Networks (optional - uses default bridge network)
 networks:
   default:
     name: marimo_flow_network

@@ -1,31 +1,43 @@
-FROM ghcr.io/mlflow/mlflow:latest
+FROM python:3.11-slim
 
-WORKDIR /mlflow
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+# Create marimo-flow user
+RUN groupadd --gid 1000 marimo-flow \
+    && useradd --uid 1000 --gid marimo-flow --shell /bin/bash --create-home marimo-flow
 
-ENV MLFLOW_DEFAULT_MODEL_ROOT=/mlflow/models
-
-ENV MLFLOW_DEFAULT_EXPERIMENT_ROOT=/mlflow/experiments
-
-ENV MLFLOW_DEFAULT_RUN_ROOT=/mlflow/runs
-
-ENV MLFLOW_DEFAULT_PROMPT_ROOT=/mlflow/prompts
-
-ENV MLFLOW_HOST=0.0.0.0
-
-ENV MLFLOW_PORT=5000
-
+# Install uv
 COPY --from=ghcr.io/astral-sh/uv:0.7.8 /uv /uvx /bin/
 
-RUN --mount=type=bind,source=./data/mlflow,target=./mlflow
+# Set working directory and give ownership to marimo-flow user
+WORKDIR /app
+RUN chown -R marimo-flow:marimo-flow /app
 
-EXPOSE 5000
+# Copy project files and set ownership
+COPY --chown=marimo-flow:marimo-flow pyproject.toml uv.lock ./
 
-CMD mlflow server \
-    --backend-store-uri sqlite:///db/mlflow.db \
-    --default-artifact-root /artifacts \
-    --host 0.0.0.0 \
-    --port 5000 \
-    --serve-artifacts
+# Switch to marimo-flow user for dependency installation
+USER marimo-flow
+
+# Install dependencies
+RUN uv sync --frozen --no-dev
+
+# Switch back to root to create directories with proper permissions
+USER root
+
+# Create MLflow directories with proper ownership
+RUN mkdir -p /mlflow/db /mlflow/artifacts /mlflow/models /mlflow/experiments /mlflow/runs /mlflow/prompts \
+    && chown -R marimo-flow:marimo-flow /mlflow
+
+# Switch back to marimo-flow user for runtime
+USER marimo-flow
+
+# Expose ports
+EXPOSE 2718 5000
+
+# Default command (can be overridden by docker-compose)
+CMD ["uv", "run", "mlflow", "server", "--host", "0.0.0.0", "--port", "5000"]
 
