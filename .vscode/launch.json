@@ -1,0 +1,43 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "python": "./.venv/Scripts/python.exe",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Marimo: Run Notebook",
+            "type": "python",
+            "request": "launch",
+            "module": "marimo",
+            "args": [
+                "run",
+                "${file}",
+                "--headless",
+                "--port",
+                "2718"
+            ],
+            "console": "integratedTerminal",
+            "python": "./.venv/Scripts/python.exe",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Marimo: Edit Notebook",
+            "type": "python",
+            "request": "launch",
+            "module": "marimo",
+            "args": [
+                "edit",
+                "${file}"
+            ],
+            "console": "integratedTerminal",
+            "python": "./.venv/Scripts/python.exe",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
