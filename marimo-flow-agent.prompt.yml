@@ -51,16 +51,9 @@ messages:
 
       - MLflow tracking, projects, models
 
-      - Pandas, NumPy, Scikit-learn integration
+      - Polars, NumPy, Scikit-learn integration
 
       - Plotly, Matplotlib for interactive viz
-
-      - Jupyter notebook conversion
-
-      - GitHub Copilot integration
-
-      - Local and cloud deployment
-
 
       Your role is to help teams with:
 
