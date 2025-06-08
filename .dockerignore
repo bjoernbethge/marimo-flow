@@ -1,0 +1,88 @@
+# 1. Version control
+.git/
+.gitignore
+.hg/
+.svn/
+
+# 2. Python artifacts
+__marimo__/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+*.cover
+*.py[cod]
+
+# 3. IDE/editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 4. Build and output directories
+dist/
+build/
+out/
+tmp/
+temp/
+
+# 5. Test and debug artifacts
+test/
+tests/
+*.log
+debug/
+
+# 6. Node.js (if any)
+node_modules/
+npm-debug.log
+yarn-debug.log
+
+# 7. Go (if any)
+/vendor/
+*.test
+.go-cache/
+
+# 8. Java (if any)
+target/
+*.class
+.gradle/
+
+# 9. Environment and secrets
+.env*
+*.env
+*.pem
+*.key
+*.crt
+config.local.*
+*.local.yml
+.local/
+
+# 10. Documentation and markdown
+docs/
+*.md
+README*
+LICENSE
+
+# 11. Docker and compose files
+Dockerfile*
+docker-compose*
+
+# 12. Project-specific
+.python-version
+.venv/
+
+# 13. Miscellaneous
+*.tmp
+local/
+
+# 14. Data artifacts (if not needed in build)
+data/mlflow/artifacts/
+data/mlflow/db/
+data/mlflow/prompts/
+
+mlruns/
+
+# Exclude lock files from ignore (explicitly allowed)
+!*.lock
