@@ -5,7 +5,6 @@
 [![MLflow](https://img.shields.io/badge/MLflow-Latest-blue?logo=mlflow&logoColor=white)](https://mlflow.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Code Style](https://img.shields.io/badge/Code%20Style-Black-black)](https://github.com/psf/black)
 
 **Modern reactive ML development with Marimo notebooks and MLflow experiment tracking**
 
