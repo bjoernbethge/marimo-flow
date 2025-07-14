@@ -61,8 +61,8 @@ config.local.*
 
 # 10. Documentation and markdown
 docs/
-*.md
-README*
+# *.md         # Commented out to allow README.md
+# README*      # Commented out to allow README.md
 LICENSE
 
 # 11. Docker and compose files

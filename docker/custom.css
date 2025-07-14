@@ -1,0 +1,131 @@
+/* Astronomisches Interface - Kosmischer Hintergrund */
+:root {
+    --cosmic-black: #0a0a0f;
+    --deep-space: #1a1a2e;
+    --white-dwarf: #f8f9fa;
+    --nebula-blue: #16213e;
+}
+
+body {
+    background: var(--cosmic-black);
+    color: var(--white-dwarf);
+    margin: 0;
+    padding: 0;
+}
+
+/* Enhanced Animated Starfield Background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: /* Große helle Sterne */ radial-gradient(3px 3px at 25px 15px, #ffffff, transparent),
+    radial-gradient(2px 2px at 180px 45px, #ffffff, transparent),
+    radial-gradient(3px 3px at 320px 85px, #ffffff, transparent),
+    radial-gradient(2px 2px at 450px 25px, #ffffff, transparent),
+        /* Mittlere Sterne */ radial-gradient(2px 2px at 80px 60px, #e8f4fd, transparent),
+    radial-gradient(1px 1px at 150px 90px, #e8f4fd, transparent),
+    radial-gradient(2px 2px at 280px 120px, #e8f4fd, transparent),
+    radial-gradient(1px 1px at 380px 70px, #e8f4fd, transparent),
+    radial-gradient(2px 2px at 520px 110px, #e8f4fd, transparent),
+        /* Kleine Sterne */ radial-gradient(1px 1px at 40px 30px, #d1e7ff, transparent),
+    radial-gradient(1px 1px at 120px 20px, #d1e7ff, transparent),
+    radial-gradient(1px 1px at 200px 75px, #d1e7ff, transparent),
+    radial-gradient(1px 1px at 350px 40px, #d1e7ff, transparent),
+    radial-gradient(1px 1px at 480px 80px, #d1e7ff, transparent),
+    radial-gradient(1px 1px at 60px 100px, #d1e7ff, transparent),
+    radial-gradient(1px 1px at 240px 50px, #d1e7ff, transparent),
+    radial-gradient(1px 1px at 420px 95px, #d1e7ff, transparent),
+        /* Ferne Sterne (sehr klein) */ radial-gradient(0.5px 0.5px at 90px 35px, #b8d4f0, transparent),
+    radial-gradient(0.5px 0.5px at 170px 65px, #b8d4f0, transparent),
+    radial-gradient(0.5px 0.5px at 300px 15px, #b8d4f0, transparent),
+    radial-gradient(0.5px 0.5px at 400px 55px, #b8d4f0, transparent),
+    radial-gradient(0.5px 0.5px at 500px 35px, #b8d4f0, transparent);
+
+    background-repeat: repeat;
+    background-size: 600px 150px;
+    animation: sparkle 25s linear infinite;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.9;
+}
+
+/* Zusätzliche Sternen-Schicht für mehr Tiefe */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(1px 1px at 110px 80px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 250px 30px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 370px 100px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 490px 60px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(0.5px 0.5px at 50px 70px, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(0.5px 0.5px at 190px 110px, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(0.5px 0.5px at 330px 20px, rgba(255, 255, 255, 0.3), transparent);
+    background-repeat: repeat;
+    background-size: 550px 130px;
+    animation: sparkle 30s linear infinite reverse;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.7;
+}
+
+@keyframes sparkle {
+    from {
+        transform: translateY(0px);
+    }
+
+    to {
+        transform: translateY(-150px);
+    }
+}
+
+/* Marimo Interface mit transparenteren Hintergründen */
+.marimo,
+:root {
+    --background: light-dark(rgba(255, 255, 255, 0.95), rgba(20, 20, 20, 0.85));
+    --foreground: light-dark(#0f172a, #eceeed);
+    --muted: light-dark(rgba(241, 245, 249, 0.9), rgba(2, 3, 3, 0.8));
+    --muted-foreground: light-dark(#64748b, #aab2af);
+    --popover: light-dark(rgba(255, 255, 255, 0.95), rgba(37, 41, 39, 0.9));
+    --popover-foreground: light-dark(#0f172a, #aab2af);
+    --card: light-dark(rgba(255, 255, 255, 0.92), rgba(37, 41, 39, 0.88));
+    --card-foreground: light-dark(#0f172a, #c0c6c3);
+    --border: light-dark(rgba(226, 232, 240, 0.8), rgba(64, 63, 59, 0.8));
+    --input: light-dark(rgba(163, 163, 163, 0.9), rgba(76, 74, 71, 0.9));
+    --primary: light-dark(#0880ea, #28879f);
+    --primary-foreground: light-dark(#f8fafc, #b6ecf7);
+    --secondary: light-dark(rgba(241, 245, 249, 0.9), rgba(236, 238, 237, 0.1));
+    --secondary-foreground: light-dark(#0f172a, #252927);
+    --accent: light-dark(rgba(237, 246, 255, 0.9), rgba(29, 91, 106, 0.8));
+    --accent-foreground: light-dark(#0b68cb, #b6ecf7);
+    --link: light-dark(#0b68cb, #479bf5);
+    --link-visited: light-dark(#8e4ec6, #bf9bdf);
+    --base-shadow: light-dark(hsla(0, 0%, 85%, .4), rgba(92, 92, 92, .6));
+    --base-shadow-darker: light-dark(hsla(0, 0%, 50%, .4), hsla(0, 0%, 50%, .6));
+}
+
+/* Spezielle Transparenz für Marimo-Container */
+.marimo-container,
+.marimo-app,
+.marimo-cell {
+    background: transparent !important;
+}
+
+/* Sidebar und Navigation mit leichter Transparenz */
+.marimo-sidebar {
+    background: rgba(37, 41, 39, 0.92) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* Code-Blöcke mit kosmischem Touch */
+.marimo-code {
+    background: rgba(20, 20, 20, 0.9) !important;
+    border: 1px solid rgba(64, 63, 59, 0.6);
+    backdrop-filter: blur(5px);
+}

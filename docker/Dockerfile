@@ -17,27 +17,28 @@ WORKDIR /app
 RUN chown -R marimo-flow:marimo-flow /app
 
 # Copy project files and set ownership
-COPY --chown=marimo-flow:marimo-flow pyproject.toml uv.lock ./
+COPY --chown=marimo-flow:marimo-flow pyproject.toml uv.lock README.md ./
+
+# Create necessary directories with proper ownership
+RUN mkdir -p /app/data/experiments/db /app/data/experiments/artifacts /app/data/experiments/models /app/data/experiments/runs \
+    && chown -R marimo-flow:marimo-flow /app
+
+# Copy startup script
+COPY --chown=marimo-flow:marimo-flow docker/start.sh docker/.marimo.toml docker/custom.css ./
+RUN chmod +x ./start.sh
 
 # Switch to marimo-flow user for dependency installation
 USER marimo-flow
 
-# Install dependencies
-RUN uv sync --frozen --no-dev
+# install packages
+RUN uv sync --no-dev
 
-# Switch back to root to create directories with proper permissions
-USER root
+RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.7.0+cu128.html
 
-# Create MLflow directories with proper ownership
-RUN mkdir -p /mlflow/db /mlflow/artifacts /mlflow/models /mlflow/experiments /mlflow/runs /mlflow/prompts \
-    && chown -R marimo-flow:marimo-flow /mlflow
 
-# Switch back to marimo-flow user for runtime
-USER marimo-flow
 
 # Expose ports
 EXPOSE 2718 5000
 
 # Default command (can be overridden by docker-compose)
-CMD ["uv", "run", "mlflow", "server", "--host", "0.0.0.0", "--port", "5000"]
-
+CMD ["./start.sh"]

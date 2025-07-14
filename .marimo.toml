@@ -1,75 +1,0 @@
-[experimental]
-secrets = true
-inline_ai_tooltip = true
-
-[completion]
-copilot = "custom"
-model = "hf.co/unsloth/gemma-3-4b-it-GGUF:Q4_K_M"
-base_url = "http://localhost:11434/v1"
-api_key = "ollama"
-activate_on_typing = true
-
-[display]
-dataframes = "rich"
-theme = "dark"
-default_table_page_size = 10
-cell_output = "above"
-default_width = "medium"
-code_editor_font_size = 14
-
-[runtime]
-default_sql_output = "native"
-on_cell_change = "autorun"
-std_stream_max_bytes = 1000000
-auto_reload = "autorun"
-watcher_on_save = "lazy"
-output_max_bytes = 8000000
-reactive_tests = true
-auto_instantiate = true
-
-[snippets]
-custom_paths = ["snippets/"]
-include_default_snippets = true
-
-[keymap]
-preset = "default"
-
-[keymap.overrides]
-
-[save]
-autosave = "after_delay"
-format_on_save = true
-autosave_delay = 1000
-
-[server]
-browser = "default"
-follow_symlink = false
-
-[ai]
-rules = "Use modern ML best practices:\r\n- Prefer polars over pandas for data manipulation\r\n- Use altair for declarative visualizations\r\n- Include comprehensive docstrings (NumPy style)\r\n- Use type hints for all functions\r\n- Integrate MLflow for experiment tracking\r\n- Follow Marimo best practices (unique variable names, idempotent cells)\r\n- Handle errors gracefully with informative messages\r\n- Use descriptive variable names to avoid conflicts\r\n"
-
-[ai.bedrock]
-
-[ai.open_ai]
-model = "marimo-flow-agent"
-base_url = "http://localhost:11434/v1"
-api_key = "ollama"
-
-[ai.google]
-
-[ai.anthropic]
-
-[package_management]
-manager = "uv"
-
-[formatting]
-line_length = 88
-
-[language_servers.pylsp]
-enable_flake8 = false
-enable_pydocstyle = false
-enable_ruff = true
-enable_mypy = true
-enabled = true
-enable_pyflakes = false
-enable_pylint = false

@@ -1,0 +1,100 @@
+[server]
+port = 2722
+
+css_file = "custom.css"
+
+follow_symlink = false
+host = "0.0.0.0"
+
+browser = "default"
+enable_token = false
+headless = false
+
+[runtime]
+std_stream_max_bytes = 1000000
+default_sql_output = "native"
+reactive_tests = true
+auto_instantiate = true
+on_cell_change = "autorun"
+output_max_bytes = 200000000
+auto_reload = "lazy"
+watcher_on_save = "lazy"
+include_code = true
+python_path = ["."]
+
+[display]
+dataframes = "rich"
+html_head_file = "head.html"
+
+custom_css = ["custom.css"]
+cell_output = "above"
+default_table_page_size = 10
+default_width = "medium"
+code_editor_font_size = 14
+width = "full"
+
+theme = "dark"
+
+[completion]
+activate_on_typing = true
+api_key = "ollama"
+copilot = false
+model = "marimo-flow-agent"
+base_url = "http://localhost:11434/v1"
+
+[session]
+timeout_seconds = 3600
+
+max_sessions = 10
+
+
+[experimental]
+inline_ai_tooltip = true
+secrets = true
+
+[ai]
+rules = "Use modern ML best practices:\r\n- Prefer polars over pandas for data manipulation\r\n- Use altair for declarative visualizations\r\n- Include comprehensive docstrings (NumPy style)\r\n- Use type hints for all functions\r\n- Integrate MLflow for experiment tracking\r\n- Follow Marimo best practices (unique variable names, idempotent cells)\r\n- Handle errors gracefully with informative messages\r\n- Use descriptive variable names to avoid conflicts\r\n"
+
+[ai.bedrock]
+
+[ai.open_ai]
+model = "marimo-flow-agent"
+api_key = "ollama"
+
+base_url = "http://localhost:11434/v1"
+
+[ai.anthropic]
+
+[ai.google]
+
+[save]
+autosave = "after_delay"
+format_on_save = true
+autosave_delay = 1000
+
+[formatting]
+line_length = 88
+
+[auth]
+enabled = false
+
+[keymap]
+preset = "default"
+
+[keymap.overrides]
+
+[package_management]
+manager = "uv"
+
+[language_servers.pylsp]
+enabled = true
+enable_mypy = true
+enable_pylint = false
+enable_flake8 = false
+enable_pyflakes = false
+enable_pydocstyle = false
+enable_ruff = true
+
+[snippets]
+include_default_snippets = true
+custom_paths = ["snippets/"]

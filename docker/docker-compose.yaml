@@ -1,19 +1,31 @@
 services:
   marimo-flow:
+    image: marimo-flow
     build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: marimo-flow-server
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: marimo-flow
     ports:
-      - "2718:2718" # Marimo default port
-      - "5000:5000" # MLflow port
+      - "2718:2718" # Marimo UI
+      - "5000:5000" # MLflow backend
     volumes:
-      # Mount local directory for SQLite database and artifacts storage
-      - ./data/mlflow:/mlflow
+      # Mount entire data directory for all data access
+      - ../data:/app/data
+      # Mount snippets directory for development
+      - ../snippets:/app/snippets
+      # Mount configs for easy access
+      - ../configs:/app/configs
+    extra_hosts:
+      # Host-Gateway for access to host services
+      - "host.docker.internal:host-gateway"
+      # Localhost alias for Container-to-Host communication
+      - "localhost:host-gateway"
+      # Astro Lab hostname for better resolution
+      - "marimo-flow:127.0.0.1"
     environment:
       # MLflow server configuration
-      - MLFLOW_BACKEND_STORE_URI=sqlite:////mlflow/db/mlflow.db
-      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+      - MLFLOW_BACKEND_STORE_URI=sqlite:////app/data/experiments/db/mlflow.db
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/app/data/experiments/artifacts
       - MLFLOW_SERVE_ARTIFACTS=true
       # Server host binding (allows external access)
       - MLFLOW_HOST=0.0.0.0
@@ -21,15 +33,9 @@ services:
       # Optional: Additional MLflow settings
       - MLFLOW_TRACKING_USERNAME=
       - MLFLOW_TRACKING_PASSWORD=
-    command: >
-      sh -c "
-        uv run mlflow server 
-        --backend-store-uri sqlite:////mlflow/db/mlflow.db 
-        --default-artifact-root /mlflow/artifacts 
-        --host 0.0.0.0 
-        --port 5000 
-        --serve-artifacts
-      "
+      # Ollama configuration - using host Ollama
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    # The new startup script is automatically used
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
@@ -37,6 +43,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
   # Optional: MinIO for S3-compatible artifact storage (alternative to local storage)
   # Uncomment if you prefer S3-compatible storage over local file system
   # minio:
@@ -62,6 +75,10 @@ services:
   #   minio_data:
 
   # Networks (optional - uses default bridge network)
-networks:
-  default:
-    name: marimo_flow_network
+volumes: { }
+
+models:
+  gemma3:
+    model: ai/gemma3
+  gemma3n:
+    model: ai/gemma3n
