@@ -3,34 +3,50 @@
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![Marimo](https://img.shields.io/badge/Marimo-Latest-orange?logo=python&logoColor=white)](https://marimo.io)
 [![MLflow](https://img.shields.io/badge/MLflow-Latest-blue?logo=mlflow&logoColor=white)](https://mlflow.org)
+[![MCP](https://img.shields.io/badge/MCP-Enabled-green?logo=anthropic&logoColor=white)](https://docs.marimo.io/guides/editor_features/mcp/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)](https://docker.com)
 [![Version](https://img.shields.io/badge/Version-0.1.3-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Contributing](https://img.shields.io/badge/Contributing-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-![Marimo Flow Demo](https://raw.githubusercontent.com/bjoernbethge/marimo-flow/main/asset/marimo-flow.mp4)
+<div align="center">
+  <video src="https://github.com/bjoernbethge/marimo-flow/raw/main/asset/marimo-flow.mp4" width="800" controls>
+    Your browser does not support the video tag.
+  </video>
+</div>
 
-**Modern reactive ML development with Marimo notebooks and MLflow experiment tracking**
+**Modern reactive ML development with AI-powered assistance, interactive notebooks, and experiment tracking**
 
 ## Why Marimo Flow is Powerful 🚀
 
-**Marimo Flow** combines the best of reactive notebook development with robust ML experiment tracking:
+**Marimo Flow** combines reactive notebook development with AI-powered assistance and robust ML experiment tracking:
 
-- **🔄 Reactive Development**: Marimo's dataflow graph ensures your notebooks are always consistent - change a parameter and watch your entire pipeline update automatically
-- **🤖 AI-Enhanced Workflow**: Built-in GitHub Copilot support and AI assistants accelerate your ML development
+- **🤖 AI-First Development with MCP**: Model Context Protocol (MCP) integration brings live documentation, code examples, and AI assistance directly into your notebooks - access up-to-date library docs for Marimo, Polars, Plotly, and more without leaving your workflow
+- **🔄 Reactive Execution**: Marimo's dataflow graph ensures your notebooks are always consistent - change a parameter and watch your entire pipeline update automatically
 - **📊 Seamless ML Pipeline**: MLflow integration tracks every experiment, model, and metric without breaking your flow
+- **🎯 Interactive Development**: Real-time parameter tuning with instant feedback and beautiful visualizations
 
-This combination eliminates the reproducibility issues of traditional notebooks while providing enterprise-grade experiment tracking.
+This combination eliminates the reproducibility issues of traditional notebooks while providing AI-enhanced, enterprise-grade experiment tracking.
 
 ## Features ✨
 
-- **📓 Marimo Reactive Notebooks**: Git-friendly `.py` notebooks with automatic dependency tracking
-- **🔬 MLflow Experiment Tracking**: Complete ML lifecycle management with model registry
-- **🤖 MCP (Model Context Protocol)**: AI-assisted development with Context7 and Marimo MCP servers
-- **🐳 Docker Deployment**: One-command setup with docker-compose
+### 🤖 AI-Powered Development (MCP)
+- **Model Context Protocol Integration**: Live documentation and AI assistance in your notebooks
+- **Context7 Server**: Access up-to-date docs for any Python library without leaving marimo
+- **Marimo MCP Server**: Specialized assistance for marimo patterns and best practices
+- **Local LLM Support**: Ollama integration for privacy-focused AI code completion
+
+### 📊 ML Development Workflow
+- **📓 Reactive Notebooks**: Git-friendly `.py` notebooks with automatic dependency tracking
+- **🔬 MLflow Tracking**: Complete ML lifecycle management with model registry
+- **🎯 Interactive Development**: Real-time parameter tuning with instant visual feedback
 - **💾 SQLite Backend**: Lightweight, file-based storage for experiments
-- **🎯 Interactive ML Development**: Real-time parameter tuning with instant feedback
-- **📚 Comprehensive Documentation**: Built-in reference docs for Marimo, Polars, Plotly, and PINA
+
+### 🚀 Production Ready
+- **🐳 Docker Deployment**: One-command setup with docker-compose
+- **📦 16 Ready-to-Use Snippets**: Advanced patterns for Polars, Plotly, Marimo
+- **📚 Comprehensive Docs**: Built-in reference guides with 100+ code examples
+- **🌐 GitHub Pages**: Auto-deploy interactive notebooks with WASM
 
 ## Quick Start 🏃‍♂️
 
@@ -188,28 +204,76 @@ The `refs/` directory contains comprehensive LLM-friendly documentation for key 
 
 ## MCP (Model Context Protocol) Integration 🔌
 
-Marimo Flow includes **Model Context Protocol (MCP)** support for enhanced AI-assisted development:
+**Marimo Flow is AI-first** with built-in Model Context Protocol (MCP) support for intelligent, context-aware development assistance.
 
-### Enabled MCP Servers
+### Why MCP Matters
 
-**Context7** - Live documentation access for libraries:
-- Get up-to-date API documentation
-- Access code examples and best practices
-- Query library-specific patterns
-- Stay current with latest versions
+Traditional notebooks require constant context-switching to documentation sites. With MCP:
+- 📚 **Live Documentation**: Access up-to-date library docs directly in marimo
+- 🤖 **AI Code Completion**: Context-aware suggestions from local LLMs (Ollama)
+- 💡 **Smart Assistance**: Ask questions about libraries and get instant, accurate answers
+- 🔄 **Always Current**: Documentation updates automatically, no more outdated tutorials
 
-**Marimo** - Marimo-specific assistance:
-- Reactive notebook patterns
-- UI component examples
-- Integration helpers
-- Best practices for Marimo development
+### Pre-Configured MCP Servers
 
-### Features
+#### Context7 - Universal Library Documentation
+Access real-time documentation for **any Python library**:
+```python
+# Ask: "How do I use polars window functions?"
+# Get: Current polars docs, code examples, best practices
 
-- **AI Code Completion**: Context-aware suggestions using Ollama (local LLM)
-- **Inline Documentation**: Access library docs without leaving the notebook
-- **Smart Refactoring**: AI-assisted code improvements
-- **Interactive Help**: Ask questions about libraries and get instant answers
+# Ask: "Show me plotly 3D scatter plot examples"
+# Get: Latest plotly API with working code samples
+```
+
+**Supported Libraries:**
+- Polars, Pandas, NumPy - Data manipulation
+- Plotly, Altair, Matplotlib - Visualization
+- Scikit-learn, PyTorch - Machine Learning
+- And 1000+ more Python packages
+
+#### Marimo - Specialized Notebook Assistance
+Get expert help with marimo-specific patterns:
+```python
+# Ask: "How do I create a reactive form in marimo?"
+# Get: marimo form patterns, state management examples
+
+# Ask: "Show me marimo UI element examples"
+# Get: Complete UI component reference with code
+```
+
+### Real-World Examples
+
+**Example 1: Learning New Libraries**
+```python
+# You're exploring polars window functions
+# Type: "polars rolling mean example"
+# MCP returns: Latest polars docs + working code
+df.with_columns(
+    pl.col("sales").rolling_mean(window_size=7).alias("7d_avg")
+)
+```
+
+**Example 2: Debugging**
+```python
+# Stuck on a plotly error?
+# Ask: "Why is my plotly 3D scatter not showing?"
+# Get: Common issues, solutions, and corrected code
+```
+
+**Example 3: Best Practices**
+```python
+# Want to optimize code?
+# Ask: "Best way to aggregate in polars?"
+# Get: Performance tips, lazy evaluation patterns
+```
+
+### AI Features Powered by MCP
+
+- **Code Completion**: Context-aware suggestions as you type (Ollama local LLM)
+- **Inline Documentation**: Hover over functions for instant docs
+- **Smart Refactoring**: AI suggests improvements based on current libraries
+- **Interactive Q&A**: Chat with AI about your code using latest docs
 
 ### Configuration
 
@@ -234,7 +298,9 @@ command = "npx"
 args = ["-y", "@your-org/your-mcp-server"]
 ```
 
-See [Marimo AI Completion Guide](https://docs.marimo.io/guides/ai_completion/) for more details on MCP configuration.
+**Learn More:**
+- [Marimo MCP Guide](https://docs.marimo.io/guides/editor_features/mcp/) - Official MCP documentation
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification and resources
 
 ## Configuration ⚙️
 
