@@ -1,1 +1,0 @@
-import importlib; import sys; sys.path.append('examples'); files = ['00_data_exploration', '01_feature_engineering', '02_basic_ml_workflow', '03_model_comparison', '04_Finetuning', '05_gnn_hetero_demo', 'app_astrophotography', 'app_cosmos_analysis', 'tool_ollama_manager', 'tool_openvino_manager']; [print(f'Checking {f}...') or importlib.import_module(f) for f in files]
