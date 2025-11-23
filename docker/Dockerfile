@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -10,7 +10,7 @@ RUN groupadd --gid 1000 marimo-flow \
     && useradd --uid 1000 --gid marimo-flow --shell /bin/bash --create-home marimo-flow
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.7.8 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.9.0 /uv /uvx /bin/
 
 # Set working directory and give ownership to marimo-flow user
 WORKDIR /app
@@ -31,9 +31,9 @@ RUN chmod +x ./start.sh
 USER marimo-flow
 
 # install packages
-RUN uv sync --no-dev
+RUN uv sync --no-dev --extra full
 
-RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.7.0+cu128.html
+RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.8.0+cu128.html
 
 
 
