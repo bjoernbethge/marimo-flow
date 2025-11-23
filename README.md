@@ -11,7 +11,10 @@
 
 <div align="center">
 
-https://github.com/user-attachments/assets/3bc24463-ff42-44a7-ae61-5d500d29688c
+<video autoplay loop muted playsinline controls width="800">
+  <source src="https://github.com/user-attachments/assets/3bc24463-ff42-44a7-ae61-5d500d29688c" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 *Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking*
 
