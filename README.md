@@ -109,29 +109,52 @@ uv run marimo edit examples/
 - Automated deployment
 - Production monitoring
 
-**Workflow**: Start with 00 and progress through 06 for a complete ML lifecycle.
+### 🎓 [07 LoRA Fine-tuning](examples/07_lora_finetuning.py)
+- Large Language Model fine-tuning
+- LoRA (Low-Rank Adaptation) techniques
+- Efficient parameter-efficient training
+- MLflow integration for LLM experiments
+
+### 🔗 [08 Graph Neural Networks](examples/08_gnn_hetero_demo.py)
+- Heterogeneous graph neural networks
+- PyTorch Geometric integration
+- Advanced GNN architectures
+- Graph-based learning workflows
+
+**Workflow**: Start with 00 and progress through 08 for a complete ML lifecycle from basics to advanced topics.
 
 ## Project Structure 📁
 
 ```
 marimo-flow/
-├── examples/                    # Progressive ML pipeline notebooks
+├── examples/                    # Progressive ML pipeline notebooks (00-08)
 │   ├── 00_data_exploration.py      # Data analysis and exploration
-│   ├── 01_feature_engineering.py  # Feature engineering techniques
+│   ├── 01_feature_engineering.py   # Feature engineering techniques
 │   ├── 02_basic_ml_workflow.py     # Basic ML pipeline with MLflow
 │   ├── 03_model_comparison.py      # Multi-model comparison
 │   ├── 04_hyperparameter_tuning.py # Optuna optimization
 │   ├── 05_model_registry.py        # Model registry & deployment
-│   └── 06_production_pipeline.py    # End-to-end production pipeline
-├── snippets/                   # Reusable code patterns (optional)
-│   ├── mlflow_setup.py            # MLflow configuration patterns
-│   ├── interactive_params.py      # Interactive parameter controls
-│   ├── data_loading.py            # Data loading utilities
-│   └── altair_visualization.py    # Visualization patterns
-├── experimental/              # Experimental/advanced examples
-│   ├── 04_Finetuning.py          # LLM fine-tuning
-│   ├── 05_gnn_hetero_demo.py      # Graph Neural Networks
-│   └── ...                        # Other experimental notebooks
+│   ├── 06_production_pipeline.py   # End-to-end production pipeline
+│   ├── 07_lora_finetuning.py       # LLM fine-tuning with LoRA
+│   └── 08_gnn_hetero_demo.py       # Graph Neural Networks
+├── snippets/                   # Reusable code patterns
+│   ├── mlflow_setup.py             # MLflow configuration
+│   ├── interactive_params.py       # Interactive controls
+│   ├── data_loading.py             # Data utilities
+│   ├── altair_visualization.py     # Visualization patterns
+│   ├── agent.py                    # AI agent integration
+│   ├── duckdb_sql.py               # DuckDB query patterns
+│   ├── openvino_1.py               # OpenVINO inference
+│   └── rag.py                      # RAG pipeline patterns
+├── tools/                       # Utility tools
+│   ├── ollama_manager.py           # Local LLM orchestration
+│   └── openvino_manager.py         # Model serving utilities
+├── refs/                        # Reference documentation
+│   ├── marimo-quickstart.md        # Marimo guide
+│   ├── polars-quickstart.md        # Polars guide
+│   ├── plotly-quickstart.md        # Plotly guide
+│   ├── pina-quickstart.md          # PINA guide
+│   └── integration-patterns.md     # Integration examples
 ├── data/
 │   └── mlflow/                  # MLflow storage
 │       ├── artifacts/           # Model artifacts
@@ -145,6 +168,19 @@ marimo-flow/
 ### 📝 About Snippets
 
 The `snippets/` directory contains reusable code patterns that can be imported into Marimo notebooks. These are optional utilities - all functionality is already integrated into the main examples. Use them if you want to extract common patterns for reuse across multiple notebooks.
+
+### 🛠️ About Tools
+
+The `tools/` directory contains standalone utility scripts for managing external services:
+- **ollama_manager.py**: Manage local LLM deployments with Ollama
+- **openvino_manager.py**: Model serving and inference with OpenVINO
+
+### 📚 About References
+
+The `refs/` directory contains comprehensive LLM-friendly documentation for key technologies:
+- Quick-start guides for Marimo, Polars, Plotly, and PINA
+- Integration patterns and best practices
+- Code examples and common workflows
 
 ## Configuration ⚙️
 
