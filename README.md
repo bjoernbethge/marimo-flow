@@ -10,9 +10,11 @@
 [![Contributing](https://img.shields.io/badge/Contributing-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 <div align="center">
-  <video src="https://github.com/bjoernbethge/marimo-flow/raw/main/asset/marimo-flow.mp4" width="800" controls>
-    Your browser does not support the video tag.
-  </video>
+
+  **[📺 Watch Demo Video (7.7 MB)](https://github.com/bjoernbethge/marimo-flow/raw/main/asset/marimo-flow.mp4)**
+
+  *Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking*
+
 </div>
 
 **Modern reactive ML development with AI-powered assistance, interactive notebooks, and experiment tracking**
