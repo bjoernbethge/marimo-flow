@@ -6,6 +6,13 @@ dist/
 wheels/
 *.egg-info
 
+# Python cache directories
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.pyc
+*.pyo
+
 # Virtual environments
 .venv
 .cache/
