@@ -1,0 +1,109 @@
+[diagnostics]
+
+[runtime]
+default_sql_output = "native"
+on_cell_change = "autorun"
+auto_reload = "autorun"
+std_stream_max_bytes = 1000000
+reactive_tests = true
+auto_instantiate = true
+watcher_on_save = "lazy"
+output_max_bytes = 8000000
+dotenv = [".env"]
+default_auto_download = []
+pythonpath = ["."]
+
+[keymap]
+preset = "default"
+destructive_delete = true
+
+[keymap.overrides]
+
+[ai]
+mode = "manual"
+rules = "Use altair for interactive visualizations and plotly express for interactive 3d plots\nPrefer polars over pandas for data manipulation due to better performance\nInclude docstrings for all functions using NumPy style\nUse Type hints for all function parameters and return values\nHandle errors with try/except blocks and provide informative error messages\nFollow PEP 8 style guidelines\nWhen working with data:\n- Use altair, plotly for declarative visualizations\n- Prefer polars over pandas\n- Ensure proper error handling for data operations\nFor plotting:\n- Use px.scatter for scatter plots\n- Use px.line for time series\n- Include proper axis labels and titles\n- Set appropriate color schemes\nIntegrate mlflow features and patterns, polars\n\n"                                     
+inline_tooltip = false
+
+[ai.ollama]
+api_key = "ollama"
+model = "gpt-oss:20b-cloud"
+base_url = "http://localhost:11434/v1"
+
+[ai.models]
+custom_models = []
+chat_model = "ollama/gpt-oss:20b-cloud"
+displayed_models = []
+edit_model = "ollama/gpt-oss:120b-cloud"
+autocomplete_model = "ollama/gpt-oss:20b-cloud"
+
+[ai.anthropic]
+
+[ai.open_ai]
+api_key = "ollama"
+model = "gpt-oss:120b-cloud"
+base_url = "http://localhost:11434/v1"
+
+[ai.open_ai_key]
+
+[ai.bedrock]
+
+[ai.google]
+
+[experimental]
+inline_ai_tooltip = false
+rtc_v2 = false
+secrets = true
+
+[snippets]
+custom_paths = []
+include_default_snippets = true
+
+[language_servers.pylsp]
+enabled = true
+enable_pyflakes = false
+enable_ruff = true
+enable_pydocstyle = false
+enable_flake8 = false
+enable_mypy = true
+enable_pylint = false
+
+[language_servers.basedpyright]
+
+[language_servers.ty]
+
+[save]
+format_on_save = false
+autosave_delay = 1000
+autosave = "off"
+
+[formatting]
+line_length = 79
+
+[completion]
+base_url = "http://localhost:11434/v1"
+api_key = "ollama"
+copilot = "custom"
+activate_on_typing = true
+model = "gpt-oss:20b-cloud"
+
+[package_management]
+manager = "uv"
+
+[mcp]
+presets = ["context7", "marimo"]
+
+[mcp.mcpServers]
+
+[display]
+default_table_max_columns = 50
+cell_output = "above"
+dataframes = "rich"
+code_editor_font_size = 14
+reference_highlighting = false
+theme = "dark"
+default_width = "medium"
+default_table_page_size = 10
+
+[server]
+browser = "default"
+follow_symlink = false

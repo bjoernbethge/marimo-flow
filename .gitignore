@@ -8,11 +8,33 @@ wheels/
 
 # Virtual environments
 .venv
-.idea/
 .cache/
-.env
-__pycache__/
 __marimo__/
-data/mlflow/db/mlflow.db
+
+# Environment files
+.env
+
+# IDE and editor configs (user-specific)
+.idea/
+.vscode/
+.cursor/
+
+# AI assistant configs (user-specific)
+.claude/
+.marimo-flow/
+.serena/
+
+# Model cache directories (large files, download on-demand)
+models/
+/models/
+
+# MLflow data
+data/mlflow/db/
+data/experiments/
 mlruns/
 
+# DuckDB files
+*.duckdb
+*.duckdb.wal
+agents/main.duckdb
+agents/skills.duckdb

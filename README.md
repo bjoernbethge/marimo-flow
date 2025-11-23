@@ -6,6 +6,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+![Marimo Flow Demo](https://raw.githubusercontent.com/bjoernbethge/marimo-flow/main/asset/marimo-flow.mp4)
+
 **Modern reactive ML development with Marimo notebooks and MLflow experiment tracking**
 
 ## Why Marimo Flow is Powerful 🚀
@@ -56,46 +58,93 @@ uv run marimo edit examples/
 
 ## Example Notebooks 📚
 
-Explore our focused, production-ready notebooks:
+**Progressive ML Pipeline** - Notebooks that build upon each other:
 
-### 🚀 [Basic ML Workflow](examples/01_basic_ml_workflow.py)
-- Simple classification with Random Forest
+### 📊 [00 Data Exploration](examples/00_data_exploration.py)
+- Interactive dataset analysis
+- Statistical summaries and distributions
+- Correlation heatmaps
+- PCA and t-SNE dimensionality reduction
+- Multiple built-in datasets (Wine, Iris, Breast Cancer, Diabetes)
+
+### 🔧 [01 Feature Engineering](examples/01_feature_engineering.py)
+- Feature selection techniques
+- Scaling and normalization
+- Polynomial features
+- Feature importance analysis
+- Interactive parameter tuning
+
+### 🚀 [02 Basic ML Workflow](examples/02_basic_ml_workflow.py)
+- End-to-end ML pipeline with Random Forest
 - Real-time parameter tuning
 - MLflow experiment tracking
 - Interactive visualizations
+- Model evaluation and metrics
 
-### 🏆 [Model Comparison](examples/02_model_comparison.py)
+### 🏆 [03 Model Comparison](examples/03_model_comparison.py)
 - Compare multiple algorithms (RF, GB, LR, SVM)
 - Cross-validation analysis
 - Performance benchmarking
-- Built-in datasets (Wine, Iris, Breast Cancer)
+- Side-by-side metric comparison
+- Best model selection
 
-### 🔍 [Data Exploration](examples/03_data_exploration.py)
-- Interactive statistical analysis
-- Correlation heatmaps
-- Distribution visualizations
-- PCA and t-SNE dimensionality reduction
+### 🎯 [04 Hyperparameter Tuning](examples/04_hyperparameter_tuning.py)
+- Automated optimization with Optuna
+- Bayesian hyperparameter search
+- MLflow integration for all trials
+- Real-time optimization progress
+- Parameter importance analysis
 
-Each notebook demonstrates reactive development principles and follows Marimo best practices for maintainable, reproducible ML code.
+### 📦 [05 Model Registry](examples/05_model_registry.py)
+- Model versioning and registration
+- Stage management (Staging → Production)
+- Model search and discovery
+- Model loading and inference
+- Production deployment workflow
+
+### 🚀 [06 Production Pipeline](examples/06_production_pipeline.py)
+- Complete end-to-end ML pipeline
+- Data validation and quality checks
+- Model validation gates
+- Automated deployment
+- Production monitoring
+
+**Workflow**: Start with 00 and progress through 06 for a complete ML lifecycle.
 
 ## Project Structure 📁
 
 ```
 marimo-flow/
-├── examples/                    # Marimo notebooks
-│   ├── 01_basic_ml_workflow.py     # Basic ML pipeline
-│   ├── 02_model_comparison.py      # Multi-model comparison
-│   └── 03_data_exploration.py      # Interactive data analysis
+├── examples/                    # Progressive ML pipeline notebooks
+│   ├── 00_data_exploration.py      # Data analysis and exploration
+│   ├── 01_feature_engineering.py  # Feature engineering techniques
+│   ├── 02_basic_ml_workflow.py     # Basic ML pipeline with MLflow
+│   ├── 03_model_comparison.py      # Multi-model comparison
+│   ├── 04_hyperparameter_tuning.py # Optuna optimization
+│   ├── 05_model_registry.py        # Model registry & deployment
+│   └── 06_production_pipeline.py    # End-to-end production pipeline
+├── snippets/                   # Reusable code patterns (optional)
+│   ├── mlflow_setup.py            # MLflow configuration patterns
+│   ├── interactive_params.py      # Interactive parameter controls
+│   ├── data_loading.py            # Data loading utilities
+│   └── altair_visualization.py    # Visualization patterns
+├── experimental/              # Experimental/advanced examples
+│   ├── 04_Finetuning.py          # LLM fine-tuning
+│   ├── 05_gnn_hetero_demo.py      # Graph Neural Networks
+│   └── ...                        # Other experimental notebooks
 ├── data/
 │   └── mlflow/                  # MLflow storage
 │       ├── artifacts/           # Model artifacts
 │       ├── db/                  # SQLite database
 │       └── prompts/             # Prompt templates
-├── docker-compose.yaml          # Service orchestration
-├── Dockerfile                   # Container definition
+├── docker/                      # Docker configuration
 ├── pyproject.toml              # Dependencies
 └── README.md                   # This file
 ```
+
+### 📝 About Snippets
+
+The `snippets/` directory contains reusable code patterns that can be imported into Marimo notebooks. These are optional utilities - all functionality is already integrated into the main examples. Use them if you want to extract common patterns for reuse across multiple notebooks.
 
 ## Configuration ⚙️
 

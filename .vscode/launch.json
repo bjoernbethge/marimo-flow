@@ -7,37 +7,62 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "python": "./.venv/Scripts/python.exe",
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
+            },
+            "python": "./.venv/Scripts/python.exe"
         },
         {
-            "name": "Marimo: Run Notebook",
+            "name": "Python: Marimo App",
             "type": "python",
             "request": "launch",
             "module": "marimo",
-            "args": [
-                "run",
-                "${file}",
-                "--headless",
-                "--port",
-                "2718"
-            ],
+            "args": ["run", "examples/marimo_demo.py"],
             "console": "integratedTerminal",
-            "python": "./.venv/Scripts/python.exe",
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
+            },
+            "python": "./.venv/Scripts/python.exe"
         },
         {
-            "name": "Marimo: Edit Notebook",
+            "name": "Python: MLflow Server",
             "type": "python",
             "request": "launch",
-            "module": "marimo",
-            "args": [
-                "edit",
-                "${file}"
-            ],
+            "module": "mlflow",
+            "args": ["ui", "--host", "0.0.0.0", "--port", "5000"],
             "console": "integratedTerminal",
-            "python": "./.venv/Scripts/python.exe",
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
+            },
+            "python": "./.venv/Scripts/python.exe"
+        },
+        {
+            "name": "Python: Pytest",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["-v", "tests/"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
+            },
+            "python": "./.venv/Scripts/python.exe"
+        },
+        {
+            "name": "Python: Agent",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/examples/agent.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
+            },
+            "python": "./.venv/Scripts/python.exe"
         }
     ]
 }
