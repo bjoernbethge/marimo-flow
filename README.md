@@ -12,7 +12,7 @@
 <div align="center">
 
 <video autoplay loop muted playsinline controls width="800">
-  <source src="https://github.com/user-attachments/assets/3bc24463-ff42-44a7-ae61-5d500d29688c" type="video/mp4">
+  <source src="https://github.com/bjoernbethge/marimo-flow/blob/de92e9998d93113fd1363327f9a675f4b1ac1e51/asset/marimo-flow.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
