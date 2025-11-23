@@ -234,7 +234,7 @@ command = "npx"
 args = ["-y", "@your-org/your-mcp-server"]
 ```
 
-See [Marimo MCP Documentation](https://docs.marimo.io/guides/ai_completion/#model-context-protocol-mcp) for more details.
+See [Marimo AI Completion Guide](https://docs.marimo.io/guides/ai_completion/) for more details on MCP configuration.
 
 ## Configuration ⚙️
 
