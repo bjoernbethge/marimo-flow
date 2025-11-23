@@ -26,9 +26,11 @@ This combination eliminates the reproducibility issues of traditional notebooks 
 
 - **📓 Marimo Reactive Notebooks**: Git-friendly `.py` notebooks with automatic dependency tracking
 - **🔬 MLflow Experiment Tracking**: Complete ML lifecycle management with model registry
+- **🤖 MCP (Model Context Protocol)**: AI-assisted development with Context7 and Marimo MCP servers
 - **🐳 Docker Deployment**: One-command setup with docker-compose
 - **💾 SQLite Backend**: Lightweight, file-based storage for experiments
 - **🎯 Interactive ML Development**: Real-time parameter tuning with instant feedback
+- **📚 Comprehensive Documentation**: Built-in reference docs for Marimo, Polars, Plotly, and PINA
 
 ## Quick Start 🏃‍♂️
 
@@ -183,6 +185,56 @@ The `refs/` directory contains comprehensive LLM-friendly documentation for key 
 - Quick-start guides for Marimo, Polars, Plotly, and PINA
 - Integration patterns and best practices
 - Code examples and common workflows
+
+## MCP (Model Context Protocol) Integration 🔌
+
+Marimo Flow includes **Model Context Protocol (MCP)** support for enhanced AI-assisted development:
+
+### Enabled MCP Servers
+
+**Context7** - Live documentation access for libraries:
+- Get up-to-date API documentation
+- Access code examples and best practices
+- Query library-specific patterns
+- Stay current with latest versions
+
+**Marimo** - Marimo-specific assistance:
+- Reactive notebook patterns
+- UI component examples
+- Integration helpers
+- Best practices for Marimo development
+
+### Features
+
+- **AI Code Completion**: Context-aware suggestions using Ollama (local LLM)
+- **Inline Documentation**: Access library docs without leaving the notebook
+- **Smart Refactoring**: AI-assisted code improvements
+- **Interactive Help**: Ask questions about libraries and get instant answers
+
+### Configuration
+
+MCP servers are pre-configured in `.marimo.toml`:
+
+```toml
+[mcp]
+presets = ["context7", "marimo"]
+
+[ai.ollama]
+model = "gpt-oss:20b-cloud"
+base_url = "http://localhost:11434/v1"
+```
+
+### Adding Custom MCP Servers
+
+You can extend functionality by adding custom MCP servers in `.marimo.toml`:
+
+```toml
+[mcp.mcpServers.your-custom-server]
+command = "npx"
+args = ["-y", "@your-org/your-mcp-server"]
+```
+
+See [Marimo MCP Documentation](https://docs.marimo.io/guides/ai_completion/#model-context-protocol-mcp) for more details.
 
 ## Configuration ⚙️
 

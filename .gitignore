@@ -30,6 +30,8 @@ __marimo__/
 .claude/
 .marimo-flow/
 .serena/
+*-agent.prompt.yml
+*.prompt.yml
 
 # Model cache directories (large files, download on-demand)
 models/
