@@ -1,10 +1,12 @@
 # Marimo Flow 🌊
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![Marimo](https://img.shields.io/badge/Marimo-Latest-orange?logo=python&logoColor=white)](https://marimo.io)
 [![MLflow](https://img.shields.io/badge/MLflow-Latest-blue?logo=mlflow&logoColor=white)](https://mlflow.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)](https://docker.com)
+[![Version](https://img.shields.io/badge/Version-0.1.3-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Contributing](https://img.shields.io/badge/Contributing-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ![Marimo Flow Demo](https://raw.githubusercontent.com/bjoernbethge/marimo-flow/main/asset/marimo-flow.mp4)
 
@@ -244,11 +246,28 @@ The `refs/` directory contains comprehensive LLM-friendly documentation for key 
 
 ## Contributing 🤝
 
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+
+- Development setup and workflow
+- Code standards and style guide
+- Testing requirements
+- Pull request process
+
+**Quick Start for Contributors:**
+
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes following the coding standards
+3. Make your changes following the [coding standards](CONTRIBUTING.md#code-standards)
 4. Test your changes: `uv run pytest`
 5. Submit a pull request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for comprehensive guidelines.
+
+## Changelog 📋
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed version history and release notes.
+
+**Current Version:** 0.1.3
 
 ## License 📄
 
