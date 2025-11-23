@@ -11,7 +11,7 @@
 
 <div align="center">
 
-<video src="https://github.com/bjoernbethge/marimo-flow/raw/main/asset/marimo-flow.mp4" autoplay loop muted playsinline width="800"></video>
+https://github.com/user-attachments/assets/3bc24463-ff42-44a7-ae61-5d500d29688c
 
 *Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking*
 
