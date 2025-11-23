@@ -11,9 +11,9 @@
 
 <div align="center">
 
-  **[📺 Watch Demo Video (7.7 MB)](https://github.com/bjoernbethge/marimo-flow/raw/main/asset/marimo-flow.mp4)**
+https://github.com/user-attachments/assets/3bc24463-ff42-44a7-ae61-5d500d29688c
 
-  *Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking*
+*Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking*
 
 </div>
 
