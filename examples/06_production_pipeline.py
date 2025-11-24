@@ -5,8 +5,9 @@
 #     "marimo",
 #     "mlflow>=2.17.0",
 #     "numpy>=1.26.4",
+#     "plotly>=5.24.0",
 #     "polars>=1.12.0",
-#     "pina>=0.1.0",
+#     "scikit-learn>=1.5.0",
 #     "torch>=2.0.0",
 # ]
 # ///

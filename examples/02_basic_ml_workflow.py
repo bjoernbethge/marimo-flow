@@ -7,17 +7,15 @@
 #     "numpy>=1.26.4",
 #     "plotly>=5.24.0",
 #     "polars>=1.12.0",
-#     "pina>=0.1.0",
+#     "scikit-learn>=1.5.0",
 #     "torch>=2.0.0",
-#     "pina-mathlab",
-#     "scikit-learn",
 # ]
 # ///
 
 import marimo
 import marimo as mo
 
-__generated_with = "0.14.10"
+__generated_with = "0.18.0"
 app = marimo.App(width="medium")
 
 
