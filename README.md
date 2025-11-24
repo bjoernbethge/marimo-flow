@@ -61,14 +61,22 @@ This combination eliminates the reproducibility issues of traditional notebooks 
 ### With Docker (Recommended)
 
 ```bash
-# Clone and start services
-git clone <repository-url>
+# Clone repository
+git clone https://github.com/bjoernbethge/marimo-flow.git
 cd marimo-flow
-docker-compose up -d
+
+# Build and start services
+docker compose -f docker/docker-compose.yaml up --build -d
 
 # Access services
 # Marimo: http://localhost:2718
 # MLflow: http://localhost:5000
+
+# View logs
+docker compose -f docker/docker-compose.yaml logs -f
+
+# Stop services
+docker compose -f docker/docker-compose.yaml down
 ```
 
 ### Local Development
@@ -77,8 +85,13 @@ docker-compose up -d
 # Install dependencies
 uv sync
 
-# Start MLflow server
-uv run mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///data/mlflow/db/mlflow.db --default-artifact-root ./data/mlflow/artifacts
+# Start MLflow server (in background or separate terminal)
+uv run mlflow server \
+  --host 0.0.0.0 \
+  --port 5000 \
+  --backend-store-uri sqlite:///data/experiments/db/mlflow.db \
+  --default-artifact-root ./data/experiments/artifacts \
+  --serve-artifacts
 
 # Start Marimo (in another terminal)
 uv run marimo edit examples/
@@ -314,14 +327,23 @@ args = ["-y", "@your-org/your-mcp-server"]
 
 ### Environment Variables
 
-- `MLFLOW_TRACKING_URI`: MLflow server URL (default: `http://localhost:5000`)
-- `MLFLOW_BACKEND_STORE_URI`: Database connection string
-- `MLFLOW_DEFAULT_ARTIFACT_ROOT`: Artifact storage location
+Docker setup (configured in `docker/docker-compose.yaml`):
+- `MLFLOW_BACKEND_STORE_URI`: `sqlite:////app/data/experiments/db/mlflow.db`
+- `MLFLOW_DEFAULT_ARTIFACT_ROOT`: `/app/data/experiments/artifacts`
+- `MLFLOW_HOST`: `0.0.0.0` (allows external access)
+- `MLFLOW_PORT`: `5000`
+- `OLLAMA_BASE_URL`: `http://host.docker.internal:11434` (requires Ollama on host)
+
+Local development:
+- `MLFLOW_TRACKING_URI`: `http://localhost:5000` (default)
 
 ### Docker Services
 
+The Docker container runs both services via `docker/start.sh`:
 - **Marimo**: Port 2718 - Interactive notebook environment
 - **MLflow**: Port 5000 - Experiment tracking UI
+
+**GPU Support**: NVIDIA GPU support is enabled by default. Remove the `deploy.resources` section in `docker-compose.yaml` if running without GPU.
 
 ## Pre-installed ML & Data Science Stack 📦
 

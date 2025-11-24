@@ -11,10 +11,10 @@ services:
     volumes:
       # Mount entire data directory for all data access
       - ../data:/app/data
+      # Mount examples for interactive editing
+      - ../examples:/app/examples
       # Mount snippets directory for development
       - ../snippets:/app/snippets
-      # Mount configs for easy access
-      - ../configs:/app/configs
     extra_hosts:
       # Host-Gateway for access to host services
       - "host.docker.internal:host-gateway"
