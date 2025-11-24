@@ -19,6 +19,12 @@ https://github.com/user-attachments/assets/3bc24463-ff42-44a7-ae61-5d500d29688c
 
 **Modern reactive ML development with AI-powered assistance, interactive notebooks, and experiment tracking**
 
+---
+
+*Like marimo algae drifting in crystal waters, your code flows and evolves – each cell a living sphere of computation, gently touching others, creating ripples of reactive change. In this digital ocean, data streams like currents, models grow like organic formations, and insights emerge naturally from the depths. Let your ML experiments flow freely, tracked and nurtured, as nature intended.*
+
+---
+
 ## Why Marimo Flow is Powerful 🚀
 
 **Marimo Flow** combines reactive notebook development with AI-powered assistance and robust ML experiment tracking:
