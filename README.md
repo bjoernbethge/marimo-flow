@@ -1,5 +1,7 @@
 # Marimo Flow 🌊
+---
 
+*Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking*
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![Marimo](https://img.shields.io/badge/Marimo-Latest-orange?logo=python&logoColor=white)](https://marimo.io)
 [![MLflow](https://img.shields.io/badge/MLflow-Latest-blue?logo=mlflow&logoColor=white)](https://mlflow.org)
@@ -13,9 +15,7 @@
 
 *Like marimo algae drifting in crystal waters, your code flows and evolves – each cell a living sphere of computation, gently touching others, creating ripples of reactive change. In this digital ocean, data streams like currents, models grow like organic formations, and insights emerge naturally from the depths. Let your ML experiments flow freely, tracked and nurtured, as nature intended.*
 
----
 
-*Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking*
 
 <div align="center">
 
