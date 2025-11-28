@@ -49,7 +49,7 @@ def _():
     Model lifecycle management using MLflow Model Registry.
 
     Builds on previous examples:
-    - Uses PINA/PyTorch models from 02_basic_ml_workflow.py, 03_model_comparison.py, and 04_hyperparameter_tuning.py
+    - Uses the Walrus/PINA solver foundations from 03_pina_walrus_solver.py and tuned checkpoints from 04_hyperparameter_tuning.py
     - Registers models for deployment
     - Manages model versions and stages (Staging → Production)
     - Demonstrates model loading and inference

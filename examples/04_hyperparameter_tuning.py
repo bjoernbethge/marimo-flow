@@ -53,7 +53,8 @@ def _():
     Automated hyperparameter optimization using Optuna with MLflow tracking.
 
     Builds on previous examples:
-    - Uses PINA/PyTorch models from 02_basic_ml_workflow.py and 03_model_comparison.py
+    - Reuses MLflow scaffolding from 02_mlflow_experiment_console.py
+    - Extends the Walrus/PINA solver introduced in 03_pina_walrus_solver.py
     - Tracks all trials in MLflow
     - Visualizes optimization progress
 
@@ -339,11 +340,33 @@ def _(
     best_params = best_trial.params
     best_value = best_trial.value
 
+    # Train best model with best hyperparameters
+    best_hidden_size = best_params["hidden_size"]
+    best_num_layers = best_params["num_layers"]
+    best_learning_rate = best_params["learning_rate"]
+    best_epochs = best_params["epochs"]
+    best_dropout_rate = best_params["dropout_rate"]
+    
+    best_model = TunableNN(n_features, best_hidden_size, best_num_layers, best_dropout_rate, n_classes).to(device)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(best_model.parameters(), lr=best_learning_rate)
+    
     # Train best model
-    best_model = RandomForestClassifier(**best_params, random_state=42, n_jobs=-1)
-    best_model.fit(X_train, y_train)
-    best_y_pred = best_model.predict(X_test)
-    best_test_accuracy = accuracy_score(y_test, best_y_pred)
+    best_model.train()
+    for epoch in range(best_epochs):
+        optimizer.zero_grad()
+        outputs = best_model(X_train_tensor)
+        loss = criterion(outputs, y_train_tensor)
+        loss.backward()
+        optimizer.step()
+    
+    # Evaluate best model
+    best_model.eval()
+    with torch.no_grad():
+        test_outputs = best_model(X_test_tensor)
+        _, best_y_pred = torch.max(test_outputs, 1)
+        best_y_pred = best_y_pred.cpu().numpy()
+        best_test_accuracy = accuracy_score(y_test, best_y_pred)
 
     # Log best model to MLflow
     with mlflow.start_run(
@@ -352,10 +375,10 @@ def _(
         mlflow.log_params(best_params)
         mlflow.log_metric("cv_accuracy", best_value)
         mlflow.log_metric("test_accuracy", best_test_accuracy)
-        mlflow.set_tag("model_type", "random_forest")
+        mlflow.set_tag("model_type", "pina-pytorch")
         mlflow.set_tag("optimization", "optuna")
-        mlflow.sklearn.log_model(
-            best_model, "model", registered_model_name="optimized_rf_model"
+        mlflow.pytorch.log_model(
+            best_model, "model", registered_model_name="optimized_pytorch_model"
         )
 
     f"Optimization complete. Best CV accuracy: {best_value:.4f}, Test accuracy: {best_test_accuracy:.4f}"

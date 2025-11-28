@@ -51,7 +51,7 @@ def _():
 
     End-to-end ML pipeline from training to deployment using **PINA** (PyTorch-based).
 
-    Builds on all previous examples (00-05). Implements:
+    Builds on the 01–05 notebooks (data profiler, MLflow console, Walrus solver, Optuna tuning, model registry). Implements:
     - Data validation and quality checks
     - Neural network training with PINA/PyTorch
     - Performance validation gates
