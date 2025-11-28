@@ -55,7 +55,7 @@ This combination eliminates the reproducibility issues of traditional notebooks 
 
 ### 🚀 Production Ready
 - **🐳 Docker Deployment**: One-command setup with docker-compose
-- **📦 16 Ready-to-Use Snippets**: Advanced patterns for Polars, Plotly, Marimo
+- **📦 Curated Snippets & Tutorials**: 4 reusable snippet modules plus 15+ tutorial notebooks covering Polars, Plotly, Marimo UI patterns, RAG, and OpenVINO
 - **📚 Comprehensive Docs**: Built-in reference guides with 100+ code examples
 - **🌐 GitHub Pages**: Auto-deploy interactive notebooks with WASM
 
@@ -102,98 +102,40 @@ uv run marimo edit examples/
 
 ## Example Notebooks 📚
 
-**Progressive ML Pipeline** - Notebooks that build upon each other:
+All notebooks live in `examples/` and can be opened with `uv run marimo edit examples/<file>.py`.
 
-### 📊 [00 Data Exploration](examples/00_data_exploration.py)
-- Interactive dataset analysis
-- Statistical summaries and distributions
-- Correlation heatmaps
-- PCA and t-SNE dimensionality reduction
-- Multiple built-in datasets (Wine, Iris, Breast Cancer, Diabetes)
+- **`01_interactive_data_profiler.py`** – DuckDB-powered data explorer with filters, previews, and interactive scatter plots for any local database.
+- **`02_mlflow_experiment_console.py`** – Connect to an MLflow tracking directory, inspect experiments, and visualize metric trends inline with Altair.
+- **`03_pina_walrus_solver.py`** – Toggle between baseline PINNs and the Walrus adapter to solve a Poisson equation with live training controls.
+- **`04_hyperparameter_tuning.py`** – Optuna-based hyperparameter search for PINA/PyTorch models with MLflow tracking and interactive study settings.
+- **`05_model_registry.py`** – Train, register, and promote MLflow models end-to-end, including stage transitions and inference checks.
+- **`06_production_pipeline.py`** – Production-style pipeline featuring validation gates, training, registry integration, deployment steps, and monitoring hooks.
+- **`09_pina_live_monitoring.py`** – Live training monitoring with real-time loss plotting, error analysis, and comprehensive visualization tools.
 
-### 🔧 [01 Feature Engineering](examples/01_feature_engineering.py)
-- Feature selection techniques
-- Scaling and normalization
-- Polynomial features
-- Feature importance analysis
-- Interactive parameter tuning
-
-### 🚀 [02 Basic ML Workflow](examples/02_basic_ml_workflow.py)
-- End-to-end ML pipeline with Random Forest
-- Real-time parameter tuning
-- MLflow experiment tracking
-- Interactive visualizations
-- Model evaluation and metrics
-
-### 🏆 [03 Model Comparison](examples/03_model_comparison.py)
-- Compare multiple algorithms (RF, GB, LR, SVM)
-- Cross-validation analysis
-- Performance benchmarking
-- Side-by-side metric comparison
-- Best model selection
-
-### 🎯 [04 Hyperparameter Tuning](examples/04_hyperparameter_tuning.py)
-- Automated optimization with Optuna
-- Bayesian hyperparameter search
-- MLflow integration for all trials
-- Real-time optimization progress
-- Parameter importance analysis
-
-### 📦 [05 Model Registry](examples/05_model_registry.py)
-- Model versioning and registration
-- Stage management (Staging → Production)
-- Model search and discovery
-- Model loading and inference
-- Production deployment workflow
-
-### 🚀 [06 Production Pipeline](examples/06_production_pipeline.py)
-- Complete end-to-end ML pipeline
-- Data validation and quality checks
-- Model validation gates
-- Automated deployment
-- Production monitoring
-
-### 🎓 [07 LoRA Fine-tuning](examples/07_lora_finetuning.py)
-- Large Language Model fine-tuning
-- LoRA (Low-Rank Adaptation) techniques
-- Efficient parameter-efficient training
-- MLflow integration for LLM experiments
-
-### 🔗 [08 Graph Neural Networks](examples/08_gnn_hetero_demo.py)
-- Heterogeneous graph neural networks
-- PyTorch Geometric integration
-- Advanced GNN architectures
-- Graph-based learning workflows
-
-**Workflow**: Start with 00 and progress through 08 for a complete ML lifecycle from basics to advanced topics.
+Additional learning material lives in `examples/tutorials/` (15+ focused notebooks covering marimo UI patterns, Polars, Plotly, DuckDB, OpenVINO, RAG, and PYG) plus `examples/tutorials/legacy/` for the retired 00–03 pipeline.
 
 ## Project Structure 📁
 
 ```
 marimo-flow/
-├── examples/                    # Progressive ML pipeline notebooks (00-08)
-│   ├── 00_data_exploration.py      # Data analysis and exploration
-│   ├── 01_feature_engineering.py   # Feature engineering techniques
-│   ├── 02_basic_ml_workflow.py     # Basic ML pipeline with MLflow
-│   ├── 03_model_comparison.py      # Multi-model comparison
-│   ├── 04_hyperparameter_tuning.py # Optuna optimization
-│   ├── 05_model_registry.py        # Model registry & deployment
-│   ├── 06_production_pipeline.py   # End-to-end production pipeline
-│   ├── 07_lora_finetuning.py       # LLM fine-tuning with LoRA
-│   └── 08_gnn_hetero_demo.py       # Graph Neural Networks
-├── snippets/                   # Reusable code patterns
-│   ├── mlflow_setup.py             # MLflow configuration
-│   ├── interactive_params.py       # Interactive controls
-│   ├── data_loading.py             # Data utilities
-│   ├── altair_visualization.py     # Visualization patterns
-│   ├── agent.py                    # AI agent integration
-│   ├── duckdb_sql.py               # DuckDB query patterns
-│   ├── openvino_1.py               # OpenVINO inference
-│   └── rag.py                      # RAG pipeline patterns
+├── examples/                    # Production-ready marimo notebooks
+│   ├── 01_interactive_data_profiler.py
+│   ├── 02_mlflow_experiment_console.py
+│   ├── 03_pina_walrus_solver.py
+│   ├── 04_hyperparameter_tuning.py
+│   ├── 05_model_registry.py
+│   ├── 06_production_pipeline.py
+│   ├── 09_pina_live_monitoring.py
+│   └── tutorials/                # 15+ focused learning notebooks (+ legacy/)
+├── snippets/                   # Reusable Python modules for notebooks
+│   ├── __init__.py
+│   ├── altair_visualization.py
+│   ├── data_explorer_pattern.py
+│   └── pina_basics.py
 ├── tools/                       # Utility tools
 │   ├── ollama_manager.py           # Local LLM orchestration
 │   └── openvino_manager.py         # Model serving utilities
-├── refs/                        # Reference documentation
+├── docs/                        # Reference documentation
 │   ├── marimo-quickstart.md        # Marimo guide
 │   ├── polars-quickstart.md        # Polars guide
 │   ├── plotly-quickstart.md        # Plotly guide
@@ -211,7 +153,13 @@ marimo-flow/
 
 ### 📝 About Snippets
 
-The `snippets/` directory contains reusable code patterns that can be imported into Marimo notebooks. These are optional utilities - all functionality is already integrated into the main examples. Use them if you want to extract common patterns for reuse across multiple notebooks.
+The `snippets/` directory contains reusable code patterns built for direct import into Marimo notebooks:
+
+- `altair_visualization.py`: opinionated chart builders and theming helpers
+- `data_explorer_pattern.py`: column filtering + scatter plotting utilities
+- `pina_basics.py`: Walrus/PINA helpers (problem setup, solver, visualization)
+
+All examples already import these where needed; use them to jump-start your own notebooks or extend the shipped apps. Additional pattern walk-throughs live in `examples/tutorials/`.
 
 ### 🛠️ About Tools
 
@@ -221,7 +169,7 @@ The `tools/` directory contains standalone utility scripts for managing external
 
 ### 📚 About References
 
-The `refs/` directory contains comprehensive LLM-friendly documentation for key technologies:
+The `docs/` directory contains comprehensive LLM-friendly documentation for key technologies:
 - Quick-start guides for Marimo, Polars, Plotly, and PINA
 - Integration patterns and best practices
 - Code examples and common workflows
@@ -312,6 +260,8 @@ model = "gpt-oss:20b-cloud"
 base_url = "http://localhost:11434/v1"
 ```
 
+If you're running inside Docker, the same `mcp` block lives in `docker/.marimo.toml`, so both local and containerized sessions pick up identical presets.
+
 ### Adding Custom MCP Servers
 
 You can extend functionality by adding custom MCP servers in `.marimo.toml`:
@@ -321,6 +271,16 @@ You can extend functionality by adding custom MCP servers in `.marimo.toml`:
 command = "npx"
 args = ["-y", "@your-org/your-mcp-server"]
 ```
+
+### MLflow Trace Server (Optional)
+
+Expose MLflow trace operations to MCP-aware IDEs/assistants (e.g., Claude Desktop, Cursor) by running:
+
+```bash
+mlflow mcp run
+```
+
+Run the command from an environment where `MLFLOW_TRACKING_URI` (or `MLFLOW_BACKEND_STORE_URI`/`MLFLOW_DEFAULT_ARTIFACT_ROOT`) points at your experiments. The server stays up until interrupted and can be proxied alongside Marimo/MLflow so every tool shares the same MCP context.
 
 **Learn More:**
 - [Marimo MCP Guide](https://docs.marimo.io/guides/editor_features/mcp/) - Official MCP documentation

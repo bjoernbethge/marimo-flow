@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example 08: Graph Neural Networks with PyTorch Geometric
 - New snippets: agent.py, duckdb_sql.py, openvino_1.py, rag.py
 - Tools directory with ollama_manager.py and openvino_manager.py
-- Comprehensive reference documentation in refs/ directory:
+- Comprehensive reference documentation in docs/ directory:
   - marimo-quickstart.md
   - polars-quickstart.md
   - plotly-quickstart.md

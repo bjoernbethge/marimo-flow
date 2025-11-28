@@ -296,7 +296,7 @@ Open a GitHub Issue describing:
 
 - Open a GitHub Issue for questions
 - Check existing issues and discussions
-- Review documentation in `refs/` directory
+- Review documentation in `docs/` directory
 
 ## Recognition
 
