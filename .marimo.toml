@@ -11,7 +11,7 @@ watcher_on_save = "lazy"
 output_max_bytes = 8000000
 dotenv = [".env"]
 default_auto_download = []
-pythonpath = ["."]
+pythonpath = [".", "src"]
 
 [keymap]
 preset = "default"
@@ -55,7 +55,7 @@ rtc_v2 = false
 secrets = true
 
 [snippets]
-custom_paths = []
+custom_paths = ["snippets"]
 include_default_snippets = true
 
 [language_servers.pylsp]
@@ -90,9 +90,15 @@ model = "gpt-oss:20b-cloud"
 manager = "uv"
 
 [mcp]
-presets = ["context7", "marimo"]
+# MCP servers configured for development
+# marimo: Local development - auto-discovered when running with --mcp flag
+# context7: Hugging Face documentation integration
+presets = ["context7"]
 
 [mcp.mcpServers]
+# marimo MCP server - started with: marimo edit --mcp
+# Add to Claude Code with: claude mcp add --transport http marimo http://localhost:2718/mcp/server?access_token=YOUR_TOKEN
+# Note: Token changes on each restart. Use scripts/start-marimo-mcp.sh to get current token
 
 [display]
 default_table_max_columns = 50

@@ -1,68 +1,29 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python: Current File",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
-            },
-            "python": "./.venv/Scripts/python.exe"
-        },
-        {
-            "name": "Python: Marimo App",
-            "type": "python",
-            "request": "launch",
-            "module": "marimo",
-            "args": ["run", "examples/marimo_demo.py"],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
-            },
-            "python": "./.venv/Scripts/python.exe"
-        },
-        {
-            "name": "Python: MLflow Server",
-            "type": "python",
-            "request": "launch",
-            "module": "mlflow",
-            "args": ["ui", "--host", "0.0.0.0", "--port", "5000"],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
-            },
-            "python": "./.venv/Scripts/python.exe"
-        },
-        {
-            "name": "Python: Pytest",
-            "type": "python",
-            "request": "launch",
-            "module": "pytest",
-            "args": ["-v", "tests/"],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
-            },
-            "python": "./.venv/Scripts/python.exe"
-        },
-        {
-            "name": "Python: Agent",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/examples/agent.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src;${workspaceFolder}/agents/src"
-            },
-            "python": "./.venv/Scripts/python.exe"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "debugpy",
+      "request": "launch",
+      "name": "marimo Debug: edit mode",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "MARIMO_SCRIPT_EDIT": "1"
+      },
+      "justMyCode": false
+    },
+    {
+      "type": "python",
+      "request": "launch",
+      "name": "marimo Debug: script mode",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "debugOptions": [
+        "--ignore",
+        "*/site-packages/marimo/*"
+      ]
+    }
+  ]
 }
