@@ -529,6 +529,348 @@ sql_query = mo.sql("""
 mo.md(f"Query returned {len(sql_query)} rows")
 ```
 
+## AI-Human Collaboration Patterns
+
+### Pattern: Interactive AI Agent with User Validation
+
+Marimo is ideal for human-AI collaboration workflows where humans guide AI reasoning and validate outputs:
+
+```python
+import marimo as mo
+from pydantic_ai import Agent
+
+# Initialize AI agent
+analysis_agent = Agent(
+    model="openai:gpt-4",
+    system_prompt="You are a data analyst. Provide clear, step-by-step analysis."
+)
+
+# User input for analysis request
+analysis_request = mo.ui.text_area(
+    label="What would you like to analyze?",
+    placeholder="Describe your analysis goal..."
+)
+
+# Run analysis with approval
+run_button = mo.ui.button(label="Analyze", on_change=lambda _: None)
+
+# AI generates analysis
+if run_button.value and analysis_request.value:
+    result = analysis_agent.run_sync(analysis_request.value)
+    mo.md(f"## AI Analysis\n\n{result.data}")
+
+    # Human validation
+    approve = mo.ui.checkbox(label="Approve this analysis?")
+
+    if approve.value:
+        mo.md("✅ Analysis approved and saved")
+    else:
+        mo.md("⚠️ Awaiting revisions...")
+```
+
+### Pattern: Collaborative Notebook with Comments
+
+```python
+import marimo as mo
+from datetime import datetime
+
+# Initialize collaboration state
+get_comments, set_comments = mo.state([])
+get_approvals, set_approvals = mo.state({})
+
+# User identity
+user_name = mo.ui.text(label="Your name:", value="Analyst 1")
+
+# Analysis cell
+analysis_result = mo.md("""
+# Data Quality Report
+- Records: 10,000
+- Missing values: 2.3%
+- Duplicates: 0
+""")
+
+# Comment section
+comment_input = mo.ui.text_area(
+    label="Add a comment:",
+    placeholder="Share thoughts or concerns..."
+)
+
+def add_comment(_):
+    if comment_input.value:
+        comment = {
+            "author": user_name.value,
+            "text": comment_input.value,
+            "timestamp": datetime.now().isoformat()
+        }
+        set_comments([*get_comments(), comment])
+
+comment_button = mo.ui.button(label="Add Comment", on_change=add_comment)
+
+# Display comments
+comments_display = mo.vstack([
+    mo.md(f"**{c['author']}** ({c['timestamp']})"),
+    mo.md(c['text'])
+] for c in get_comments())
+
+# Approval tracking
+def toggle_approval(_):
+    approvals = dict(get_approvals())
+    approvals[user_name.value] = not approvals.get(user_name.value, False)
+    set_approvals(approvals)
+
+approve_button = mo.ui.button(label="Approve", on_change=toggle_approval)
+
+# Workflow display
+mo.vstack([
+    analysis_result,
+    mo.md("---"),
+    mo.md("## Discussion"),
+    comment_input,
+    comment_button,
+    comments_display,
+    mo.md("---"),
+    mo.md(f"## Approvals: {sum(get_approvals().values())}/{len(get_approvals())}"),
+    approve_button
+])
+```
+
+### Pattern: AI-Assisted Data Exploration
+
+```python
+import marimo as mo
+import polars as pl
+from pydantic_ai import Agent
+
+# Load data
+df = pl.read_csv("data.csv")
+
+# Exploration agent
+explore_agent = Agent(
+    model="openai:gpt-4",
+    system_prompt="Analyze data profiles and suggest interesting patterns to investigate."
+)
+
+# User selects column
+column = mo.ui.dropdown(df.columns, label="Select column:")
+
+# AI generates insights
+if column.value:
+    stats = df[column.value].describe()
+    prompt = f"Column: {column.value}\nStatistics:\n{stats}"
+
+    insights = explore_agent.run_sync(prompt)
+    mo.md(f"## AI Insights\n\n{insights.data}")
+
+    # Human exploration control
+    drill_down = mo.ui.dropdown(
+        ["Distribution", "Outliers", "Relationships", "Anomalies"],
+        label="Explore:",
+    )
+
+    if drill_down.value:
+        follow_up = explore_agent.run_sync(f"Focus on: {drill_down.value}")
+        mo.md(f"## Deep Dive\n\n{follow_up.data}")
+```
+
+### Pattern: Collaborative Model Evaluation
+
+```python
+import marimo as mo
+from datetime import datetime
+
+# Model comparison state
+get_model_scores, set_model_scores = mo.state({})
+get_reviewer_notes, set_reviewer_notes = mo.state([])
+
+# Reviewer information
+reviewer = mo.ui.text(label="Reviewer name:", value="")
+
+# Model selection
+models = ["Model A (v1.2)", "Model B (v2.0)", "Model C (experimental)"]
+selected_model = mo.ui.dropdown(models, label="Evaluate model:")
+
+# Scoring interface
+accuracy = mo.ui.slider(0, 1, step=0.01, label="Accuracy score:")
+latency = mo.ui.slider(0, 5000, step=100, label="Latency (ms):")
+robustness = mo.ui.dropdown(
+    ["Poor", "Fair", "Good", "Excellent"],
+    label="Robustness:"
+)
+
+# Save evaluation
+def save_evaluation(_):
+    if selected_model.value and reviewer.value:
+        score_key = f"{selected_model.value}_{reviewer.value}"
+        scores = dict(get_model_scores())
+        scores[score_key] = {
+            "accuracy": accuracy.value,
+            "latency": latency.value,
+            "robustness": robustness.value,
+            "timestamp": datetime.now().isoformat()
+        }
+        set_model_scores(scores)
+
+save_button = mo.ui.button(label="Save Evaluation", on_change=save_evaluation)
+
+# Notes
+notes = mo.ui.text_area(label="Notes:", placeholder="Add observations...")
+
+def add_notes(_):
+    if notes.value and reviewer.value:
+        note = {
+            "author": reviewer.value,
+            "model": selected_model.value,
+            "text": notes.value,
+            "time": datetime.now().isoformat()
+        }
+        set_reviewer_notes([*get_reviewer_notes(), note])
+
+notes_button = mo.ui.button(label="Add Notes", on_change=add_notes)
+
+# Display aggregated results
+scores_summary = mo.md(f"""
+## Evaluation Summary
+
+{len(get_model_scores())} evaluations recorded
+
+Models evaluated: {len(set(k.split('_')[0] for k in get_model_scores().keys()))}
+Reviewers: {len(set(k.split('_')[1] for k in get_model_scores().keys()))}
+""")
+
+# Layout
+mo.vstack([
+    mo.md("## Model Evaluation Form"),
+    selected_model,
+    reviewer,
+    accuracy,
+    latency,
+    robustness,
+    save_button,
+    mo.md("---"),
+    notes,
+    notes_button,
+    mo.md("---"),
+    scores_summary
+])
+```
+
+### Pattern: Asynchronous Review Workflow
+
+```python
+import marimo as mo
+from enum import Enum
+from datetime import datetime
+
+class ReviewStatus(str, Enum):
+    DRAFT = "draft"
+    SUBMITTED = "submitted"
+    IN_REVIEW = "in_review"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+# Workflow state
+get_document, set_document = mo.state({
+    "title": "Q4 Analysis Report",
+    "status": ReviewStatus.DRAFT,
+    "author": "Data Team",
+    "reviewers": [],
+    "created_at": datetime.now().isoformat()
+})
+
+# Author view
+mo.md("## Report Submission")
+submit_button = mo.ui.button(label="Submit for Review", on_change=lambda _: None)
+
+if submit_button.value:
+    doc = dict(get_document())
+    doc["status"] = ReviewStatus.SUBMITTED
+    set_document(doc)
+    mo.md("✅ Report submitted for review")
+
+# Display status
+doc = get_document()
+mo.md(f"""
+### Document Status
+- Title: {doc['title']}
+- Author: {doc['author']}
+- Status: **{doc['status'].upper()}**
+- Created: {doc['created_at']}
+""")
+
+# Reviewer view (would be in separate app or user context)
+if doc["status"] in [ReviewStatus.SUBMITTED, ReviewStatus.IN_REVIEW]:
+    reviewer_decision = mo.ui.radio(
+        [ReviewStatus.APPROVED, ReviewStatus.REJECTED],
+        label="Review decision:"
+    )
+    feedback = mo.ui.text_area(label="Feedback:")
+
+    review_button = mo.ui.button(label="Submit Review", on_change=lambda _: None)
+```
+
+## Collaborative Notebook Best Practices
+
+### ✅ DO: Structure for Multiple Contributors
+
+```python
+# GOOD - clear sections for different contributors
+# ===== DATA PREPARATION (by: Data Engineer) =====
+data = load_data()
+
+# ===== EXPLORATORY ANALYSIS (by: Analyst) =====
+mo.md("## Data Overview")
+summary_stats = data.describe()
+
+# ===== MODEL DEVELOPMENT (by: Data Scientist) =====
+model = train_model(data)
+
+# ===== VALIDATION (by: QA Reviewer) =====
+metrics = evaluate_model(model)
+```
+
+### ✅ DO: Use State for Shared Results
+
+```python
+# GOOD - state allows multiple cells to read/modify shared data
+get_results, set_results = mo.state({})
+
+# Different cells can update results
+def update_result(key, value):
+    results = dict(get_results())
+    results[key] = value
+    set_results(results)
+
+# All changes are tracked and reactive
+mo.md(f"Results: {get_results()}")
+```
+
+### ❌ DON'T: Use Notebook for Real-time Editing
+
+```python
+# BAD - marimo is not a real-time collaborative editor
+# Use version control + code review workflow instead
+# Each change = commit to git
+```
+
+### ✅ DO: Maintain Clear Approvals
+
+```python
+# GOOD - explicit approval tracking
+get_approvals, set_approvals = mo.state({
+    "data_quality": False,
+    "methodology": False,
+    "results": False
+})
+
+def approve_section(section):
+    approvals = dict(get_approvals())
+    approvals[section] = True
+    set_approvals(approvals)
+
+all_approved = all(get_approvals().values())
+mo.md(f"All sections approved: {all_approved}")
+```
+
 ## API Reference - Quick Lookup
 
 ### State Management
@@ -546,6 +888,7 @@ mo.state(initial_value, allow_self_loops=False)
 mo.ui.slider(start, stop, step=1, label="")
 mo.ui.button(label="", on_change=callback)
 mo.ui.text(placeholder="", label="", value="")
+mo.ui.text_area(placeholder="", label="", value="")
 mo.ui.dropdown(options, label="", value=None)
 mo.ui.radio(options, label="", value=None)
 mo.ui.checkbox(label="", value=False)
@@ -571,12 +914,57 @@ mo.matshow(array)       # Matrix/array visualization
 mo.spinner()            # Loading spinner
 ```
 
+## Debugging & Development
+
+### Common Patterns for AI Collaboration
+
+**1. Error Handling in AI Workflows**
+```python
+import marimo as mo
+from pydantic_ai import Agent
+
+try:
+    result = agent.run_sync(prompt)
+    mo.md(f"✅ {result.data}")
+except Exception as e:
+    mo.md(f"❌ Error: {str(e)}")
+    mo.md("Please try again with a different prompt")
+```
+
+**2. Progress Tracking**
+```python
+# Use state to track progress
+get_progress, set_progress = mo.state(0)
+
+# Update progress in long-running operations
+for i in range(10):
+    process_item(i)
+    set_progress(i + 1)
+
+mo.md(f"Progress: {get_progress()}/10")
+```
+
+**3. Conditional Rendering Based on Approval**
+```python
+# Show/hide sections based on approval state
+get_approved, set_approved = mo.state(False)
+
+approve_btn = mo.ui.button("Approve", on_change=lambda _: set_approved(True))
+
+if get_approved():
+    mo.md("## Approved Results")
+    # Show sensitive data only after approval
+else:
+    approve_btn
+```
+
 ## Additional Resources
 
 - **Official Docs**: https://docs.marimo.io
 - **GitHub**: https://github.com/marimo-team/marimo
 - **Examples**: https://github.com/marimo-team/marimo/tree/main/examples
 - **Discord Community**: https://discord.gg/marimo
+- **Pydantic AI Docs**: https://ai.pydantic.dev
 
 ## Migration Notes
 
@@ -591,3 +979,14 @@ mo.spinner()            # Loading spinner
 
 - Requires Python 3.9+
 - Uses modern type hints and f-strings
+
+## Integration with marimo-flow
+
+Marimo works seamlessly with the marimo-flow ecosystem:
+
+- **MLflow Integration**: Track experiments with `mlflow` module (see `mlflow-quickstart.md`)
+- **Polars Data Processing**: Use with Polars for efficient data manipulation
+- **PINA Models**: Integrate physics-informed neural networks
+- **OpenVINO Inference**: Deploy optimized models using OpenVINO
+
+For more details, see the integration patterns documentation.

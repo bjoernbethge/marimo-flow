@@ -355,7 +355,7 @@ The documentation serves as a foundation for effective development with these te
 ## Document File Manifest
 
 ```
-refs/
+docs/
 ├── INDEX.md                    # Start here - navigation & overview
 ├── marimo-quickstart.md        # Reactive notebooks reference
 ├── polars-quickstart.md        # DataFrames reference

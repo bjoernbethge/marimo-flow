@@ -1,7 +1,7 @@
 # Technology Reference Index
 
-**Last Updated**: 2025-11-21
-**Status**: Complete - All 4 technologies documented
+**Last Updated**: 2025-11-25
+**Status**: Complete - All 5 technologies documented
 
 This directory contains comprehensive LLM-friendly reference documentation for key technologies used in the marimo-flow project.
 
@@ -9,10 +9,11 @@ This directory contains comprehensive LLM-friendly reference documentation for k
 
 ### Core Technologies Documented
 
-1. **marimo** - Reactive Python notebook framework
-2. **polars** - High-performance DataFrame library
-3. **plotly** - Interactive visualization library
-4. **pina** - Physics-Informed Neural Networks framework
+1. **marimo** - Reactive Python notebook framework (with AI-Human Collaboration)
+2. **mlflow** - Machine Learning lifecycle management & experiment tracking
+3. **polars** - High-performance DataFrame library
+4. **plotly** - Interactive visualization library
+5. **pina** - Physics-Informed Neural Networks framework
 
 ---
 
@@ -20,7 +21,8 @@ This directory contains comprehensive LLM-friendly reference documentation for k
 
 | Technology | Type | Primary Use | Performance | Learning Curve |
 |---|---|---|---|---|
-| marimo | Notebook | Interactive development, deployment | Fast startup | Low-Medium |
+| marimo | Notebook | Interactive development, AI collaboration, deployment | Fast startup | Low-Medium |
+| mlflow | ML Ops | Experiment tracking, model registry, deployment | High | Low-Medium |
 | polars | Data | DataFrame operations, transformation | Very High | Low-Medium |
 | plotly | Visualization | Interactive charts, dashboards | High | Low |
 | pina | ML/SciML | Neural networks, differential equations | High | Medium-High |
@@ -31,15 +33,22 @@ This directory contains comprehensive LLM-friendly reference documentation for k
 
 ### marimo-quickstart.md
 
-**Coverage**: Complete overview of marimo reactive notebooks
+**Coverage**: Complete overview of marimo reactive notebooks with AI-Human Collaboration
 
 Key sections:
 - Installation and basic commands
 - Core concepts (reactivity, state management, UI elements)
 - Layout and composition patterns
+- **AI-Human Collaboration Patterns** (new!)
+  - Interactive AI Agent with User Validation
+  - Collaborative Notebooks with Comments
+  - AI-Assisted Data Exploration
+  - Collaborative Model Evaluation
+  - Asynchronous Review Workflows
 - Common usage patterns with code examples
 - Best practices and anti-patterns
-- Integration patterns (Polars, Plotly, DuckDB)
+- Debugging & Development patterns
+- Integration patterns (Polars, Plotly, DuckDB, MLflow)
 - Deployment and export options
 - API reference for quick lookup
 
@@ -47,15 +56,72 @@ Key sections:
 - Setting up marimo notebooks
 - Understanding reactivity model
 - Building interactive UIs
+- Building AI-powered applications
+- Implementing human-in-the-loop workflows
 - Deploying notebooks as apps
 - Integrating with other libraries
 
 **Key APIs**:
 - `mo.state()` - Reactive state
-- `mo.ui.*` - UI components (slider, button, dropdown, etc.)
+- `mo.ui.*` - UI components (slider, button, dropdown, text_area, etc.)
 - `mo.hstack()/mo.vstack()` - Layout elements
 - `mo.md()` - Markdown display
 - Export commands: `marimo export`, `marimo run`
+
+**AI-Focused Features**:
+- User approval gates for AI outputs
+- Interactive validation workflows
+- Collaboration tracking
+- Progress monitoring
+
+---
+
+### mlflow-quickstart.md
+
+**Coverage**: Complete guide to MLflow experiment tracking and model management
+
+Key sections:
+- What is MLflow and key features
+- Installation and MLflow server setup
+- Core concepts (Experiments, Runs, Parameters, Metrics, Artifacts)
+- Model Registry and versioning
+- Common ML workflow patterns
+  - Complete ML workflow with tracking
+  - Deep learning with PyTorch
+  - Hyperparameter tuning
+  - Custom metrics tracking
+  - Model serving & loading
+- Integration with marimo notebooks
+  - Interactive dashboard creation
+  - Real-time metric tracking
+  - Experiment comparison
+- Best practices and anti-patterns
+- Troubleshooting guide
+- API reference for quick lookup
+
+**When to use this**:
+- Tracking ML experiments
+- Managing model versions
+- Comparing model performance
+- Deploying models to production
+- Creating experiment dashboards
+- Integrating with training scripts
+- Building reproducible ML pipelines
+
+**Key APIs**:
+- `mlflow.set_experiment()` - Organize experiments
+- `mlflow.start_run()` - Begin tracking
+- `mlflow.log_param()/log_params()` - Log hyperparameters
+- `mlflow.log_metric()/log_metrics()` - Log performance metrics
+- `mlflow.log_artifact()/log_artifacts()` - Log files
+- Framework-specific: `mlflow.sklearn.log_model()`, `mlflow.pytorch.log_model()`, etc.
+- `mlflow.pyfunc.load_model()` - Load for inference
+
+**Marimo Integration**:
+- Build interactive experiment dashboards
+- Real-time tracking during training
+- Model comparison interfaces
+- Results visualization
 
 ---
 
@@ -284,9 +350,10 @@ mo.Html(fig.to_html())
 ## File Organization
 
 ```
-refs/
+docs/
 ├── INDEX.md                    # This file - navigation guide
-├── marimo-quickstart.md        # Marimo reference
+├── marimo-quickstart.md        # Marimo reference (with AI collaboration)
+├── mlflow-quickstart.md        # MLflow reference (NEW!)
 ├── polars-quickstart.md        # Polars reference
 ├── plotly-quickstart.md        # Plotly reference
 ├── pina-quickstart.md          # PINA reference
@@ -357,9 +424,10 @@ trainer.fit()
 
 ## Technology Versions
 
-All documentation is current as of **November 21, 2025** with latest stable versions:
+All documentation is current as of **November 25, 2025** with latest stable versions:
 
 - **marimo**: Latest (marimo-team/marimo)
+- **mlflow**: 2.0+ (mlflow/mlflow)
 - **polars**: Latest (pola-rs/polars)
 - **plotly**: Latest (plotly/plotly.py)
 - **pina**: Latest (mathLab/PINA)
@@ -370,12 +438,14 @@ All documentation is current as of **November 21, 2025** with latest stable vers
 
 ### Official Documentation
 - Marimo: https://docs.marimo.io
+- MLflow: https://mlflow.org/docs/latest/index.html
 - Polars: https://docs.pola.rs/
 - Plotly: https://plotly.com/python/
 - PINA: https://mathlab.github.io/PINA/
 
 ### GitHub Repositories
 - Marimo: https://github.com/marimo-team/marimo
+- MLflow: https://github.com/mlflow/mlflow
 - Polars: https://github.com/pola-rs/polars
 - Plotly: https://github.com/plotly/plotly.py
 - PINA: https://github.com/mathLab/PINA
@@ -403,10 +473,21 @@ When adding new references:
 
 ## Status & Completeness
 
-### Marimo - Complete
+### Marimo - Complete (Enhanced)
 - Covers all core concepts
 - Includes state management, UI, deployment
+- **NEW**: AI-Human collaboration patterns
+- **NEW**: Pydantic AI integration examples
 - Integration patterns documented
+- Status: Ready for production use
+
+### MLflow - Complete (NEW)
+- Installation and server setup
+- Experiment tracking & metrics
+- Model Registry & versioning
+- Framework-specific examples (sklearn, PyTorch, TensorFlow, XGBoost)
+- Marimo integration patterns
+- Troubleshooting guide
 - Status: Ready for production use
 
 ### Polars - Complete
@@ -447,11 +528,12 @@ When adding new references:
 ## Document Metadata
 
 - **Created**: 2025-11-21
-- **Last Updated**: 2025-11-21
+- **Last Updated**: 2025-11-25
 - **Format**: Markdown (LLM-optimized)
 - **Scope**: Reference documentation, not tutorials
-- **Target Audience**: Developers, data scientists, ML engineers
+- **Target Audience**: Developers, data scientists, ML engineers, AI practitioners
 - **Prerequisites**: Python 3.9+, basic programming knowledge
+- **New in Update**: MLflow quickstart + AI-Human collaboration patterns in marimo
 
 ---
 

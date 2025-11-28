@@ -269,7 +269,7 @@ By Topic:
 ## File Organization
 
 ```
-refs/
+docs/
 ├── README.md                   ← You are here
 ├── INDEX.md                    ← Navigation & overview
 ├── RESEARCH_SUMMARY.md         ← Research details
