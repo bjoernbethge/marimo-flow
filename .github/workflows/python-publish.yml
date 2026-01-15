@@ -19,6 +19,7 @@ permissions:
 jobs:
   release-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
@@ -45,6 +46,7 @@ jobs:
 
   pypi-publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       - release-build
     permissions:
