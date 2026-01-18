@@ -242,7 +242,7 @@ marimo-flow/
 - `context7` preset provides access to library documentation for Polars, Plotly, Altair, etc.
 - `marimo` preset provides marimo-specific patterns and best practices
 - Configure in `.marimo.toml` under `[mcp]` section
-- See `docs/MCP-SETUP.md` for detailed configuration
+- See [MCP-SETUP.md](../docs/MCP-SETUP.md) for detailed configuration
 
 ### Security Considerations
 1. Never commit secrets or API keys (use `.env` files, listed in `.gitignore`)
@@ -284,7 +284,7 @@ uv run marimo edit examples/
 
 ## Testing Guidelines
 
-- Tests should be placed in `tests/` directory (currently minimal test infrastructure)
+- Tests should be placed in `tests/` directory when added (currently no formal test infrastructure exists)
 - Use pytest for test execution: `uv run pytest`
 - Test naming convention: `test_*.py` for files, `test_*` for functions
 - For notebooks: Validate they execute without errors
