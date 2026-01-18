@@ -292,7 +292,7 @@ uv run marimo edit examples/
 
 ## Contributing
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed contribution guidelines including:
+See [CONTRIBUTING.md](/CONTRIBUTING.md) for detailed contribution guidelines including:
 - Branch naming conventions
 - Commit message format (conventional commits)
 - Pull request process
@@ -304,8 +304,8 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed contribution guidelines i
 - **MLflow Documentation**: https://mlflow.org/docs/latest/
 - **PINA Documentation**: https://mathlab.github.io/PINA/
 - **Model Context Protocol**: https://modelcontextprotocol.io/
-- **Project README**: [README.md](../README.md)
-- **Changelog**: [CHANGELOG.md](../CHANGELOG.md)
+- **Project README**: [README.md](/README.md)
+- **Changelog**: [CHANGELOG.md](/CHANGELOG.md)
 
 ## Questions or Issues?
 
