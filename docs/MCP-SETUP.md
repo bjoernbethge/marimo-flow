@@ -143,7 +143,7 @@ Mehr MCP Servers können hinzugefügt werden:
 
 ## GitHub Copilot Integration
 
-Für GitHub Copilot in VSCode wird die MCP Server Konfiguration in `.vscode/mcp.json` verwendet (offiziell unterstützt seit 2024).
+Für GitHub Copilot in VSCode wird die MCP Server Konfiguration in `.vscode/mcp.json` verwendet (offiziell unterstützt ab VS Code 1.96+).
 
 ### Setup für VSCode/GitHub Copilot
 
@@ -187,7 +187,7 @@ Um weitere MCP Server hinzuzufügen, erweitere `.vscode/mcp.json`:
 
 **Weitere Beispiele für MCP Server:**
 - `@modelcontextprotocol/server-github`: GitHub Repository Integration
-- `@modelcontextprotocol/server-filesystem`: Dateisystem-Zugriff  
+- `@modelcontextprotocol/server-filesystem`: Dateisystem-Zugriff
 - `@modelcontextprotocol/server-postgres`: PostgreSQL Integration
 - Custom MCP Server: Eigene Tools und APIs
 
