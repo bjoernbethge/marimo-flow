@@ -140,3 +140,57 @@ Mehr MCP Servers können hinzugefügt werden:
 - `anthropic`: Claude API Integration
 - `filesystem`: File Operations
 - Custom MCPs: Externe APIs, Databases, etc.
+
+## GitHub Copilot Integration
+
+Für GitHub Copilot in VSCode ist die MCP Server Konfiguration in `.vscode/mcp.json` erforderlich.
+
+### Setup für VSCode/GitHub Copilot
+
+Die context7 MCP Server Konfiguration ist bereits in `.vscode/mcp.json` eingerichtet:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "url": "https://context7.liam.sh/mcp"
+    }
+  }
+}
+```
+
+Dies ermöglicht GitHub Copilot:
+- Zugriff auf aktuelle Dokumentation für Polars, Plotly, Altair, und andere ML/Data Science Bibliotheken
+- Kontextbewusste Code-Vervollständigung
+- Bessere Vorschläge für marimo-spezifische Patterns
+
+**Wichtig**: GitHub Copilot erkennt die `.vscode/mcp.json` automatisch beim Öffnen des Projekts in VSCode.
+
+### Weitere MCP Server für GitHub Copilot hinzufügen
+
+Um weitere MCP Server hinzuzufügen, erweitere `.vscode/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "url": "https://context7.liam.sh/mcp"
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${input:github_mcp_pat}"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "github_mcp_pat",
+      "description": "GitHub Personal Access Token",
+      "password": true
+    }
+  ]
+}
+```
