@@ -146,12 +146,12 @@ jobs:
               # Create a display name by replacing underscores with spaces and capitalizing each word
               display_name=$(echo "$filename" | sed 's/_/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
               
-              cat >> _site/index.html << NOTEBOOK
+              cat >> _site/index.html << EOF_NOTEBOOK_CARD
                   <div class="notebook-card">
                     <a href="${filename}.html">${display_name}</a>
                     <p>Interactive Marimo notebook</p>
                   </div>
-          NOTEBOOK
+          EOF_NOTEBOOK_CARD
             fi
           done
 
@@ -169,7 +169,7 @@ jobs:
           </html>
           FOOTER
 
-          echo "✅ Exported $(ls -1 _site/*.html 2>/dev/null | grep -v index.html | wc -l) notebooks to _site/"
+          echo "✅ Exported $(find _site -name '*.html' ! -name 'index.html' | wc -l) notebooks to _site/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
