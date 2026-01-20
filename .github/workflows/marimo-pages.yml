@@ -143,8 +143,8 @@ jobs:
           for notebook in examples/*.py; do
             if [ -f "$notebook" ]; then
               filename=$(basename "$notebook" .py)
-              # Create a display name by replacing underscores with spaces and capitalizing
-              display_name=$(echo "$filename" | sed 's/_/ /g' | sed 's/\b\(.\)/\u\1/g')
+              # Create a display name by replacing underscores with spaces and capitalizing each word
+              display_name=$(echo "$filename" | sed 's/_/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
               
               cat >> _site/index.html << NOTEBOOK
                   <div class="notebook-card">
