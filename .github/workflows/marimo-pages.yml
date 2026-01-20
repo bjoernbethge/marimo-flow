@@ -39,7 +39,7 @@ jobs:
         run: |
           mkdir -p _site
 
-          # Export all examples only
+          # Export all examples from examples/ directory
           for notebook in examples/*.py; do
             if [ -f "$notebook" ]; then
               filename=$(basename "$notebook" .py)
@@ -48,8 +48,8 @@ jobs:
             fi
           done
 
-          # Create index.html
-          cat > _site/index.html << 'EOF'
+          # Create index.html dynamically
+          cat > _site/index.html << 'HEADER'
           <!DOCTYPE html>
           <html lang="en">
           <head>
@@ -116,15 +116,6 @@ jobs:
                 margin-top: 0.5rem;
                 font-size: 0.9rem;
               }
-              .badge {
-                display: inline-block;
-                background: #667eea;
-                color: white;
-                padding: 0.2rem 0.6rem;
-                border-radius: 4px;
-                font-size: 0.75rem;
-                margin-top: 0.5rem;
-              }
               footer {
                 text-align: center;
                 margin-top: 3rem;
@@ -144,53 +135,28 @@ jobs:
               <p class="subtitle">Interactive ML Notebooks with MLflow Tracking</p>
 
               <div class="section">
-                <h2>📚 Examples - Progressive ML Pipeline</h2>
+                <h2>📚 Interactive Examples</h2>
                 <div class="notebook-grid">
+          HEADER
+
+          # Generate notebook cards dynamically
+          for notebook in examples/*.py; do
+            if [ -f "$notebook" ]; then
+              filename=$(basename "$notebook" .py)
+              # Create a display name by replacing underscores with spaces and capitalizing each word
+              display_name=$(echo "$filename" | sed 's/_/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
+              
+              cat >> _site/index.html << EOF_NOTEBOOK_CARD
                   <div class="notebook-card">
-                    <a href="00_data_exploration.html">00 Data Exploration</a>
-                    <p>Interactive dataset analysis with statistical summaries</p>
-                    <span class="badge">Polars</span> <span class="badge">Altair</span>
+                    <a href="${filename}.html">${display_name}</a>
+                    <p>Interactive Marimo notebook</p>
                   </div>
-                  <div class="notebook-card">
-                    <a href="01_feature_engineering.html">01 Feature Engineering</a>
-                    <p>Feature selection and transformation techniques</p>
-                    <span class="badge">Scikit-learn</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="02_basic_ml_workflow.html">02 Basic ML Workflow</a>
-                    <p>End-to-end ML pipeline with MLflow tracking</p>
-                    <span class="badge">MLflow</span> <span class="badge">Random Forest</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="03_model_comparison.html">03 Model Comparison</a>
-                    <p>Compare multiple ML algorithms</p>
-                    <span class="badge">Cross-validation</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="04_hyperparameter_tuning.html">04 Hyperparameter Tuning</a>
-                    <p>Automated optimization with Optuna</p>
-                    <span class="badge">Optuna</span> <span class="badge">Bayesian</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="05_model_registry.html">05 Model Registry</a>
-                    <p>Model versioning and deployment</p>
-                    <span class="badge">MLflow Registry</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="06_production_pipeline.html">06 Production Pipeline</a>
-                    <p>Complete end-to-end production workflow</p>
-                    <span class="badge">Production</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="07_lora_finetuning.html">07 LoRA Fine-tuning</a>
-                    <p>LLM fine-tuning with LoRA</p>
-                    <span class="badge">LLM</span> <span class="badge">Advanced</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="08_gnn_hetero_demo.html">08 Graph Neural Networks</a>
-                    <p>Heterogeneous GNN with PyTorch Geometric</p>
-                    <span class="badge">PyG</span> <span class="badge">Advanced</span>
-                  </div>
+          EOF_NOTEBOOK_CARD
+            fi
+          done
+
+          # Close HTML
+          cat >> _site/index.html << 'FOOTER'
                 </div>
               </div>
 
@@ -201,9 +167,9 @@ jobs:
             </div>
           </body>
           </html>
-          EOF
+          FOOTER
 
-          echo "✅ Exported $(ls -1 _site/*.html | wc -l) notebooks to _site/"
+          echo "✅ Exported $(find _site -name '*.html' ! -name 'index.html' | wc -l) notebooks to _site/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
