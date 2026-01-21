@@ -1,0 +1,261 @@
+# Cursor AI Rules for marimo-flow
+
+You are working in the **marimo-flow** repository - an AI-first ML development environment combining reactive notebooks, experiment tracking, and MCP-powered AI assistance.
+
+## Project Stack
+
+### Core Technologies
+- **Marimo**: Reactive Python notebooks (git-friendly `.py` files, not `.ipynb`)
+- **MLflow**: ML experiment tracking, model registry, and artifact management
+- **PINA**: Physics-Informed Neural Networks framework
+- **Polars**: High-performance DataFrame library (prefer over Pandas)
+- **DuckDB**: In-process analytical database
+- **Altair/Plotly**: Declarative visualizations
+
+### AI & MCP Integration
+- **Marimo MCP**: Notebook introspection (active notebooks, errors, cell data, variables)
+- **Context7 MCP**: Live documentation for Python libraries
+- **MLflow MCP**: Experiment tracking and model management
+- **Ollama**: Local LLM for code completion (gpt-oss:20b-cloud)
+
+## Directory Structure
+
+```
+marimo-flow/
+├── examples/           # Production notebooks (01-09 + tutorials/)
+│   ├── 01_interactive_data_profiler.py
+│   ├── 02_mlflow_experiment_console.py
+│   ├── 03_pina_walrus_solver.py
+│   ├── 04_hyperparameter_tuning.py
+│   ├── 05_model_registry.py
+│   ├── 06_production_pipeline.py
+│   ├── 09_pina_live_monitoring.py
+│   └── tutorials/      # 15+ focused learning notebooks
+├── snippets/           # Reusable Python modules
+│   ├── altair_visualization.py
+│   ├── data_explorer_pattern.py
+│   └── pina_basics.py
+├── data/mlflow/        # MLflow storage (artifacts, db)
+├── docs/               # Reference documentation
+└── tools/              # Utility scripts (ollama_manager, openvino_manager)
+```
+
+## Code Standards
+
+### Marimo Notebooks
+1. **Reactivity First**: All cells must be idempotent
+   - No hidden state or global mutations
+   - Cells re-run when dependencies change
+   - Use `mo.state()` for interactive state management
+
+2. **Variable Naming**: Use unique, descriptive names
+   ```python
+   # ✅ Good - unique names
+   data_raw = pl.read_csv("data.csv")
+   data_clean = data_raw.filter(...)
+
+   # ❌ Bad - reusing names breaks reactivity
+   data = pl.read_csv("data.csv")
+   data = data.filter(...)
+   ```
+
+3. **Cell Dependencies**: Explicitly return values
+   ```python
+   # Cell 1
+   import marimo as mo
+   import polars as pl
+
+   # Cell 2
+   data = pl.read_csv("data.csv")
+
+   # Cell 3 - depends on Cell 2
+   filtered_data = data.filter(pl.col("age") > 18)
+   ```
+
+### Data Processing
+- **Prefer Polars**: Faster than Pandas, better lazy evaluation
+  ```python
+  # ✅ Polars (preferred)
+  df = pl.read_csv("data.csv").lazy()
+  result = df.filter(pl.col("age") > 18).collect()
+
+  # ❌ Pandas (avoid unless necessary)
+  df = pd.read_csv("data.csv")
+  result = df[df["age"] > 18]
+  ```
+
+- **Use DuckDB for SQL**: Integrated analytics
+  ```python
+  import duckdb
+  conn = duckdb.connect()
+  result = conn.execute("SELECT * FROM 'data.csv' WHERE age > 18").pl()
+  ```
+
+### Visualizations
+- **Altair**: Declarative charts (see `snippets/altair_visualization.py`)
+  ```python
+  import altair as alt
+  chart = alt.Chart(data).mark_point().encode(
+      x="age:Q",
+      y="income:Q",
+      color="category:N"
+  )
+  ```
+
+- **Plotly**: 3D plots and complex interactions
+  ```python
+  import plotly.express as px
+  fig = px.scatter_3d(data, x="x", y="y", z="z", color="category")
+  ```
+
+### MLflow Integration
+- Always check for existing experiments before creating new ones
+- Log all hyperparameters and metrics
+- Use context managers for run tracking
+  ```python
+  import mlflow
+
+  with mlflow.start_run(run_name="experiment_1"):
+      mlflow.log_param("learning_rate", 0.001)
+      mlflow.log_metric("accuracy", 0.95)
+      mlflow.log_artifact("model.pkl")
+  ```
+
+### Python Style
+- **Type Hints**: Required for all function parameters and returns
+  ```python
+  def process_data(df: pl.DataFrame, threshold: float) -> pl.DataFrame:
+      return df.filter(pl.col("value") > threshold)
+  ```
+
+- **Docstrings**: NumPy style for all functions
+  ```python
+  def calculate_metrics(predictions: pl.DataFrame, targets: pl.DataFrame) -> dict[str, float]:
+      """
+      Calculate evaluation metrics for model predictions.
+
+      Parameters
+      ----------
+      predictions : pl.DataFrame
+          Model predictions with columns: id, predicted_value
+      targets : pl.DataFrame
+          Ground truth values with columns: id, true_value
+
+      Returns
+      -------
+      dict[str, float]
+          Dictionary with metric names and values
+      """
+      pass
+  ```
+
+- **Formatting**: Black with line length 79
+  ```python
+  # Auto-format on save or run: uv run black --line-length=79 file.py
+  ```
+
+## Workflow Guidelines
+
+### Starting Development
+```bash
+# Start all services
+./scripts/start-dev.sh
+
+# Or manually:
+mlflow server --host 0.0.0.0 --port 5000 \
+  --backend-store-uri sqlite:///data/mlflow/db/mlflow.db \
+  --default-artifact-root ./data/mlflow/artifacts
+
+marimo edit examples/ --mcp --port 2718
+```
+
+### Working with Notebooks
+1. Open notebook: `marimo edit examples/01_interactive_data_profiler.py`
+2. Changes auto-save to `.py` file (git-friendly)
+3. Use MCP tools to inspect runtime state
+4. Test reactivity by changing cell dependencies
+
+### Adding New Features
+1. Check `snippets/` for reusable patterns
+2. Consult `docs/` for integration patterns
+3. Use Context7 MCP for library documentation
+4. Follow patterns in `examples/tutorials/`
+
+### Testing
+```bash
+# Run tests
+uv run pytest
+
+# With coverage
+uv run pytest --cov=src tests/
+```
+
+### Common Pitfalls
+1. ❌ **Don't** reuse variable names in different cells
+2. ❌ **Don't** use global state or mutations
+3. ❌ **Don't** mix Pandas and Polars unnecessarily
+4. ❌ **Don't** create new MLflow experiments without checking existing ones
+5. ❌ **Don't** forget to log experiments to MLflow
+
+## MCP Tools Available
+
+### Marimo MCP (when marimo is running with --mcp)
+- `get_active_notebooks`: List all open notebooks
+- `get_notebook_errors`: Find runtime errors in cells
+- `get_cell_runtime_data`: Inspect cell execution state
+- `get_tables_and_variables`: Analyze DataFrames and variables
+- `get_database_tables`: Inspect DuckDB/SQL connections
+
+### Context7 MCP (always available)
+- `search_docs`: Find documentation for Python libraries
+- `get_library_docs`: Get comprehensive library reference
+- Use for: Polars, Plotly, Altair, Marimo, scikit-learn, PyTorch
+
+### MLflow MCP (when mlflow mcp run is active)
+- `search_experiments`: Find ML experiments
+- `search_runs`: Query training runs
+- `log_metric` / `log_param`: Track experiments
+- `list_models`: Browse model registry
+
+## When Assisting Users
+
+### For Notebook Debugging
+1. Ask if marimo is running with `--mcp` flag
+2. Use `get_notebook_errors` to identify issues
+3. Check cell dependencies with `get_lightweight_cell_map`
+4. Inspect data with `get_tables_and_variables`
+
+### For Performance Optimization
+1. Suggest Polars lazy evaluation
+2. Check DataFrame schemas
+3. Recommend DuckDB for SQL operations
+4. Point to `snippets/data_explorer_pattern.py`
+
+### For ML Experiments
+1. Query existing experiments with MLflow MCP
+2. Suggest proper logging patterns
+3. Reference `examples/04_hyperparameter_tuning.py`
+4. Check model registry before registering new models
+
+### For Documentation
+1. Use Context7 instead of asking user to check docs
+2. Provide code examples from latest library versions
+3. Reference `docs/` for integration patterns
+
+## Environment Variables
+
+```bash
+MLFLOW_TRACKING_URI=http://localhost:5000
+PYTHONPATH=.:src:snippets
+```
+
+## Additional Resources
+
+- Marimo Docs: https://docs.marimo.io
+- MLflow Docs: https://mlflow.org/docs/latest
+- Polars Docs: https://pola-rs.github.io/polars
+- MCP Specification: https://modelcontextprotocol.io
+
+---
+
+**Remember**: This is a reactive, AI-first environment. Every change cascades through the dependency graph. Think reactively, code declaratively, track everything.

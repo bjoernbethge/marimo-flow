@@ -23,8 +23,8 @@ __marimo__/
 
 # IDE and editor configs (user-specific)
 .idea/
-.vscode/
-.cursor/
+# .vscode/ - committed for project-wide MCP setup
+# .cursor/ - committed for project-wide MCP setup
 
 # AI assistant configs (user-specific)
 .claude/
