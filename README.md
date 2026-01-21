@@ -1,7 +1,5 @@
 # Marimo Flow 🌊
 
-*Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking*
-
 ---
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://python.org)
