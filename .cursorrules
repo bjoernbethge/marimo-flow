@@ -2,6 +2,23 @@
 
 You are working in the **marimo-flow** repository - an AI-first ML development environment combining reactive notebooks, experiment tracking, and MCP-powered AI assistance.
 
+## Agent Architecture
+
+This project uses a **multi-agent system** based on [Cursor's autonomous agent research](https://cursor.com/blog/agents):
+
+- **Planner Agent**: Explores codebase, creates tasks (see `.github/agents/planner-agent.md`)
+- **Worker Agents**: Execute tasks autonomously (see `.github/agents/worker-*.md`)
+- **Judge Agent**: Evaluates quality, decides ship/iterate/escalate (see `.github/agents/judge-agent.md`)
+
+**Key principles from Cursor's research**:
+1. **Clear role separation** - Planner/Worker/Judge (not flat hierarchy)
+2. **Reduce complexity** - Workers self-coordinate on conflicts
+3. **Model-role matching** - Different models for different roles
+4. **Prompts > Infrastructure** - Prompt engineering matters most
+5. **Own hard problems** - Workers take responsibility end-to-end
+
+For full architecture details, see `.github/agents/README.md`.
+
 ## Project Stack
 
 ### Core Technologies

@@ -4,14 +4,32 @@ This is a Python-based interactive machine learning notebook project combining M
 
 ## Project Overview
 
-**Purpose**: Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking  
-**Target Users**: ML researchers, data scientists, and developers building reactive ML pipelines  
+**Purpose**: Interactive ML notebooks with reactive updates, AI assistance, and MLflow tracking
+**Target Users**: ML researchers, data scientists, and developers building reactive ML pipelines
 **Key Features**:
 - Reactive notebook execution with automatic dependency tracking
 - MLflow integration for experiment tracking and model registry
 - MCP (Model Context Protocol) support for AI-powered development assistance
 - PINA integration for Physics-Informed Neural Networks
+- Multi-agent development system (Planner/Worker/Judge architecture)
 - Docker-based deployment for reproducibility
+
+## Agent Architecture
+
+This project implements a **multi-agent development system** inspired by [Cursor's autonomous agent research](https://cursor.com/blog/agents):
+
+- **Planner Agent** - Explores codebase, breaks down work into tasks
+- **Worker Agents** - Specialized executors (Notebook, MLflow, PINA, Data, Testing)
+- **Judge Agent** - Evaluates work quality, decides ship/iterate/escalate
+
+**Core Principles**:
+1. Clear role separation (hierarchical, not flat)
+2. Workers self-coordinate conflicts (no integrator)
+3. Model-role matching (different models for different tasks)
+4. Prompts > Infrastructure
+5. Workers own hard problems end-to-end
+
+**Documentation**: See `.github/agents/README.md` for full architecture details and prompt engineering guidelines.
 
 ## Technology Stack
 
