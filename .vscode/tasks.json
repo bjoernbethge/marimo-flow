@@ -1,0 +1,131 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start All Services",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/start-dev.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Start MLflow Server",
+      "type": "shell",
+      "command": "uv run mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///data/mlflow/db/mlflow.db --default-artifact-root ./data/mlflow/artifacts --serve-artifacts",
+      "problemMatcher": [],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "Start Marimo with MCP",
+      "type": "shell",
+      "command": "uv run marimo edit examples/ --mcp --port 2718",
+      "problemMatcher": [],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "Start MLflow MCP Server",
+      "type": "shell",
+      "command": "export MLFLOW_TRACKING_URI=http://localhost:5000 && uv run mlflow mcp run",
+      "problemMatcher": [],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "Run Tests",
+      "type": "shell",
+      "command": "uv run pytest",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Run Tests with Coverage",
+      "type": "shell",
+      "command": "uv run pytest --cov=src tests/",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "group": "test"
+    },
+    {
+      "label": "Format with Black",
+      "type": "shell",
+      "command": "uv run black --line-length=79 ${file}",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Lint with Ruff",
+      "type": "shell",
+      "command": "uv run ruff check ${workspaceFolder}",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Type Check with MyPy",
+      "type": "shell",
+      "command": "uv run mypy ${workspaceFolder}",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Open MLflow UI",
+      "type": "shell",
+      "command": "open http://localhost:5000 || xdg-open http://localhost:5000",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "never"
+      }
+    },
+    {
+      "label": "Open Marimo UI",
+      "type": "shell",
+      "command": "open http://localhost:2718 || xdg-open http://localhost:2718",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "never"
+      }
+    }
+  ]
+}

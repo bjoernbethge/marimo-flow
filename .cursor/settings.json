@@ -4,9 +4,8 @@
   "editor.formatOnPaste": false,
   "editor.tabSize": 4,
   "editor.insertSpaces": true,
-  "editor.rulers": [79, 88],
 
-  // === Language-Specific Formatters ===
+  // === Python Settings ===
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
@@ -14,25 +13,16 @@
       "source.organizeImports": "explicit"
     }
   },
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
 
   // === Marimo Extension Settings ===
   "marimo.browserType": "embedded",
   "marimo.autoStartServer": true,
   "marimo.pythonPath": "${workspaceFolder}/.venv/bin/python",
   "marimo.port": 2718,
-  "marimo.serverArgs": ["--mcp"],  // Enable MCP by default
 
   // === Python Interpreter Settings ===
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "python.terminal.activateEnvironment": true,
-
-  // === Python Analysis Settings ===
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.autoImportCompletions": true,
   "python.analysis.diagnosticMode": "workspace",
@@ -41,25 +31,12 @@
     "${workspaceFolder}/src",
     "${workspaceFolder}/snippets"
   ],
-  "python.analysis.importFormat": "absolute",
-  "python.analysis.autoSearchPaths": true,
 
   // === Black Formatter ===
-  "black-formatter.args": [
-    "--line-length=79"
-  ],
+  "black-formatter.args": ["--line-length=79"],
 
   // === Ruff Linter ===
-  "ruff.lint.args": [
-    "--line-length=79"
-  ],
-
-  // === Python Testing ===
-  "python.testing.pytestEnabled": true,
-  "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": [
-    "tests"
-  ],
+  "ruff.lint.args": ["--line-length=79"],
 
   // === Files ===
   "files.exclude": {
@@ -80,6 +57,29 @@
     "**/data/mlflow/**": true
   },
 
+  // === Cursor AI Settings ===
+  "cursor.aiReview": true,
+  "cursor.chat.model": "claude-sonnet-4.5",
+  "cursor.cpp.disabledLanguages": [],
+
+  // === Cursor Rules for marimo-flow ===
+  // These rules guide Cursor's AI when working with this codebase
+  "cursor.rules": [
+    "This is a marimo-flow project - reactive ML notebooks with MLflow tracking",
+    "Prefer Polars over Pandas for data operations (better performance)",
+    "Use Altair for declarative visualizations, Plotly for 3D plots",
+    "All notebooks are in examples/ as .py files (marimo format)",
+    "Reusable code goes in snippets/ directory",
+    "Always check MLflow for existing experiments before creating new ones",
+    "Marimo cells must be idempotent - no hidden state",
+    "Use unique variable names to avoid reactivity conflicts",
+    "Include type hints and NumPy-style docstrings",
+    "Format with Black, line length 79",
+    "Test with: uv run pytest",
+    "Start dev environment with: ./scripts/start-dev.sh",
+    "MCP servers: marimo (notebooks), context7 (docs), mlflow (tracking)"
+  ],
+
   // === Search Settings ===
   "search.exclude": {
     "**/node_modules": true,
@@ -93,14 +93,13 @@
   // === Terminal ===
   "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.env.linux": {
-    "MLFLOW_TRACKING_URI": "http://localhost:5000",
-    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src:${workspaceFolder}/snippets"
-  },
-  "terminal.integrated.env.osx": {
-    "MLFLOW_TRACKING_URI": "http://localhost:5000",
-    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src:${workspaceFolder}/snippets"
+    "MLFLOW_TRACKING_URI": "http://localhost:5000"
   },
 
-  // === Tasks (for running MLflow, Marimo, etc.) ===
-  "tasks.autoDetect": "on"
+  // === Testing ===
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "tests"
+  ]
 }

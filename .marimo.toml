@@ -91,14 +91,24 @@ manager = "uv"
 
 [mcp]
 # MCP servers configured for development
-# marimo: Local development - auto-discovered when running with --mcp flag
+# marimo: Notebook introspection and reactive cell analysis
 # context7: Hugging Face documentation integration
-presets = ["context7"]
+presets = ["marimo", "context7"]
 
 [mcp.mcpServers]
-# marimo MCP server - started with: marimo edit --mcp
-# Add to Claude Code with: claude mcp add --transport http marimo http://localhost:2718/mcp/server?access_token=YOUR_TOKEN
-# Note: Token changes on each restart. Use scripts/start-marimo-mcp.sh to get current token
+# marimo MCP server - auto-started with: marimo edit --mcp
+# Provides tools for notebook introspection:
+# - get_active_notebooks, get_notebook_errors
+# - get_cell_runtime_data, get_tables_and_variables
+# - get_database_tables, get_lightweight_cell_map
+
+# MLflow MCP server - start separately with: mlflow mcp run
+# Provides tools for experiment tracking and model management
+# Run from project root to access ./data/mlflow/ experiments
+[mcp.mcpServers.mlflow]
+command = "mlflow"
+args = ["mcp", "run"]
+env = { MLFLOW_TRACKING_URI = "http://localhost:5000" }
 
 [display]
 default_table_max_columns = 50
