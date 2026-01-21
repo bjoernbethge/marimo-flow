@@ -21,6 +21,10 @@ __marimo__/
 # Environment files
 .env
 
+# Runtime files from scripts
+*.log
+.dev-pids
+
 # IDE and editor configs (user-specific)
 .idea/
 # .vscode/ - committed for project-wide MCP setup
