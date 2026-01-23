@@ -18,6 +18,7 @@ RUN chown -R marimo-flow:marimo-flow /app
 
 # Copy project files and set ownership
 COPY --chown=marimo-flow:marimo-flow pyproject.toml uv.lock README.md ./
+COPY --chown=marimo-flow:marimo-flow src/ ./src/
 
 # Create necessary directories with proper ownership
 RUN mkdir -p /app/data/experiments/db /app/data/experiments/artifacts /app/data/experiments/models /app/data/experiments/runs \
@@ -35,7 +36,9 @@ RUN uv sync --no-dev --extra full
 
 RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.8.0+cu128.html
 
-
+# Activate virtualenv by default
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Expose ports
 EXPOSE 2718 5000
