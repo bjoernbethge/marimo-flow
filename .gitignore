@@ -24,6 +24,7 @@ __marimo__/
 # IDE and editor configs (user-specific)
 .idea/
 .vscode/
+!.vscode/mcp.json
 .cursor/
 
 # AI assistant configs (user-specific)
