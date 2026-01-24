@@ -91,9 +91,9 @@ manager = "uv"
 
 [mcp]
 # MCP servers configured for development
-# marimo: Local development - auto-discovered when running with --mcp flag
+# marimo: Official marimo documentation and examples
 # context7: Hugging Face documentation integration
-presets = ["context7"]
+presets = ["marimo", "context7"]
 
 [mcp.mcpServers]
 # marimo MCP server - started with: marimo edit --mcp

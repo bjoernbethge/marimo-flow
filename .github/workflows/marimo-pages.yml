@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - 'examples/**/*.py'
+      - "examples/**/*.py"
   workflow_dispatch:
 
 permissions:
@@ -26,183 +26,156 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
 
-      - name: Install marimo
-        run: uv pip install --system marimo
+      - name: Install dependencies
+        run: |
+          uv sync --no-dev
+          uv pip install --system marimo mlflow
 
       - name: Export notebooks to WASM HTML
         run: |
+          set -e
           mkdir -p _site
+
+          export_count=0
+          export_failed=0
+          exported_files=()
 
           # Export all examples only
           for notebook in examples/*.py; do
             if [ -f "$notebook" ]; then
               filename=$(basename "$notebook" .py)
-              echo "Exporting $filename..."
-              marimo export html-wasm "$notebook" -o "_site/${filename}.html"
+              echo "📦 Exporting $filename..."
+              
+              # marimo export creates a directory with HTML file inside
+              # Use a temp dir for each export, then move the HTML file
+              temp_dir="_site/tmp_${filename}"
+              mkdir -p "$temp_dir"
+              
+              if marimo export html-wasm "$notebook" -o "$temp_dir" --mode run --no-show-code 2>&1; then
+                # Find the generated HTML file and move it to _site with correct name
+                html_file=$(find "$temp_dir" -name "*.html" -type f | head -1)
+                if [ -n "$html_file" ] && [ -f "$html_file" ]; then
+                  mv "$html_file" "_site/${filename}.html"
+                  # Move assets directory if it exists
+                  if [ -d "$temp_dir/assets" ]; then
+                    mv "$temp_dir/assets" "_site/assets_${filename}" 2>/dev/null || true
+                  fi
+                  export_count=$((export_count + 1))
+                  exported_files+=("$filename")
+                  echo "✅ Successfully exported $filename"
+                else
+                  echo "⚠️ Export completed but no HTML file found in $temp_dir"
+                  export_failed=$((export_failed + 1))
+                fi
+                # Cleanup temp dir
+                rm -rf "$temp_dir"
+              else
+                export_failed=$((export_failed + 1))
+                echo "❌ Failed to export $filename"
+                rm -rf "$temp_dir" 2>/dev/null || true
+              fi
             fi
           done
 
-          # Create index.html
-          cat > _site/index.html << 'EOF'
-          <!DOCTYPE html>
+          if [ $export_count -eq 0 ]; then
+            echo "❌ No notebooks were exported successfully"
+            exit 1
+          fi
+
+          echo "✅ Exported $export_count notebook(s), $export_failed failed"
+
+      - name: Generate index.html
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          import json
+          from pathlib import Path
+
+          site_dir = Path("_site")
+          notebooks = []
+
+          descriptions = {
+              "01_interactive_data_profiler": "Interactive dataset analysis with statistical summaries",
+              "02_mlflow_experiment_console": "MLflow experiment tracking and visualization",
+              "03_pina_walrus_solver": "Physics-Informed Neural Networks with PINA",
+              "04_hyperparameter_tuning": "Automated hyperparameter optimization with Optuna",
+              "05_model_registry": "Model versioning and deployment with MLflow",
+              "06_production_pipeline": "Complete end-to-end production workflow",
+              "09_pina_live_monitoring": "Live training monitoring and visualization",
+          }
+
+          for html_file in sorted(site_dir.glob("*.html")):
+              if html_file.name == "index.html":
+                  continue
+              name = html_file.stem
+              description = descriptions.get(name, f"Interactive notebook: {name}")
+              notebooks.append({"name": name, "href": html_file.name, "description": description})
+
+          html_template = """<!DOCTYPE html>
           <html lang="en">
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Marimo Flow - Interactive ML Notebooks</title>
             <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 2rem;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: #333;
-              }
-              .container {
-                background: white;
-                border-radius: 12px;
-                padding: 2rem;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-              }
-              h1 {
-                color: #667eea;
-                margin-bottom: 0.5rem;
-              }
-              .subtitle {
-                color: #666;
-                font-size: 1.2rem;
-                margin-bottom: 2rem;
-              }
-              .section {
-                margin-bottom: 2rem;
-              }
-              .section h2 {
-                color: #764ba2;
-                border-bottom: 2px solid #667eea;
-                padding-bottom: 0.5rem;
-                margin-bottom: 1rem;
-              }
-              .notebook-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                gap: 1rem;
-              }
-              .notebook-card {
-                background: #f8f9fa;
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                padding: 1rem;
-                transition: transform 0.2s, box-shadow 0.2s;
-              }
-              .notebook-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-              }
-              .notebook-card a {
-                color: #667eea;
-                text-decoration: none;
-                font-weight: 600;
-                font-size: 1.1rem;
-              }
-              .notebook-card p {
-                color: #666;
-                margin-top: 0.5rem;
-                font-size: 0.9rem;
-              }
-              .badge {
-                display: inline-block;
-                background: #667eea;
-                color: white;
-                padding: 0.2rem 0.6rem;
-                border-radius: 4px;
-                font-size: 0.75rem;
-                margin-top: 0.5rem;
-              }
-              footer {
-                text-align: center;
-                margin-top: 3rem;
-                padding-top: 2rem;
-                border-top: 1px solid #e0e0e0;
-                color: #666;
-              }
-              footer a {
-                color: #667eea;
-                text-decoration: none;
-              }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; max-width: 1200px; margin: 0 auto; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; }
+              .container { background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+              h1 { color: #667eea; margin-bottom: 0.5rem; }
+              .subtitle { color: #666; font-size: 1.2rem; margin-bottom: 2rem; }
+              .section { margin-bottom: 2rem; }
+              .section h2 { color: #764ba2; border-bottom: 2px solid #667eea; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+              .notebook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+              .notebook-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; transition: transform 0.2s, box-shadow 0.2s; }
+              .notebook-card:hover { transform: translateY(-4px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2); }
+              .notebook-card a { color: #667eea; text-decoration: none; font-weight: 600; font-size: 1.1rem; }
+              .notebook-card p { color: #666; margin-top: 0.5rem; font-size: 0.9rem; }
+              footer { text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e0e0e0; color: #666; }
+              footer a { color: #667eea; text-decoration: none; }
             </style>
           </head>
           <body>
             <div class="container">
               <h1>🌊 Marimo Flow</h1>
               <p class="subtitle">Interactive ML Notebooks with MLflow Tracking</p>
-
               <div class="section">
                 <h2>📚 Examples - Progressive ML Pipeline</h2>
                 <div class="notebook-grid">
-                  <div class="notebook-card">
-                    <a href="00_data_exploration.html">00 Data Exploration</a>
-                    <p>Interactive dataset analysis with statistical summaries</p>
-                    <span class="badge">Polars</span> <span class="badge">Altair</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="01_feature_engineering.html">01 Feature Engineering</a>
-                    <p>Feature selection and transformation techniques</p>
-                    <span class="badge">Scikit-learn</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="02_basic_ml_workflow.html">02 Basic ML Workflow</a>
-                    <p>End-to-end ML pipeline with MLflow tracking</p>
-                    <span class="badge">MLflow</span> <span class="badge">Random Forest</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="03_model_comparison.html">03 Model Comparison</a>
-                    <p>Compare multiple ML algorithms</p>
-                    <span class="badge">Cross-validation</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="04_hyperparameter_tuning.html">04 Hyperparameter Tuning</a>
-                    <p>Automated optimization with Optuna</p>
-                    <span class="badge">Optuna</span> <span class="badge">Bayesian</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="05_model_registry.html">05 Model Registry</a>
-                    <p>Model versioning and deployment</p>
-                    <span class="badge">MLflow Registry</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="06_production_pipeline.html">06 Production Pipeline</a>
-                    <p>Complete end-to-end production workflow</p>
-                    <span class="badge">Production</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="07_lora_finetuning.html">07 LoRA Fine-tuning</a>
-                    <p>LLM fine-tuning with LoRA</p>
-                    <span class="badge">LLM</span> <span class="badge">Advanced</span>
-                  </div>
-                  <div class="notebook-card">
-                    <a href="08_gnn_hetero_demo.html">08 Graph Neural Networks</a>
-                    <p>Heterogeneous GNN with PyTorch Geometric</p>
-                    <span class="badge">PyG</span> <span class="badge">Advanced</span>
-                  </div>
-                </div>
-              </div>
+          """
 
+          for nb in notebooks:
+              html_template += f'                  <div class="notebook-card"><a href="{nb["href"]}">{nb["name"]}</a><p>{nb["description"]}</p></div>\n'
+
+          html_template += """                </div>
+              </div>
               <footer>
                 <p>Built with ❤️ using <a href="https://marimo.io" target="_blank">Marimo</a> and <a href="https://mlflow.org" target="_blank">MLflow</a></p>
                 <p><a href="https://github.com/bjoernbethge/marimo-flow" target="_blank">View on GitHub</a></p>
               </footer>
             </div>
           </body>
-          </html>
-          EOF
+          </html>"""
 
-          echo "✅ Exported $(ls -1 _site/*.html | wc -l) notebooks to _site/"
+          (site_dir / "index.html").write_text(html_template)
+          print(f"✅ Generated index.html with {len(notebooks)} notebook(s)")
+          PYTHON_SCRIPT
+
+      - name: Validate exports
+        run: |
+          if [ ! -f _site/index.html ]; then
+            echo "❌ index.html not generated"
+            exit 1
+          fi
+          html_count=$(find _site -name "*.html" -not -name "index.html" | wc -l)
+          if [ "$html_count" -eq 0 ]; then
+            echo "❌ No notebook HTML files found"
+            exit 1
+          fi
+          echo "✅ Validation passed: $html_count notebook(s) exported"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

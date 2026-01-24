@@ -98,6 +98,18 @@ marimo_flow = ["py.typed", "*.yaml", "*.yml", "*.json", "*.css", "*.mp4"]
 [tool.uv]
 link-mode = "copy"
 
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
 [tool.uv.sources]
 # transformers = { git = "https://github.com/huggingface/transformers" }  # Use PyPI version unless needed
 

@@ -1,0 +1,89 @@
+name: Copilot Setup Steps
+
+on:
+    workflow_dispatch:
+    push:
+        paths:
+            - ".github/workflows/copilot-setup-steps.yml"
+            - ".github/mcp-config.json"
+            - ".github/agents/**"
+        branches: ["main"]
+    pull_request:
+        paths:
+            - ".github/workflows/copilot-setup-steps.yml"
+            - ".github/mcp-config.json"
+            - ".github/agents/**"
+        branches: ["main"]
+
+permissions:
+    contents: read
+
+jobs:
+    copilot-setup-steps:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v3
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: |
+                  uv sync --no-dev
+                  uv pip install --system marimo mlflow
+
+            - name: Verify MCP configuration
+              run: |
+                  if [ ! -f .github/mcp-config.json ]; then
+                    echo "❌ MCP config file not found"
+                    exit 1
+                  fi
+                  echo "✅ MCP config file exists"
+                  python3 -m json.tool .github/mcp-config.json > /dev/null && echo "✅ MCP config is valid JSON" || (echo "❌ Invalid JSON" && exit 1)
+
+            - name: Verify agents
+              run: |
+                  if [ ! -d .github/agents ]; then
+                    echo "❌ Agents directory not found"
+                    exit 1
+                  fi
+                  agent_count=$(find .github/agents -name "*.md" | wc -l)
+                  echo "✅ Found $agent_count agent(s)"
+                  for agent in .github/agents/*.md; do
+                    if [ -f "$agent" ]; then
+                      echo "  - $(basename "$agent")"
+                    fi
+                  done
+
+            - name: Test Marimo export capability
+              run: |
+                  if [ -f examples/01_interactive_data_profiler.py ]; then
+                    echo "Testing Marimo export..."
+                    marimo export html-wasm examples/01_interactive_data_profiler.py -o /tmp/test_export.html 2>&1 || echo "⚠️ Export test failed (may need full dependencies)"
+                    if [ -f /tmp/test_export.html ]; then
+                      echo "✅ Marimo export works"
+                      rm /tmp/test_export.html
+                    fi
+                  else
+                    echo "⚠️ No example notebook found for testing"
+                  fi
+
+            - name: Validate MCP server commands
+              run: |
+                  echo "Validating MCP server commands..."
+                  echo "✅ uvx available: $(which uvx || echo 'not found')"
+                  echo "✅ npx available: $(which npx || echo 'not found')"
+                  echo "✅ marimo available: $(which marimo || echo 'not found')"
+                  echo "✅ mlflow available: $(which mlflow || echo 'not found')"

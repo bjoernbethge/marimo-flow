@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "mlflow": {
+      "command": "mlflow",
+      "args": ["mcp", "run"],
+      "env": {
+        "MLFLOW_TRACKING_URI": "sqlite:///mlruns.db"
+      }
+    },
+    "marimo": {
+      "type": "http",
+      "url": "http://127.0.0.1:2718/mcp/server"
+    }
+  }
+}
