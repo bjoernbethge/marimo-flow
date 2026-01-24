@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File D:\\marimo-flow\\scripts\\start-marimo-mcp.ps1"
+            "command": "bash -c 'if command -v marimo &>/dev/null && ! nc -z 127.0.0.1 2718 2>/dev/null; then marimo edit --mcp --no-token --port 2718 --headless & sleep 2; fi' 2>/dev/null || powershell -ExecutionPolicy Bypass -File scripts/start-marimo-mcp.ps1"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -Command \"if ($env:CLAUDE_FILE_PATH -like '*.py') { ruff format $env:CLAUDE_FILE_PATH; ruff check --fix $env:CLAUDE_FILE_PATH 2>$null }\""
+            "command": "bash -c '[[ \"$CLAUDE_FILE_PATH\" == *.py ]] && ruff format \"$CLAUDE_FILE_PATH\" && ruff check --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null || true' 2>/dev/null || powershell -Command \"if ($env:CLAUDE_FILE_PATH -like '*.py') { ruff format $env:CLAUDE_FILE_PATH; ruff check --fix $env:CLAUDE_FILE_PATH 2>$null }\""
           }
         ]
       }
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -Command \"if ((Split-Path -Leaf $env:CLAUDE_FILE_PATH) -eq 'uv.lock') { exit 1 }\"",
+            "command": "bash -c '[[ \"$(basename \"$CLAUDE_FILE_PATH\")\" == \"uv.lock\" ]] && exit 1 || exit 0' 2>/dev/null || powershell -Command \"if ((Split-Path -Leaf $env:CLAUDE_FILE_PATH) -eq 'uv.lock') { exit 1 }\"",
             "onFail": "block"
           }
         ]
