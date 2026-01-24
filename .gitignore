@@ -28,7 +28,7 @@ __marimo__/
 .cursor/
 
 # AI assistant configs (user-specific)
-.claude/
+.claude/settings.local.json
 .marimo-flow/
 .serena/
 *-agent.prompt.yml

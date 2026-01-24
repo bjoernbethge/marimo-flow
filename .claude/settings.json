@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File D:\\marimo-flow\\scripts\\start-marimo-mcp.ps1"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"if ($env:CLAUDE_FILE_PATH -like '*.py') { ruff format $env:CLAUDE_FILE_PATH; ruff check --fix $env:CLAUDE_FILE_PATH 2>$null }\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"if ((Split-Path -Leaf $env:CLAUDE_FILE_PATH) -eq 'uv.lock') { exit 1 }\"",
+            "onFail": "block"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,369 @@
+"""
+Generic Model Definition Template
+
+This template provides flexible model architecture patterns that work with
+PyTorch, PINA, and other neural network frameworks.
+
+Usage:
+1. Choose appropriate base class (nn.Module, torch.nn.Sequential, etc.)
+2. Customize layer types and sizes
+3. Add activation functions
+4. Include normalization if needed
+"""
+
+import torch
+import torch.nn as nn
+from typing import List, Optional, Callable
+
+
+# ============================================================================
+# Pattern 1: Simple Feedforward Network
+# ============================================================================
+
+class FeedForward(nn.Module):
+    """
+    Generic feedforward neural network with customizable architecture.
+
+    Args:
+        input_dim: Input dimension
+        output_dim: Output dimension
+        hidden_dims: List of hidden layer sizes
+        activation: Activation function (default: ReLU)
+        dropout: Dropout rate (0 = no dropout)
+        batch_norm: Whether to use batch normalization
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+        hidden_dims: List[int] = [64, 64],
+        activation: nn.Module = nn.ReLU(),
+        dropout: float = 0.0,
+        batch_norm: bool = False,
+    ):
+        super().__init__()
+
+        layers = []
+        in_dim = input_dim
+
+        # Hidden layers
+        for hidden_dim in hidden_dims:
+            layers.append(nn.Linear(in_dim, hidden_dim))
+
+            if batch_norm:
+                layers.append(nn.BatchNorm1d(hidden_dim))
+
+            layers.append(activation)
+
+            if dropout > 0:
+                layers.append(nn.Dropout(dropout))
+
+            in_dim = hidden_dim
+
+        # Output layer
+        layers.append(nn.Linear(in_dim, output_dim))
+
+        self.network = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.network(x)
+
+
+# ============================================================================
+# Pattern 2: Residual Network
+# ============================================================================
+
+class ResidualBlock(nn.Module):
+    """Single residual block with skip connection."""
+
+    def __init__(self, dim: int, activation: nn.Module = nn.ReLU()):
+        super().__init__()
+        self.layers = nn.Sequential(
+            nn.Linear(dim, dim),
+            activation,
+            nn.Linear(dim, dim)
+        )
+        self.activation = activation
+
+    def forward(self, x):
+        return self.activation(x + self.layers(x))
+
+
+class ResidualNetwork(nn.Module):
+    """
+    Residual neural network with skip connections.
+
+    Useful for deeper networks and better gradient flow.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+        hidden_dim: int = 64,
+        num_blocks: int = 4,
+        activation: nn.Module = nn.ReLU(),
+    ):
+        super().__init__()
+
+        self.input_layer = nn.Linear(input_dim, hidden_dim)
+        self.activation = activation
+
+        self.residual_blocks = nn.ModuleList([
+            ResidualBlock(hidden_dim, activation)
+            for _ in range(num_blocks)
+        ])
+
+        self.output_layer = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, x):
+        x = self.activation(self.input_layer(x))
+
+        for block in self.residual_blocks:
+            x = block(x)
+
+        return self.output_layer(x)
+
+
+# ============================================================================
+# Pattern 3: Modified MLP with Fourier Features
+# ============================================================================
+
+class FourierFeatureEmbedding(nn.Module):
+    """
+    Fourier feature embedding for better multi-scale representation.
+
+    Useful for physics problems and coordinate-based networks.
+    """
+
+    def __init__(self, input_dim: int, num_frequencies: int = 10, scale: float = 1.0):
+        super().__init__()
+        self.num_frequencies = num_frequencies
+        self.scale = scale
+
+        # Random Fourier features
+        self.B = nn.Parameter(
+            torch.randn(input_dim, num_frequencies) * scale,
+            requires_grad=False
+        )
+
+    def forward(self, x):
+        # x: [batch, input_dim]
+        x_proj = 2 * torch.pi * x @ self.B  # [batch, num_frequencies]
+        return torch.cat([torch.sin(x_proj), torch.cos(x_proj)], dim=-1)
+
+
+class FourierNetwork(nn.Module):
+    """
+    Neural network with Fourier feature embedding.
+
+    Good for coordinate-based problems and multi-scale features.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+        num_frequencies: int = 10,
+        hidden_dims: List[int] = [128, 128],
+        activation: nn.Module = nn.ReLU(),
+    ):
+        super().__init__()
+
+        self.fourier_embed = FourierFeatureEmbedding(input_dim, num_frequencies)
+        embed_dim = 2 * num_frequencies  # sin + cos
+
+        # Build network
+        layers = []
+        in_dim = embed_dim
+
+        for hidden_dim in hidden_dims:
+            layers.append(nn.Linear(in_dim, hidden_dim))
+            layers.append(activation)
+            in_dim = hidden_dim
+
+        layers.append(nn.Linear(in_dim, output_dim))
+
+        self.network = nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.fourier_embed(x)
+        return self.network(x)
+
+
+# ============================================================================
+# Pattern 4: Multi-Task Network
+# ============================================================================
+
+class MultiTaskNetwork(nn.Module):
+    """
+    Network with shared backbone and multiple task-specific heads.
+
+    Useful when solving multiple related problems simultaneously.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        output_dims: dict,  # e.g., {"task1": 1, "task2": 3}
+        shared_hidden_dims: List[int] = [64, 64],
+        task_hidden_dims: Optional[List[int]] = None,
+        activation: nn.Module = nn.ReLU(),
+    ):
+        super().__init__()
+
+        # Shared backbone
+        layers = []
+        in_dim = input_dim
+
+        for hidden_dim in shared_hidden_dims:
+            layers.append(nn.Linear(in_dim, hidden_dim))
+            layers.append(activation)
+            in_dim = hidden_dim
+
+        self.shared_backbone = nn.Sequential(*layers)
+
+        # Task-specific heads
+        self.task_heads = nn.ModuleDict()
+        task_hidden = task_hidden_dims or [32]
+
+        for task_name, out_dim in output_dims.items():
+            head_layers = []
+            head_in = in_dim
+
+            for task_h in task_hidden:
+                head_layers.append(nn.Linear(head_in, task_h))
+                head_layers.append(activation)
+                head_in = task_h
+
+            head_layers.append(nn.Linear(head_in, out_dim))
+            self.task_heads[task_name] = nn.Sequential(*head_layers)
+
+    def forward(self, x):
+        # Shared features
+        shared = self.shared_backbone(x)
+
+        # Task-specific outputs
+        outputs = {
+            task: head(shared)
+            for task, head in self.task_heads.items()
+        }
+
+        return outputs
+
+
+# ============================================================================
+# Pattern 5: Physics-Informed Model with Hard Constraints
+# ============================================================================
+
+class HardConstraintModel(nn.Module):
+    """
+    Model that enforces hard constraints (e.g., boundary conditions).
+
+    The constraint is built into the architecture, so it's always satisfied.
+
+    Example: For u(0) = u(1) = 0, multiply output by x*(1-x)
+    """
+
+    def __init__(
+        self,
+        base_model: nn.Module,
+        constraint_fn: Callable[[torch.Tensor], torch.Tensor],
+    ):
+        super().__init__()
+        self.base_model = base_model
+        self.constraint_fn = constraint_fn
+
+    def forward(self, x):
+        # Get unconstrained output
+        u_unconstrained = self.base_model(x)
+
+        # Apply hard constraint
+        constraint = self.constraint_fn(x)
+
+        return constraint * u_unconstrained
+
+
+# ============================================================================
+# Example Constraint Functions
+# ============================================================================
+
+def boundary_constraint_1d(x: torch.Tensor) -> torch.Tensor:
+    """
+    Hard constraint for 1D problem: u(0) = u(1) = 0
+
+    Args:
+        x: Input coordinates [batch, 1] in [0, 1]
+
+    Returns:
+        Constraint multiplier that is 0 at boundaries
+    """
+    return x * (1 - x)
+
+
+def boundary_constraint_2d(x: torch.Tensor) -> torch.Tensor:
+    """
+    Hard constraint for 2D problem on unit square: u=0 on all boundaries
+
+    Args:
+        x: Input coordinates [batch, 2] with columns [x, y] in [0, 1]
+
+    Returns:
+        Constraint multiplier that is 0 at all boundaries
+    """
+    x_coord = x[:, 0:1]
+    y_coord = x[:, 1:2]
+    return x_coord * (1 - x_coord) * y_coord * (1 - y_coord)
+
+
+# ============================================================================
+# Example Usage
+# ============================================================================
+
+if __name__ == "__main__":
+    # Example 1: Simple feedforward
+    model1 = FeedForward(
+        input_dim=10,
+        output_dim=1,
+        hidden_dims=[64, 64, 32],
+        dropout=0.1,
+        batch_norm=True
+    )
+    print(f"FeedForward parameters: {sum(p.numel() for p in model1.parameters())}")
+
+    # Example 2: Residual network
+    model2 = ResidualNetwork(
+        input_dim=10,
+        output_dim=1,
+        hidden_dim=64,
+        num_blocks=5
+    )
+    print(f"ResidualNetwork parameters: {sum(p.numel() for p in model2.parameters())}")
+
+    # Example 3: Fourier network
+    model3 = FourierNetwork(
+        input_dim=2,
+        output_dim=1,
+        num_frequencies=20,
+        hidden_dims=[128, 128, 64]
+    )
+    print(f"FourierNetwork parameters: {sum(p.numel() for p in model3.parameters())}")
+
+    # Example 4: Multi-task network
+    model4 = MultiTaskNetwork(
+        input_dim=10,
+        output_dims={"velocity": 3, "pressure": 1, "temperature": 1},
+        shared_hidden_dims=[128, 128],
+        task_hidden_dims=[64]
+    )
+    print(f"MultiTaskNetwork parameters: {sum(p.numel() for p in model4.parameters())}")
+
+    # Example 5: Hard constraint model
+    base = FeedForward(input_dim=2, output_dim=1, hidden_dims=[64, 64])
+    model5 = HardConstraintModel(base, boundary_constraint_2d)
+
+    # Test with boundary points
+    x = torch.tensor([[0.0, 0.5], [1.0, 0.5], [0.5, 0.0], [0.5, 1.0]])
+    output = model5(x)
+    print(f"Boundary values (should be ~0): {output.flatten().tolist()}")
