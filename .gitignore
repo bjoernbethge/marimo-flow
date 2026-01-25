@@ -27,11 +27,13 @@ __marimo__/
 # .cursor/ - committed for project-wide MCP setup
 
 # AI assistant configs (user-specific)
-.claude/
+.claude/settings.local.json
 .marimo-flow/
 .serena/
 *-agent.prompt.yml
 *.prompt.yml
+
+# Keep .claude/Skills/ tracked (project-specific skills)
 
 # Model cache directories (large files, download on-demand)
 models/
