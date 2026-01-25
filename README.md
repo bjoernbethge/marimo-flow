@@ -9,7 +9,7 @@
 [![MLflow](https://img.shields.io/badge/MLflow-Latest-blue?logo=mlflow&logoColor=white)](https://mlflow.org)
 [![MCP](https://img.shields.io/badge/MCP-Enabled-green?logo=anthropic&logoColor=white)](https://docs.marimo.io/guides/editor_features/mcp/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)](https://docker.com)
-[![Version](https://img.shields.io/badge/Version-0.1.3-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.2.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Contributing](https://img.shields.io/badge/Contributing-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -80,6 +80,22 @@ docker compose -f docker/docker-compose.yaml logs -f
 
 # Stop services
 docker compose -f docker/docker-compose.yaml down
+```
+
+#### Docker Image Variants
+
+| Variant | Image Tag | Use Case |
+|---------|-----------|----------|
+| **CPU** | `ghcr.io/bjoernbethge/marimo-flow:latest` | No GPU (lightweight) |
+| **CUDA** | `ghcr.io/bjoernbethge/marimo-flow:cuda` | NVIDIA GPUs |
+| **XPU** | `ghcr.io/bjoernbethge/marimo-flow:xpu` | Intel Arc/Data Center GPUs |
+
+```bash
+# NVIDIA GPU (requires nvidia-docker)
+docker compose -f docker/docker-compose.cuda.yaml up -d
+
+# Intel GPU (requires Intel GPU drivers)
+docker compose -f docker/docker-compose.xpu.yaml up -d
 ```
 
 ### Local Development
@@ -447,7 +463,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for comprehensive guidelines.
 
 See [CHANGELOG.md](CHANGELOG.md) for a detailed version history and release notes.
 
-**Current Version:** 0.1.3
+**Current Version:** 0.2.0
 
 ## License 📄
 

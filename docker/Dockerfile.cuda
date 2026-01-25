@@ -1,48 +1,43 @@
-FROM python:3.13-slim
+FROM pytorch/pytorch:2.6.0-cuda12.4-cudnn9-runtime
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:0.9.0 /uv /uvx /bin/
+
+WORKDIR /app
+
 # Create marimo-flow user
 RUN groupadd --gid 1000 marimo-flow \
     && useradd --uid 1000 --gid marimo-flow --shell /bin/bash --create-home marimo-flow
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.9.0 /uv /uvx /bin/
-
-# Set working directory and give ownership to marimo-flow user
-WORKDIR /app
-RUN chown -R marimo-flow:marimo-flow /app
-
-# Copy project files and set ownership
+# Copy project files
 COPY --chown=marimo-flow:marimo-flow pyproject.toml uv.lock README.md ./
 COPY --chown=marimo-flow:marimo-flow src/ ./src/
 
-# Create necessary directories with proper ownership
+# Create necessary directories
 RUN mkdir -p /app/data/experiments/db /app/data/experiments/artifacts /app/data/experiments/models /app/data/experiments/runs \
     && chown -R marimo-flow:marimo-flow /app
 
-# Copy startup script
+# Copy startup files
 COPY --chown=marimo-flow:marimo-flow docker/start.sh docker/.marimo.toml docker/custom.css ./
 RUN chmod +x ./start.sh
 
-# Switch to marimo-flow user for dependency installation
 USER marimo-flow
 
-# install packages
+# Install dependencies (torch already in base image)
 RUN uv sync --no-dev --extra full
 
-# Install PyG packages for CPU (no CUDA)
-RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.6.0+cpu.html
+# Install PyG CUDA packages (matching PyTorch version in base image)
+RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.6.0+cu124.html
 
-# Activate virtualenv by default
+# Activate virtualenv
 ENV VIRTUAL_ENV=/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Expose ports
 EXPOSE 2718 5000
 
-# Default command (can be overridden by docker-compose)
 CMD ["./start.sh"]
