@@ -149,15 +149,13 @@ marimo-flow/
 │   ├── 05_model_registry.py
 │   ├── 06_production_pipeline.py
 │   ├── 09_pina_live_monitoring.py
-│   └── tutorials/                # 15+ focused learning notebooks (+ legacy/)
-├── snippets/                   # Reusable Python modules for notebooks
-│   ├── __init__.py
-│   ├── altair_visualization.py
-│   ├── data_explorer_pattern.py
-│   └── pina_basics.py
-├── tools/                       # Utility tools
-│   ├── ollama_manager.py           # Local LLM orchestration
-│   └── openvino_manager.py         # Model serving utilities
+│   └── tutorials/               # Learning notebooks
+│       ├── pina/                # PINA tutorials (5 notebooks)
+│       ├── mlflow/              # MLflow tutorials (5 notebooks)
+│       └── *.py                 # Marimo, Polars, Plotly patterns
+├── src/marimo_flow/             # Installable package
+│   ├── core/                    # PINA solvers, training, visualization
+│   └── snippets/                # Reusable chart/dataframe helpers
 ├── docs/                        # Reference documentation
 │   ├── marimo-quickstart.md        # Marimo guide
 │   ├── polars-quickstart.md        # Polars guide
@@ -174,21 +172,19 @@ marimo-flow/
 └── README.md                   # This file
 ```
 
-### 📝 About Snippets
+### 📝 About the Library
 
-The `snippets/` directory contains reusable code patterns built for direct import into Marimo notebooks:
+The `marimo_flow` package provides reusable components:
 
-- `altair_visualization.py`: opinionated chart builders and theming helpers
-- `data_explorer_pattern.py`: column filtering + scatter plotting utilities
-- `pina_basics.py`: Walrus/PINA helpers (problem setup, solver, visualization)
+```python
+# Chart and dataframe helpers
+from marimo_flow.snippets import build_interactive_scatter, filter_dataframe
 
-All examples already import these where needed; use them to jump-start your own notebooks or extend the shipped apps. Additional pattern walk-throughs live in `examples/tutorials/`.
+# PINA solver components
+from marimo_flow.core import ModelFactory, ProblemManager, SolverManager
+```
 
-### 🛠️ About Tools
-
-The `tools/` directory contains standalone utility scripts for managing external services:
-- **ollama_manager.py**: Manage local LLM deployments with Ollama
-- **openvino_manager.py**: Model serving and inference with OpenVINO
+Tutorial notebooks in `examples/tutorials/` demonstrate these patterns with progressive examples for PINA, MLflow, and common visualization tasks.
 
 ### 📚 About References
 
