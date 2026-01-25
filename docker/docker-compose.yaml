@@ -43,13 +43,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # GPU support removed - use docker-compose.cuda.yaml for NVIDIA
+    # or docker-compose.xpu.yaml for Intel GPUs
   # Optional: MinIO for S3-compatible artifact storage (alternative to local storage)
   # Uncomment if you prefer S3-compatible storage over local file system
   # minio:

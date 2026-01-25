@@ -1,0 +1,35 @@
+FROM intel/intel-extension-for-pytorch:2.5.10-xpu
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:0.9.0 /uv /uvx /bin/
+
+WORKDIR /app
+
+# Create marimo-flow user (may already exist in base image)
+RUN groupadd --gid 1000 marimo-flow 2>/dev/null || true \
+    && useradd --uid 1000 --gid 1000 --shell /bin/bash --create-home marimo-flow 2>/dev/null || true
+
+# Copy project files
+COPY --chown=1000:1000 pyproject.toml uv.lock README.md ./
+COPY --chown=1000:1000 src/ ./src/
+
+# Create necessary directories
+RUN mkdir -p /app/data/experiments/db /app/data/experiments/artifacts /app/data/experiments/models /app/data/experiments/runs \
+    && chown -R 1000:1000 /app
+
+# Copy startup files
+COPY --chown=1000:1000 docker/start.sh docker/.marimo.toml docker/custom.css ./
+RUN chmod +x ./start.sh
+
+USER 1000
+
+# Install dependencies (torch already in base image)
+RUN uv sync --no-dev --extra full
+
+# Activate virtualenv
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+EXPOSE 2718 5000
+
+CMD ["./start.sh"]

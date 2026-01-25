@@ -7,13 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-01-25
+
 ### Added
+- Multi-platform Docker images for CUDA and Intel XPU
+- `docker/Dockerfile.cuda` - NVIDIA GPU support (PyTorch 2.6.0, CUDA 12.4)
+- `docker/Dockerfile.xpu` - Intel GPU support (Intel Extension for PyTorch)
+- `docker/docker-compose.cuda.yaml` - NVIDIA GPU compose configuration
+- `docker/docker-compose.xpu.yaml` - Intel GPU compose configuration
+- GitHub Actions workflow for Docker image publishing (GHCR + Docker Hub)
 - CONTRIBUTING.md with comprehensive contribution guidelines
-- CHANGELOG.md for tracking version history
 
 ### Changed
 - Improved .gitignore with Python cache directories
 - Moved data files to organized locations (data/ directory)
+- Simplified CPU Dockerfile (removed GPU-specific packages)
 
 ## [0.1.3] - 2025-11-23
 
@@ -110,12 +118,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **0.2.0** (2026-01-25) - Multi-platform Docker images (CUDA, Intel XPU)
 - **0.1.3** (2025-11-23) - Major restructuring, advanced examples, comprehensive docs
 - **0.1.2** (2025-10-18) - PINA and PyG integration
 - **0.1.1** (2025-07-14) - Docker and CI/CD improvements
 - **0.1.0** (2025-07-08) - Initial release
 
-[Unreleased]: https://github.com/bjoernbethge/marimo-flow/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/bjoernbethge/marimo-flow/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/bjoernbethge/marimo-flow/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/bjoernbethge/marimo-flow/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/bjoernbethge/marimo-flow/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/bjoernbethge/marimo-flow/compare/v0.1.0...v0.1.1

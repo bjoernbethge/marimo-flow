@@ -6,7 +6,7 @@
 [![MLflow](https://img.shields.io/badge/MLflow-Latest-blue?logo=mlflow&logoColor=white)](https://mlflow.org)
 [![MCP](https://img.shields.io/badge/MCP-Enabled-green?logo=anthropic&logoColor=white)](https://docs.marimo.io/guides/editor_features/mcp/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)](https://docker.com)
-[![Version](https://img.shields.io/badge/Version-0.1.3-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.2.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Contributing](https://img.shields.io/badge/Contributing-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -79,6 +79,22 @@ docker compose -f docker/docker-compose.yaml logs -f
 docker compose -f docker/docker-compose.yaml down
 ```
 
+#### Docker Image Variants
+
+| Variant | Image Tag | Use Case |
+|---------|-----------|----------|
+| **CPU** | `ghcr.io/bjoernbethge/marimo-flow:latest` | No GPU (lightweight) |
+| **CUDA** | `ghcr.io/bjoernbethge/marimo-flow:cuda` | NVIDIA GPUs |
+| **XPU** | `ghcr.io/bjoernbethge/marimo-flow:xpu` | Intel Arc/Data Center GPUs |
+
+```bash
+# NVIDIA GPU (requires nvidia-docker)
+docker compose -f docker/docker-compose.cuda.yaml up -d
+
+# Intel GPU (requires Intel GPU drivers)
+docker compose -f docker/docker-compose.xpu.yaml up -d
+```
+
 ### Local Development
 
 ```bash
@@ -115,6 +131,16 @@ Additional learning material lives in `examples/tutorials/` (15+ focused noteboo
 
 ```
 marimo-flow/
+├── .claude/                     # Claude Code configuration
+│   ├── Skills/                  # Domain-specific skills
+│   │   ├── marimo/              # Marimo notebook development
+│   │   ├── mlflow/              # MLflow tracking & GenAI
+│   │   ├── pina/                # Physics-informed neural networks
+│   │   └── _integration/        # Cross-skill workflows
+│   └── settings.json            # Hooks (format, lint, protection)
+├── .vscode/
+│   └── mcp.json                 # VS Code Copilot MCP config
+├── .mcp.json                    # Claude Code MCP config
 ├── examples/                    # Production-ready marimo notebooks
 │   ├── 01_interactive_data_profiler.py
 │   ├── 02_mlflow_experiment_console.py
@@ -283,6 +309,65 @@ Run the command from an environment where `MLFLOW_TRACKING_URI` (or `MLFLOW_BACK
 - [Marimo MCP Guide](https://docs.marimo.io/guides/editor_features/mcp/) - Official MCP documentation
 - [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification and resources
 
+## Claude Code Integration 🤖
+
+**Marimo Flow** includes full Claude Code support with domain-specific skills, MCP servers, and automated hooks.
+
+### Pre-Configured MCP Servers
+
+| Server | Purpose | Config |
+|--------|---------|--------|
+| **marimo** | Notebook inspection, debugging, linting | HTTP on port 2718 |
+| **mlflow** | Trace search, feedback, evaluation | stdio via `mlflow mcp run` |
+| **context7** | Live library documentation | stdio via npx |
+| **serena** | Semantic code search | stdio via uvx |
+
+**Start marimo MCP server:**
+```bash
+# Install once (recommended)
+uv tool install "marimo[lsp,recommended,sql,mcp]>=0.18.0"
+
+# Start server
+marimo edit --mcp --no-token --port 2718 --headless
+```
+
+### Domain Skills
+
+Three specialized skills in `.claude/Skills/` provide expert guidance:
+
+| Skill | Triggers | MCP Tools |
+|-------|----------|-----------|
+| **marimo** | `marimo`, `reactive notebook`, `mo.ui` | Notebook inspection, linting, context7 docs |
+| **mlflow** | `mlflow`, `experiment tracking`, `genai tracing` | Trace search, feedback, evaluation, context7 docs |
+| **pina** | `pina`, `pinns`, `pde solver`, `neural operator` | MLflow tracking, context7 docs |
+
+**Pre-resolved context7 library IDs** (no lookup needed):
+- `/marimo-team/marimo` - marimo docs (2,413 snippets)
+- `/mlflow/mlflow` - mlflow docs (9,559 snippets)
+- `/mathlab/pina` - PINA docs (2,345 snippets)
+
+### Automated Hooks
+
+Cross-platform hooks in `.claude/settings.json`:
+
+| Hook | Trigger | Action |
+|------|---------|--------|
+| **SessionStart** | Session begins | Start marimo MCP server |
+| **PostToolUse** | Edit/Write `.py` files | Auto-format with ruff |
+| **PreToolUse** | Edit `uv.lock` | Block (protection) |
+
+### VS Code Copilot
+
+MCP config for VS Code Copilot in `.vscode/mcp.json`:
+```json
+{
+  "servers": {
+    "marimo": { "type": "http", "url": "http://127.0.0.1:2718/mcp/server" },
+    "mlflow": { "type": "stdio", "command": "mlflow", "args": ["mcp", "run"] }
+  }
+}
+```
+
 ## Configuration ⚙️
 
 ### Environment Variables
@@ -375,7 +460,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for comprehensive guidelines.
 
 See [CHANGELOG.md](CHANGELOG.md) for a detailed version history and release notes.
 
-**Current Version:** 0.1.3
+**Current Version:** 0.2.0
 
 ## License 📄
 

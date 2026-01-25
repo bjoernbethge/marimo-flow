@@ -1,0 +1,463 @@
+"""
+Testing Patterns Template
+
+Provides patterns for testing ML models, data pipelines, and experiments.
+
+Usage:
+1. Choose appropriate testing pattern
+2. Customize for your specific use case
+3. Integrate with pytest, unittest, or marimo
+4. Add to CI/CD pipeline
+"""
+
+import torch
+import torch.nn as nn
+import numpy as np
+from typing import Any, Callable, Dict, List, Optional
+from pathlib import Path
+import pytest
+
+
+# ============================================================================
+# Pattern 1: Unit Tests for Models
+# ============================================================================
+
+class ModelTester:
+    """
+    Generic model testing utilities.
+
+    Tests model properties, forward pass, gradient flow, etc.
+    """
+
+    @staticmethod
+    def test_output_shape(
+        model: nn.Module,
+        input_shape: tuple,
+        expected_output_shape: tuple,
+        device: str = "cpu"
+    ):
+        """
+        Test that model produces correct output shape.
+
+        Args:
+            model: Model to test
+            input_shape: Input tensor shape (batch_size, ...)
+            expected_output_shape: Expected output shape
+            device: Device to run on
+        """
+        model = model.to(device)
+        model.eval()
+
+        x = torch.randn(*input_shape).to(device)
+        with torch.no_grad():
+            output = model(x)
+
+        assert output.shape == expected_output_shape, \
+            f"Expected shape {expected_output_shape}, got {output.shape}"
+
+        print(f"✓ Output shape test passed: {output.shape}")
+
+    @staticmethod
+    def test_gradient_flow(
+        model: nn.Module,
+        input_shape: tuple,
+        device: str = "cpu"
+    ):
+        """
+        Test that gradients flow through the model.
+
+        Ensures no dead neurons or gradient blocking.
+        """
+        model = model.to(device)
+        model.train()
+
+        x = torch.randn(*input_shape, requires_grad=True).to(device)
+        output = model(x)
+
+        # Create dummy loss
+        loss = output.sum()
+        loss.backward()
+
+        # Check that gradients exist
+        has_grad = any(p.grad is not None and p.grad.abs().sum() > 0
+                      for p in model.parameters())
+
+        assert has_grad, "No gradients found in model parameters"
+
+        print(f"✓ Gradient flow test passed")
+
+    @staticmethod
+    def test_parameter_count(
+        model: nn.Module,
+        expected_params: Optional[int] = None,
+        max_params: Optional[int] = None
+    ):
+        """
+        Test model parameter count.
+
+        Args:
+            model: Model to test
+            expected_params: Expected exact parameter count
+            max_params: Maximum allowed parameters
+        """
+        total_params = sum(p.numel() for p in model.parameters())
+        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+        print(f"Total parameters: {total_params:,}")
+        print(f"Trainable parameters: {trainable_params:,}")
+
+        if expected_params is not None:
+            assert total_params == expected_params, \
+                f"Expected {expected_params:,} params, got {total_params:,}"
+
+        if max_params is not None:
+            assert total_params <= max_params, \
+                f"Model has {total_params:,} params, exceeds max {max_params:,}"
+
+        print(f"✓ Parameter count test passed")
+
+    @staticmethod
+    def test_deterministic(
+        model: nn.Module,
+        input_shape: tuple,
+        device: str = "cpu",
+        seed: int = 42
+    ):
+        """
+        Test that model is deterministic with same seed.
+        """
+        model = model.to(device)
+        model.eval()
+
+        # First run
+        torch.manual_seed(seed)
+        x1 = torch.randn(*input_shape).to(device)
+        with torch.no_grad():
+            output1 = model(x1)
+
+        # Second run with same seed
+        torch.manual_seed(seed)
+        x2 = torch.randn(*input_shape).to(device)
+        with torch.no_grad():
+            output2 = model(x2)
+
+        # Outputs should be identical
+        assert torch.allclose(output1, output2), \
+            "Model is not deterministic with same seed"
+
+        print(f"✓ Determinism test passed")
+
+
+# ============================================================================
+# Pattern 2: Integration Tests for Training
+# ============================================================================
+
+class TrainingTester:
+    """Test training pipeline components."""
+
+    @staticmethod
+    def test_overfitting_small_batch(
+        model: nn.Module,
+        loss_fn: Callable,
+        optimizer: torch.optim.Optimizer,
+        data: torch.Tensor,
+        targets: torch.Tensor,
+        num_steps: int = 100,
+        loss_threshold: float = 0.01
+    ):
+        """
+        Test that model can overfit a small batch.
+
+        This verifies the model has sufficient capacity and gradients work.
+        """
+        model.train()
+
+        initial_loss = None
+        final_loss = None
+
+        for step in range(num_steps):
+            optimizer.zero_grad()
+            output = model(data)
+            loss = loss_fn(output, targets)
+
+            if step == 0:
+                initial_loss = loss.item()
+
+            loss.backward()
+            optimizer.step()
+
+            final_loss = loss.item()
+
+        print(f"Initial loss: {initial_loss:.6f}")
+        print(f"Final loss: {final_loss:.6f}")
+
+        assert final_loss < loss_threshold, \
+            f"Model failed to overfit: final loss {final_loss:.6f} > {loss_threshold}"
+
+        print(f"✓ Overfitting test passed")
+
+    @staticmethod
+    def test_loss_decreases(
+        model: nn.Module,
+        loss_fn: Callable,
+        optimizer: torch.optim.Optimizer,
+        data_loader: Any,
+        num_epochs: int = 5
+    ):
+        """
+        Test that loss decreases over training.
+        """
+        model.train()
+
+        losses = []
+
+        for epoch in range(num_epochs):
+            epoch_loss = 0.0
+            num_batches = 0
+
+            for batch in data_loader:
+                inputs, targets = batch
+                optimizer.zero_grad()
+
+                outputs = model(inputs)
+                loss = loss_fn(outputs, targets)
+
+                loss.backward()
+                optimizer.step()
+
+                epoch_loss += loss.item()
+                num_batches += 1
+
+            avg_loss = epoch_loss / num_batches
+            losses.append(avg_loss)
+            print(f"Epoch {epoch+1}: Loss = {avg_loss:.6f}")
+
+        # Check that loss generally decreases
+        assert losses[-1] < losses[0], \
+            f"Loss did not decrease: {losses[0]:.6f} -> {losses[-1]:.6f}"
+
+        print(f"✓ Loss decrease test passed")
+
+
+# ============================================================================
+# Pattern 3: Data Pipeline Tests
+# ============================================================================
+
+class DataTester:
+    """Test data loading and preprocessing."""
+
+    @staticmethod
+    def test_data_loader(
+        data_loader: Any,
+        expected_batch_size: int,
+        expected_num_batches: Optional[int] = None
+    ):
+        """
+        Test data loader properties.
+        """
+        # Get first batch
+        first_batch = next(iter(data_loader))
+
+        if isinstance(first_batch, (tuple, list)):
+            inputs = first_batch[0]
+        else:
+            inputs = first_batch
+
+        batch_size = inputs.shape[0]
+        assert batch_size <= expected_batch_size, \
+            f"Batch size {batch_size} exceeds expected {expected_batch_size}"
+
+        # Count total batches
+        num_batches = len(data_loader)
+
+        if expected_num_batches is not None:
+            assert num_batches == expected_num_batches, \
+                f"Expected {expected_num_batches} batches, got {num_batches}"
+
+        print(f"✓ Data loader test passed: {num_batches} batches, batch_size={batch_size}")
+
+    @staticmethod
+    def test_data_range(
+        data: torch.Tensor,
+        expected_min: float,
+        expected_max: float
+    ):
+        """
+        Test that data is in expected range.
+        """
+        data_min = data.min().item()
+        data_max = data.max().item()
+
+        assert data_min >= expected_min, \
+            f"Data min {data_min} < expected {expected_min}"
+        assert data_max <= expected_max, \
+            f"Data max {data_max} > expected {expected_max}"
+
+        print(f"✓ Data range test passed: [{data_min:.4f}, {data_max:.4f}]")
+
+    @staticmethod
+    def test_no_nans(data: torch.Tensor):
+        """Test that data contains no NaN values."""
+        has_nan = torch.isnan(data).any().item()
+        assert not has_nan, "Data contains NaN values"
+        print(f"✓ No NaN test passed")
+
+
+# ============================================================================
+# Pattern 4: Physics-Informed Tests
+# ============================================================================
+
+class PhysicsTester:
+    """Test physics-based properties."""
+
+    @staticmethod
+    def test_pde_residual(
+        model: nn.Module,
+        pde_equation: Callable,
+        test_points: torch.Tensor,
+        tolerance: float = 1e-2
+    ):
+        """
+        Test that PDE residual is below tolerance.
+
+        Args:
+            model: Trained PINN model
+            pde_equation: Function that computes PDE residual
+            test_points: Points to evaluate
+            tolerance: Maximum allowed residual
+        """
+        model.eval()
+        test_points.requires_grad_(True)
+
+        with torch.no_grad():
+            output = model(test_points)
+
+        # Compute residual
+        residual = pde_equation(test_points, output)
+        max_residual = residual.abs().max().item()
+        mean_residual = residual.abs().mean().item()
+
+        print(f"Max residual: {max_residual:.6e}")
+        print(f"Mean residual: {mean_residual:.6e}")
+
+        assert max_residual < tolerance, \
+            f"PDE residual {max_residual:.6e} exceeds tolerance {tolerance}"
+
+        print(f"✓ PDE residual test passed")
+
+    @staticmethod
+    def test_boundary_condition(
+        model: nn.Module,
+        boundary_points: torch.Tensor,
+        expected_values: torch.Tensor,
+        tolerance: float = 1e-3
+    ):
+        """
+        Test that boundary conditions are satisfied.
+        """
+        model.eval()
+
+        with torch.no_grad():
+            predicted = model(boundary_points)
+
+        error = (predicted - expected_values).abs()
+        max_error = error.max().item()
+        mean_error = error.mean().item()
+
+        print(f"Max boundary error: {max_error:.6e}")
+        print(f"Mean boundary error: {mean_error:.6e}")
+
+        assert max_error < tolerance, \
+            f"Boundary error {max_error:.6e} exceeds tolerance {tolerance}"
+
+        print(f"✓ Boundary condition test passed")
+
+
+# ============================================================================
+# Pattern 5: Pytest Integration
+# ============================================================================
+
+# Example pytest tests
+class TestModel:
+    """Example pytest test suite."""
+
+    @pytest.fixture
+    def model(self):
+        """Create test model."""
+        return nn.Sequential(
+            nn.Linear(10, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1)
+        )
+
+    def test_forward_pass(self, model):
+        """Test forward pass."""
+        x = torch.randn(32, 10)
+        output = model(x)
+        assert output.shape == (32, 1)
+
+    def test_gradient_flow(self, model):
+        """Test gradient flow."""
+        ModelTester.test_gradient_flow(model, input_shape=(32, 10))
+
+    def test_parameter_count(self, model):
+        """Test parameter count."""
+        ModelTester.test_parameter_count(model, max_params=10000)
+
+
+# ============================================================================
+# Example Usage
+# ============================================================================
+
+if __name__ == "__main__":
+    print("=== Running Model Tests ===\n")
+
+    # Create simple test model
+    model = nn.Sequential(
+        nn.Linear(10, 64),
+        nn.ReLU(),
+        nn.Linear(64, 32),
+        nn.ReLU(),
+        nn.Linear(32, 1)
+    )
+
+    # Test 1: Output shape
+    print("Test 1: Output Shape")
+    ModelTester.test_output_shape(model, (32, 10), (32, 1))
+    print()
+
+    # Test 2: Gradient flow
+    print("Test 2: Gradient Flow")
+    ModelTester.test_gradient_flow(model, (32, 10))
+    print()
+
+    # Test 3: Parameter count
+    print("Test 3: Parameter Count")
+    ModelTester.test_parameter_count(model, max_params=10000)
+    print()
+
+    # Test 4: Determinism
+    print("Test 4: Determinism")
+    ModelTester.test_deterministic(model, (32, 10))
+    print()
+
+    # Test 5: Overfitting
+    print("Test 5: Overfitting Small Batch")
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    loss_fn = nn.MSELoss()
+    data = torch.randn(8, 10)
+    targets = torch.randn(8, 1)
+
+    TrainingTester.test_overfitting_small_batch(
+        model, loss_fn, optimizer, data, targets
+    )
+    print()
+
+    # Test 6: Data tests
+    print("Test 6: Data Tests")
+    test_data = torch.randn(100, 10)
+    DataTester.test_no_nans(test_data)
+    DataTester.test_data_range(test_data, -5, 5)
+    print()
+
+    print("=== All Tests Passed ===")
