@@ -17,13 +17,11 @@ services:
       - "localhost:host-gateway"
       - "marimo-flow:127.0.0.1"
     environment:
-      - MLFLOW_BACKEND_STORE_URI=sqlite:////app/data/experiments/db/mlflow.db
-      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/app/data/experiments/artifacts
+      - MLFLOW_BACKEND_STORE_URI=sqlite:////app/data/mlflow/db/mlflow.db
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/app/data/mlflow/artifacts
       - MLFLOW_SERVE_ARTIFACTS=true
       - MLFLOW_HOST=0.0.0.0
       - MLFLOW_PORT=5000
-      - MLFLOW_TRACKING_USERNAME=
-      - MLFLOW_TRACKING_PASSWORD=
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
     restart: unless-stopped
     healthcheck:
@@ -38,5 +36,3 @@ services:
     group_add:
       - render
       - video
-
-volumes: {}

@@ -10,7 +10,7 @@ RUN groupadd --gid 1000 marimo-flow \
     && useradd --uid 1000 --gid marimo-flow --shell /bin/bash --create-home marimo-flow
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.9.0 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.10.12 /uv /uvx /bin/
 
 # Set working directory and give ownership to marimo-flow user
 WORKDIR /app
@@ -20,19 +20,19 @@ RUN chown -R marimo-flow:marimo-flow /app
 COPY --chown=marimo-flow:marimo-flow pyproject.toml uv.lock README.md ./
 COPY --chown=marimo-flow:marimo-flow src/ ./src/
 
-# Create necessary directories with proper ownership
-RUN mkdir -p /app/data/experiments/db /app/data/experiments/artifacts /app/data/experiments/models /app/data/experiments/runs \
+# Create necessary directories with proper ownership (created by start.sh)
+RUN mkdir -p /app/data \
     && chown -R marimo-flow:marimo-flow /app
 
 # Copy startup script
-COPY --chown=marimo-flow:marimo-flow docker/start.sh docker/.marimo.toml docker/custom.css ./
+COPY --chown=marimo-flow:marimo-flow ./docker/start.sh ./docker/.marimo.toml ./docker/custom.css ./
 RUN chmod +x ./start.sh
 
 # Switch to marimo-flow user for dependency installation
 USER marimo-flow
 
-# install packages
-RUN uv sync --no-dev --extra full
+# Install dependencies
+RUN uv sync --no-dev
 
 # Install PyG packages for CPU (no CUDA)
 RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.6.0+cpu.html

@@ -1,7 +1,7 @@
 FROM intel/intel-extension-for-pytorch:2.5.10-xpu
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.9.0 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.10.12 /uv /uvx /bin/
 
 WORKDIR /app
 
@@ -13,18 +13,18 @@ RUN groupadd --gid 1000 marimo-flow 2>/dev/null || true \
 COPY --chown=1000:1000 pyproject.toml uv.lock README.md ./
 COPY --chown=1000:1000 src/ ./src/
 
-# Create necessary directories
-RUN mkdir -p /app/data/experiments/db /app/data/experiments/artifacts /app/data/experiments/models /app/data/experiments/runs \
+# Create necessary directories for MLflow (created by start.sh, but provide fallback)
+RUN mkdir -p /app/data \
     && chown -R 1000:1000 /app
 
 # Copy startup files
-COPY --chown=1000:1000 docker/start.sh docker/.marimo.toml docker/custom.css ./
+COPY --chown=1000:1000 ./docker/start.sh ./docker/.marimo.toml ./docker/custom.css ./
 RUN chmod +x ./start.sh
 
 USER 1000
 
 # Install dependencies (torch already in base image)
-RUN uv sync --no-dev --extra full
+RUN uv sync --no-dev --extra cuda
 
 # Activate virtualenv
 ENV VIRTUAL_ENV=/app/.venv

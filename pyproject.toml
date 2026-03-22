@@ -27,8 +27,8 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "marimo[lsp,recommended,sql,mcp]>=0.18.0",
-    "mlflow[genai,mcp]>=2.19.0",
+    "marimo[lsp,recommended,sql,mcp]>=0.21.0",
+    "mlflow[genai,mcp]>=3.10.1",
     "pina-mathlab>=0.2.1",
     "transformers[accelerate,sentencepiece,tiktoken]>=4.55.0",
     # security: explicit minimums for vulnerable transitive deps
@@ -70,6 +70,20 @@ apps = [
     "duckdb>=1.1.4",
     "nbformat>=5.10.4",
     "plotly>=5.24.0",
+]
+cuda = [
+    "altair>=5.5.0",
+    "langchain>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "numpy>=2.1.2",
+    "openvino>=2025.3.0",
+    "optuna>=3.0.0",
+    "polars>=1.17.0",
+    "scikit-learn>=1.5.2",
+    "sentence-transformers>=5.1.0",
+    "torch-geometric>=2.6.0",
+    "vegafusion>=1.7.4",
 ]
 full = [
     "marimo-flow[ml,llm,openvino,apps]",

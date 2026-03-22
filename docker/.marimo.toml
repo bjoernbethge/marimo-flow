@@ -24,8 +24,6 @@ python_path = ["."]
 
 [display]
 dataframes = "rich"
-html_head_file = "head.html"
-
 custom_css = ["custom.css"]
 cell_output = "above"
 default_table_page_size = 10
@@ -40,7 +38,7 @@ activate_on_typing = true
 api_key = "ollama"
 copilot = false
 model = "marimo-flow-agent"
-base_url = "http://localhost:11434/v1"
+base_url = "http://host.docker.internal:11434/v1"
 
 [session]
 timeout_seconds = 3600
@@ -61,7 +59,7 @@ rules = "Use modern ML best practices:\r\n- Prefer polars over pandas for data m
 model = "marimo-flow-agent"
 api_key = "ollama"
 
-base_url = "http://localhost:11434/v1"
+base_url = "http://host.docker.internal:11434/v1"
 
 [ai.anthropic]
 
