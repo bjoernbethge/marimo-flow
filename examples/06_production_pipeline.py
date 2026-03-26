@@ -5,14 +5,14 @@
 #     "marimo",
 #     "mlflow>=2.17.0",
 #     "numpy>=1.26.4",
+#     "plotly>=5.24.0",
 #     "polars>=1.12.0",
-#     "pina>=0.1.0",
+#     "scikit-learn>=1.5.0",
 #     "torch>=2.0.0",
 # ]
 # ///
 
 import marimo
-import marimo as mo
 
 __generated_with = "0.18.0"
 app = marimo.App(width="medium")
@@ -27,7 +27,6 @@ def _():
 
     import altair as alt
     import marimo as mo
-    import mlflow
     import mlflow.pytorch
     import numpy as np
     import plotly.express as px
@@ -40,7 +39,9 @@ def _():
     from sklearn.metrics import accuracy_score, classification_report
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler
-    
+
+    import mlflow
+
     # Set modern Plotly theme
     px.defaults.template = "plotly_white"
 
@@ -135,11 +136,11 @@ def _(experiment_name, mlflow, mlflow_uri):
     mlflow.set_experiment(experiment_name.value)
 
     f"✅ MLflow initialized: {experiment_name.value}"
-    return experiment_id,
+    return (experiment_id,)
 
 
 @app.cell
-@mo.cache
+@marimo.cache
 def _(load_wine, np, pl):
     """Load & Validate Data"""
 
@@ -198,11 +199,11 @@ def _(mo, validation_results):
     mo.md(f"""
     ## 📊 Data Validation
 
-    - **Samples**: {validation_results['n_samples']}
-    - **Features**: {validation_results['n_features']}
-    - **Classes**: {validation_results['n_classes']}
-    - **Missing Values**: {'❌ Found' if validation_results['has_nan'] else '✅ None'}
-    - **Status**: {validation_results['status']}
+    - **Samples**: {validation_results["n_samples"]}
+    - **Features**: {validation_results["n_features"]}
+    - **Classes**: {validation_results["n_classes"]}
+    - **Missing Values**: {"❌ Found" if validation_results["has_nan"] else "✅ None"}
+    - **Status**: {validation_results["status"]}
     """)
     return
 
@@ -299,17 +300,17 @@ def _(
     # Define neural network model
     class WineClassifier(nn.Module):
         def __init__(self, input_size, hidden_size, num_layers, num_classes):
-            super(WineClassifier, self).__init__()
+            super().__init__()
             layers = []
             layers.append(nn.Linear(input_size, hidden_size))
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(0.2))
-            
+
             for _ in range(num_layers - 1):
                 layers.append(nn.Linear(hidden_size, hidden_size))
                 layers.append(nn.ReLU())
                 layers.append(nn.Dropout(0.2))
-            
+
             layers.append(nn.Linear(hidden_size, num_classes))
             self.network = nn.Sequential(*layers)
 
@@ -326,7 +327,7 @@ def _(
 
     # Training loop
     model.train()
-    for epoch in range(epochs.value):
+    for _epoch in range(epochs.value):
         optimizer.zero_grad()
         outputs = model(X_train_tensor)
         loss = criterion(outputs, y_train_tensor)
@@ -413,13 +414,13 @@ def _(
     # Final test evaluation
     X_test_scaled = scaler.transform(X_test)
     X_test_tensor = torch.FloatTensor(X_test_scaled)
-    
+
     model.eval()
     with torch.no_grad():
         test_outputs = model(X_test_tensor)
         _, y_test_pred = torch.max(test_outputs, 1)
         y_test_pred = y_test_pred.numpy()
-    
+
     test_accuracy = accuracy_score(y_test, y_test_pred)
 
     # Register model
@@ -429,9 +430,7 @@ def _(
         mlflow.set_tag("model_name", model_name.value)
 
         # Register model
-        registered_model = mlflow.register_model(
-            model_uri.model_uri, model_name.value
-        )
+        registered_model = mlflow.register_model(model_uri.model_uri, model_name.value)
 
     f"✅ Model registered: {model_name.value} v{registered_model.version} (Test accuracy: {test_accuracy:.4f})"
     return reg_run, registered_model, test_accuracy, y_test_pred
@@ -454,7 +453,9 @@ def _(mlflow, model_name, mo):
                 name=model_name.value, version=version, stage="Production"
             )
 
-            deployment_status = f"✅ Deployed: {model_name.value} v{version} to Production"
+            deployment_status = (
+                f"✅ Deployed: {model_name.value} v{version} to Production"
+            )
         else:
             deployment_status = "⚠️ No model versions found"
     except Exception as e:
@@ -465,7 +466,7 @@ def _(mlflow, model_name, mo):
 
     {deployment_status}
     """)
-    return deployment_status,
+    return (deployment_status,)
 
 
 @app.cell
@@ -481,9 +482,7 @@ def _(mlflow, model_name):
     except Exception:
         # Fallback to latest version
         try:
-            model_versions = mlflow.search_model_versions(
-                f"name='{model_name.value}'"
-            )
+            model_versions = mlflow.search_model_versions(f"name='{model_name.value}'")
             if model_versions:
                 version = model_versions[0].version
                 model_uri = f"models:/{model_name.value}/{version}"
@@ -511,13 +510,13 @@ def _(X_test, mo, np, production_model, scaler, torch, y_test):
         X_prod = X_test[:10]  # First 10 samples
         X_prod_scaled = scaler.transform(X_prod)
         X_prod_tensor = torch.FloatTensor(X_prod_scaled)
-        
+
         production_model.eval()
         with torch.no_grad():
             outputs = production_model(X_prod_tensor)
             _, production_predictions = torch.max(outputs, 1)
             production_predictions = production_predictions.numpy()
-        
+
         production_actual = y_test[:10]
 
         # Calculate metrics
@@ -538,15 +537,21 @@ def _(X_test, mo, np, production_model, scaler, torch, y_test):
         mo.md(f"""
         ## 📈 Production Monitoring
 
-        **Recent Predictions**: {monitoring_data['n_predictions']} samples
-        **Accuracy**: {monitoring_data['accuracy']:.4f}
-        **Prediction Distribution**: {monitoring_data['prediction_distribution']}
+        **Recent Predictions**: {monitoring_data["n_predictions"]} samples
+        **Accuracy**: {monitoring_data["accuracy"]:.4f}
+        **Prediction Distribution**: {monitoring_data["prediction_distribution"]}
         """)
     else:
         monitoring_data = None
         mo.md("## 📈 Production Monitoring\n⚠️ Model not loaded")
 
-    return monitoring_accuracy, monitoring_data, prediction_dist, production_actual, production_predictions
+    return (
+        monitoring_accuracy,
+        monitoring_data,
+        prediction_dist,
+        production_actual,
+        production_predictions,
+    )
 
 
 @app.cell
@@ -644,4 +649,3 @@ def _(mlflow_uri, model_name, mo):
 
 if __name__ == "__main__":
     app.run()
-

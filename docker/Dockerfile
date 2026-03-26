@@ -1,4 +1,5 @@
-FROM python:3.13-slim
+# PyG wheels (torch-scatter/sparse/cluster) for torch 2.10 CPU are published for cp312 on Linux, not cp313.
+FROM python:3.12-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -31,11 +32,11 @@ RUN chmod +x ./start.sh
 # Switch to marimo-flow user for dependency installation
 USER marimo-flow
 
-# Install dependencies
-RUN uv sync --no-dev
+# Install dependencies (includes torch + torch-geometric)
+RUN uv sync --no-dev --extra all
 
 # Install PyG packages for CPU (no CUDA)
-RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.6.0+cpu.html
+RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.10.0+cpu.html
 
 # Activate virtualenv by default
 ENV VIRTUAL_ENV=/app/.venv

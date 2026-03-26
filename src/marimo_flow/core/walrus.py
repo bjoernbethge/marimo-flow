@@ -47,4 +47,3 @@ class WalrusAdapter(nn.Module):
         features = outputs.last_hidden_state.squeeze(0)
         prediction = self.head(features)
         return LabelTensor(prediction, labels=list(self.out_labels))
-

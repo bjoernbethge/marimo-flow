@@ -10,26 +10,38 @@
 # ]
 # ///
 
-import marimo as mo
-import torch
-
-from marimo_flow.core import (
-    ModelFactory,
-    ProblemManager,
-    SolverManager,
-    WalrusAdapter,
-    build_heatmap_chart,
-    generate_heatmap_data,
-    train_solver,
-)
+import marimo
 
 __generated_with = "0.18.0"
-app = mo.App(width="medium")
+app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
-    return (mo,)
+    import marimo as mo
+    import torch
+
+    from marimo_flow.core import (
+        ModelFactory,
+        ProblemManager,
+        SolverManager,
+        WalrusAdapter,
+        build_heatmap_chart,
+        generate_heatmap_data,
+        train_solver,
+    )
+
+    return (
+        ModelFactory,
+        mo,
+        ProblemManager,
+        SolverManager,
+        torch,
+        train_solver,
+        WalrusAdapter,
+        build_heatmap_chart,
+        generate_heatmap_data,
+    )
 
 
 @app.cell(hide_code=True)
@@ -47,7 +59,7 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(ProblemManager):
     problem_class = ProblemManager.create_poisson_problem()
     problem = problem_class()
     return problem, problem_class
@@ -68,10 +80,20 @@ def _(mo):
 
 
 @app.cell
-def _(epochs, freeze, lr, model_choice, problem):
+def _(
+    epochs,
+    freeze,
+    lr,
+    model_choice,
+    ModelFactory,
+    problem,
+    SolverManager,
+    torch,
+    WalrusAdapter,
+):
     model = ModelFactory.create_model_for_problem(problem)
     solver = SolverManager.create_pinn(problem, model)
-    
+
     if model_choice.value == "walrus":
         solver.model = WalrusAdapter(freeze_backbone=freeze.value)
 
@@ -89,7 +111,7 @@ def _(mo):
 
 
 @app.cell
-def _(epochs, mo, solver, train_button):
+def _(epochs, mo, solver, train_button, train_solver):
     mo.stop(not train_button.value, "Click the button to start training.")
     with mo.status.spinner("Training in progress..."):
         trainer = train_solver(
@@ -107,7 +129,7 @@ def _(mo):
 
 
 @app.cell
-def _(solver):
+def _(build_heatmap_chart, generate_heatmap_data, solver):
     df, X, Y = generate_heatmap_data(solver)
     chart = build_heatmap_chart(df)
     return chart, df, X, Y

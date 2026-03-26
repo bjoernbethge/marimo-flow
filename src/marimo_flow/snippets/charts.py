@@ -28,4 +28,3 @@ def build_interactive_scatter(
         .mark_circle(size=120, opacity=0.7)
         .encode(**encoding, tooltip=list(df.columns))
     )
-

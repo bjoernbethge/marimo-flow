@@ -21,4 +21,3 @@ def train_solver(
     )
     trainer.train()
     return trainer
-

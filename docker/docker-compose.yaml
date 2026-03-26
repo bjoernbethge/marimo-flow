@@ -1,6 +1,6 @@
 services:
   marimo-flow:
-    image: marimo-flow
+    image: ghcr.io/synapticore-io/marimo-flow:latest
     build:
       context: ..
       dockerfile: docker/Dockerfile

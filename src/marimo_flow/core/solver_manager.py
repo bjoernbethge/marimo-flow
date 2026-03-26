@@ -8,7 +8,8 @@ import torch
 import torch.nn as nn
 from pina.optim import TorchOptimizer
 from pina.problem import AbstractProblem
-from pina.solver import PINN, SelfAdaptivePINN as SAPINN, SupervisedSolver
+from pina.solver import PINN, SupervisedSolver
+from pina.solver import SelfAdaptivePINN as SAPINN
 
 
 class SolverManager:
@@ -24,7 +25,7 @@ class SolverManager:
         **solver_kwargs: Any,
     ) -> PINN:
         """Create a PINN (Physics-Informed Neural Network) solver.
-        
+
         Args:
             problem: PINA problem instance
             model: Neural network model
@@ -32,7 +33,7 @@ class SolverManager:
             learning_rate: Learning rate for optimizer (if optimizer not provided)
             optimizer_type: Optimizer class (defaults to torch.optim.Adam)
             **solver_kwargs: Additional arguments for PINN constructor
-        
+
         Returns:
             PINN solver instance
         """
@@ -60,7 +61,7 @@ class SolverManager:
         **solver_kwargs: Any,
     ) -> SupervisedSolver:
         """Create a SupervisedSolver for data-driven problems.
-        
+
         Args:
             problem: PINA problem instance (typically SupervisedProblem)
             model: Neural network model
@@ -70,7 +71,7 @@ class SolverManager:
             loss: Loss function (defaults to nn.MSELoss)
             use_lt: Whether to use LabelTensors
             **solver_kwargs: Additional arguments for SupervisedSolver constructor
-        
+
         Returns:
             SupervisedSolver instance
         """
@@ -101,7 +102,7 @@ class SolverManager:
         **solver_kwargs: Any,
     ) -> SAPINN:
         """Create a SAPINN (Self-Adaptive PINN) solver.
-        
+
         Args:
             problem: PINA problem instance
             model: Neural network model
@@ -109,7 +110,7 @@ class SolverManager:
             learning_rate: Learning rate for optimizer (if optimizer not provided)
             optimizer_type: Optimizer class (defaults to torch.optim.Adam)
             **solver_kwargs: Additional arguments for SAPINN constructor
-        
+
         Returns:
             SAPINN solver instance
         """
@@ -124,4 +125,3 @@ class SolverManager:
             optimizer=optimizer,
             **solver_kwargs,
         )
-

@@ -27,4 +27,3 @@ def build_solver(problem: AbstractProblem, lr: float = 1e-3) -> PINN:
     model = build_model()
     optimizer = TorchOptimizer(torch.optim.Adam, lr=lr)
     return PINN(problem=problem, model=model, optimizer=optimizer)
-

@@ -1,6 +1,6 @@
 services:
   marimo-flow:
-    image: ghcr.io/bjoernbethge/marimo-flow:cuda
+    image: ghcr.io/synapticore-io/marimo-flow:cuda
     build:
       context: ..
       dockerfile: docker/Dockerfile.cuda

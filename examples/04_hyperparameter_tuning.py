@@ -6,14 +6,14 @@
 #     "mlflow>=2.17.0",
 #     "numpy>=1.26.4",
 #     "optuna>=3.0.0",
+#     "plotly>=5.24.0",
 #     "polars>=1.12.0",
-#     "pina>=0.1.0",
+#     "scikit-learn>=1.5.0",
 #     "torch>=2.0.0",
 # ]
 # ///
 
 import marimo
-import marimo as mo
 
 __generated_with = "0.18.0"
 app = marimo.App(width="medium")
@@ -27,7 +27,6 @@ def _():
 
     import altair as alt
     import marimo as mo
-    import mlflow
     import mlflow.pytorch
     import numpy as np
     import optuna
@@ -38,10 +37,12 @@ def _():
     import torch.nn as nn
     import torch.optim as optim
     from sklearn.datasets import load_wine
-    from sklearn.preprocessing import StandardScaler
     from sklearn.metrics import accuracy_score, f1_score
     from sklearn.model_selection import train_test_split
-    
+    from sklearn.preprocessing import StandardScaler
+
+    import mlflow
+
     # Set modern Plotly theme
     px.defaults.template = "plotly_white"
 
@@ -137,11 +138,11 @@ def _(experiment_name, mlflow, mlflow_uri):
     mlflow.set_experiment(experiment_name.value)
 
     f"MLflow initialized: {experiment_name.value}"
-    return experiment_id,
+    return (experiment_id,)
 
 
 @app.cell
-@mo.cache
+@marimo.cache
 def _(load_wine, pl):
     """Load Dataset"""
 
@@ -194,7 +195,7 @@ def _(mo):
 
 
 @app.cell
-def _(sampler_type):
+def _(optuna, sampler_type):
     """Create Optuna Sampler"""
 
     if sampler_type.value == "TPE":
@@ -208,41 +209,28 @@ def _(sampler_type):
 
 
 @app.cell
-def _(
-    X_test,
-    X_train,
-    accuracy_score,
-    experiment_id,
-    mlflow,
-    nn,
-    np,
-    optim,
-    optimization_direction,
-    optuna,
-    sampler,
-    StandardScaler,
-    study_name,
-    torch,
-    y_test,
-    y_train,
-):
-    """Run Optuna Optimization with MLflow Tracking (PINA/PyTorch)"""
+def _(np, StandardScaler, torch, X_train, X_test, y_train):
+    """Prepare Data Tensors"""
 
-    # Scale features
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-    
-    # Convert to PyTorch tensors
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     X_train_tensor = torch.FloatTensor(X_train_scaled).to(device)
     y_train_tensor = torch.LongTensor(y_train).to(device)
     X_test_tensor = torch.FloatTensor(X_test_scaled).to(device)
-    
+
     n_features = X_train.shape[1]
     n_classes = len(np.unique(y_train))
 
-    # MLflow callback for tracking trials
+    return device, n_classes, n_features, X_test_tensor, X_train_tensor, y_train_tensor
+
+
+@app.cell
+def _(mlflow, nn):
+    """Model and Callback Class Definitions"""
+
     class MLflowCallback:
         def __init__(self, experiment_id):
             self.experiment_id = experiment_id
@@ -250,128 +238,155 @@ def _(
         def __call__(self, study, trial):
             with mlflow.start_run(
                 experiment_id=self.experiment_id, run_name=f"trial_{trial.number}"
-            ) as run:
-                # Log parameters
+            ):
                 for param_name, param_value in trial.params.items():
                     mlflow.log_param(param_name, param_value)
-
-                # Log metrics
                 mlflow.log_metric("value", trial.value)
                 mlflow.log_metric("trial_number", trial.number)
-
-                # Log state
                 mlflow.set_tag("trial_state", trial.state.name)
                 mlflow.set_tag("study_name", study.study_name)
                 mlflow.set_tag("framework", "pina-pytorch")
 
-    # Define neural network model
     class TunableNN(nn.Module):
-        def __init__(self, input_size, hidden_size, num_layers, dropout_rate, num_classes):
-            super(TunableNN, self).__init__()
-            layers = []
-            layers.append(nn.Linear(input_size, hidden_size))
-            layers.append(nn.ReLU())
-            layers.append(nn.Dropout(dropout_rate))
-            
+        def __init__(
+            self, input_size, hidden_size, num_layers, dropout_rate, num_classes
+        ):
+            super().__init__()
+            layers = [
+                nn.Linear(input_size, hidden_size),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate),
+            ]
             for _ in range(num_layers - 1):
-                layers.append(nn.Linear(hidden_size, hidden_size))
-                layers.append(nn.ReLU())
-                layers.append(nn.Dropout(dropout_rate))
-            
+                layers += [
+                    nn.Linear(hidden_size, hidden_size),
+                    nn.ReLU(),
+                    nn.Dropout(dropout_rate),
+                ]
             layers.append(nn.Linear(hidden_size, num_classes))
             self.network = nn.Sequential(*layers)
 
         def forward(self, x):
             return self.network(x)
 
-    # Define objective function
+    return MLflowCallback, TunableNN
+
+
+@app.cell
+def _(
+    accuracy_score,
+    device,
+    experiment_id,
+    MLflowCallback,
+    n_classes,
+    n_features,
+    n_trials,
+    nn,
+    optim,
+    optimization_direction,
+    optuna,
+    sampler,
+    study_name,
+    torch,
+    TunableNN,
+    X_test_tensor,
+    X_train_tensor,
+    y_test,
+    y_train_tensor,
+):
+    """Run Optuna Optimization"""
+
     def objective(trial):
-        # Suggest hyperparameters
         hidden_size = trial.suggest_int("hidden_size", 32, 256, step=16)
         num_layers = trial.suggest_int("num_layers", 1, 4)
         learning_rate = trial.suggest_float("learning_rate", 1e-4, 1e-2, log=True)
         dropout_rate = trial.suggest_float("dropout_rate", 0.1, 0.5)
         epochs = trial.suggest_int("epochs", 50, 300, step=50)
 
-        # Create model
-        model = TunableNN(n_features, hidden_size, num_layers, dropout_rate, n_classes).to(device)
-        
-        # Training setup
+        model = TunableNN(
+            n_features, hidden_size, num_layers, dropout_rate, n_classes
+        ).to(device)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-        
-        # Training loop
+
         model.train()
-        for epoch in range(epochs):
+        for _ in range(epochs):
             optimizer.zero_grad()
-            outputs = model(X_train_tensor)
-            loss = criterion(outputs, y_train_tensor)
+            loss = criterion(model(X_train_tensor), y_train_tensor)
             loss.backward()
             optimizer.step()
-        
-        # Evaluate on test set
+
         model.eval()
         with torch.no_grad():
-            test_outputs = model(X_test_tensor)
-            _, y_pred = torch.max(test_outputs, 1)
-            y_pred = y_pred.cpu().numpy()
-            test_accuracy = accuracy_score(y_test, y_pred)
-        
-        # Log test metrics to trial user attributes
+            _, y_pred = torch.max(model(X_test_tensor), 1)
+            test_accuracy = accuracy_score(y_test, y_pred.cpu().numpy())
         trial.set_user_attr("test_accuracy", test_accuracy)
-
         return test_accuracy
 
-    # Create study
     study = optuna.create_study(
         direction=optimization_direction.value,
         sampler=sampler,
         study_name=study_name.value,
     )
-
-    # Run optimization with MLflow callback
-    mlflow_callback = MLflowCallback(experiment_id)
     study.optimize(
-        objective, n_trials=n_trials.value, callbacks=[mlflow_callback], show_progress_bar=True
+        objective,
+        n_trials=n_trials.value,
+        callbacks=[MLflowCallback(experiment_id)],
+        show_progress_bar=True,
     )
 
-    # Get best trial
     best_trial = study.best_trial
     best_params = best_trial.params
     best_value = best_trial.value
 
-    # Train best model with best hyperparameters
-    best_hidden_size = best_params["hidden_size"]
-    best_num_layers = best_params["num_layers"]
-    best_learning_rate = best_params["learning_rate"]
-    best_epochs = best_params["epochs"]
-    best_dropout_rate = best_params["dropout_rate"]
-    
-    best_model = TunableNN(n_features, best_hidden_size, best_num_layers, best_dropout_rate, n_classes).to(device)
+    return best_params, best_trial, best_value, study
+
+
+@app.cell
+def _(
+    accuracy_score,
+    best_params,
+    best_value,
+    device,
+    experiment_id,
+    mlflow,
+    n_classes,
+    n_features,
+    nn,
+    optim,
+    torch,
+    TunableNN,
+    X_test_tensor,
+    X_train_tensor,
+    y_test,
+    y_train_tensor,
+):
+    """Train Best Model and Register"""
+
+    best_model = TunableNN(
+        n_features,
+        best_params["hidden_size"],
+        best_params["num_layers"],
+        best_params["dropout_rate"],
+        n_classes,
+    ).to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(best_model.parameters(), lr=best_learning_rate)
-    
-    # Train best model
+    optimizer = optim.Adam(best_model.parameters(), lr=best_params["learning_rate"])
+
     best_model.train()
-    for epoch in range(best_epochs):
+    for _ in range(best_params["epochs"]):
         optimizer.zero_grad()
-        outputs = best_model(X_train_tensor)
-        loss = criterion(outputs, y_train_tensor)
+        loss = criterion(best_model(X_train_tensor), y_train_tensor)
         loss.backward()
         optimizer.step()
-    
-    # Evaluate best model
+
     best_model.eval()
     with torch.no_grad():
-        test_outputs = best_model(X_test_tensor)
-        _, best_y_pred = torch.max(test_outputs, 1)
+        _, best_y_pred = torch.max(best_model(X_test_tensor), 1)
         best_y_pred = best_y_pred.cpu().numpy()
         best_test_accuracy = accuracy_score(y_test, best_y_pred)
 
-    # Log best model to MLflow
-    with mlflow.start_run(
-        experiment_id=experiment_id, run_name="best_model"
-    ) as best_run:
+    with mlflow.start_run(experiment_id=experiment_id, run_name="best_model"):
         mlflow.log_params(best_params)
         mlflow.log_metric("cv_accuracy", best_value)
         mlflow.log_metric("test_accuracy", best_test_accuracy)
@@ -382,17 +397,7 @@ def _(
         )
 
     f"Optimization complete. Best CV accuracy: {best_value:.4f}, Test accuracy: {best_test_accuracy:.4f}"
-    return (
-        best_model,
-        best_params,
-        best_test_accuracy,
-        best_trial,
-        best_value,
-        best_y_pred,
-        mlflow_callback,
-        objective,
-        study,
-    )
+    return best_model, best_test_accuracy, best_y_pred
 
 
 @app.cell
@@ -468,7 +473,9 @@ def _(mo, pl, px, study):
 
 
 @app.cell
-def _(best_params, best_trial, best_value, best_test_accuracy, mo, optuna, pl, px, study):
+def _(
+    best_params, best_trial, best_value, best_test_accuracy, mo, optuna, pl, px, study
+):
     """Best Model Summary"""
 
     # Parameter importance
@@ -534,4 +541,3 @@ def _(experiment_name, mlflow_uri, mo):
 
 if __name__ == "__main__":
     app.run()
-

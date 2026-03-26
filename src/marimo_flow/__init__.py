@@ -9,4 +9,3 @@ except Exception:  # pragma: no cover - fallback during local dev
 
 
 __all__ = ["__version__"]
-

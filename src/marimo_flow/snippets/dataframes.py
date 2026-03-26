@@ -18,4 +18,3 @@ def filter_dataframe(
     return df.filter(
         pl.col(column).cast(pl.Utf8).str.contains(value_substring, literal=True)
     )
-

@@ -31,7 +31,9 @@ def generate_heatmap_data(
     return df, X, Y
 
 
-def build_heatmap_chart(df: pl.DataFrame, title: str = "PINN Solution u(x,y)") -> alt.Chart:
+def build_heatmap_chart(
+    df: pl.DataFrame, title: str = "PINN Solution u(x,y)"
+) -> alt.Chart:
     """Return an Altair heatmap for the predicted solution."""
 
     return (
@@ -53,12 +55,12 @@ def generate_error_data(
     grid_size: int = 50,
 ) -> pl.DataFrame:
     """Generate prediction, exact solution, and error data on a grid.
-    
+
     Args:
         solver: Trained PINA solver
         exact_solution_fn: Function that takes input tensor and returns exact solution tensor
         grid_size: Resolution of the evaluation grid
-        
+
     Returns:
         DataFrame with x, y, u_pred, u_exact, error
     """
@@ -73,47 +75,49 @@ def generate_error_data(
 
     with torch.no_grad():
         u_pred = solver.model(input_tensor).numpy().flatten()
-        
+
         # Calculate exact solution
         # Note: exact_solution_fn might expect LabelTensor or just tensor
         try:
             u_exact = exact_solution_fn(input_tensor)
         except Exception:
             u_exact = exact_solution_fn(pts)
-            
+
         if hasattr(u_exact, "numpy"):
             u_exact = u_exact.numpy()
         u_exact = u_exact.flatten()
 
     error = np.abs(u_pred - u_exact)
 
-    df = pl.DataFrame({
-        "x": X.ravel(),
-        "y": Y.ravel(),
-        "u_pred": u_pred,
-        "u_exact": u_exact,
-        "error": error
-    })
+    df = pl.DataFrame(
+        {
+            "x": X.ravel(),
+            "y": Y.ravel(),
+            "u_pred": u_pred,
+            "u_exact": u_exact,
+            "error": error,
+        }
+    )
     return df
 
 
 def build_comparison_chart(df: pl.DataFrame) -> alt.Chart:
     """Create a side-by-side comparison chart: Prediction | Exact | Error.
-    
+
     Args:
         df: DataFrame with columns x, y, u_pred, u_exact, error
-        
+
     Returns:
         Altair chart with 3 faceted heatmaps
     """
     # Convert to long format for faceting
     df_long = df.unpivot(
-        index=["x", "y"], 
-        on=["u_pred", "u_exact", "error"], 
-        variable_name="type", 
-        value_name="value"
+        index=["x", "y"],
+        on=["u_pred", "u_exact", "error"],
+        variable_name="type",
+        value_name="value",
     )
-    
+
     return (
         alt.Chart(df_long.to_pandas())
         .mark_rect()
@@ -122,7 +126,7 @@ def build_comparison_chart(df: pl.DataFrame) -> alt.Chart:
             y="y:Q",
             color=alt.Color("value:Q", scale=alt.Scale(scheme="viridis")),
             column=alt.Column("type:N", title=None),
-            tooltip=["x", "y", "value"]
+            tooltip=["x", "y", "value"],
         )
         .properties(title="Solution Comparison")
         .resolve_scale(color="independent")

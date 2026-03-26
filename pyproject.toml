@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-    {name = "Bjoern Bethge", email = "bjoern.bethge@gmail.com"},
+    {name = "Björn Bethge", email = "bjoern.bethge@gmail.com"},
 ]
 keywords = ["marimo", "mlflow", "machine-learning", "notebooks", "interactive"]
 classifiers = [
@@ -44,51 +44,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ml = [
-    "altair>=5.5.0",
-    "numpy>=2.1.2",
-    "optuna>=3.0.0",
-    "polars>=1.17.0",
-    "scikit-learn>=1.5.2",
-    "vegafusion>=1.7.4",
-]
-llm = [
-    "langchain>=0.3.0",
-    "langchain-community>=0.3.0",
-    "langchain-openai>=0.2.0",
-    "langchain-core>=0.3.15",
-    "langsmith>=0.2.0",
-    "sentence-transformers>=5.1.0",
-]
-openvino = [
-    "httpx>=0.28.1",
-    "openvino>=2025.3.0",
-]
-apps = [
-    "astrophot>=0.16.1",
-    "astropy>=6.1.2",
-    "duckdb>=1.1.4",
-    "nbformat>=5.10.4",
-    "plotly>=5.24.0",
-]
-cuda = [
-    "altair>=5.5.0",
-    "langchain>=0.3.0",
-    "langchain-community>=0.3.0",
-    "langchain-openai>=0.2.0",
-    "numpy>=2.1.2",
-    "openvino>=2025.3.0",
-    "optuna>=3.0.0",
-    "polars>=1.17.0",
-    "scikit-learn>=1.5.2",
-    "sentence-transformers>=5.1.0",
-    "torch-geometric>=2.6.0",
-    "vegafusion>=1.7.4",
-]
-full = [
-    "marimo-flow[ml,llm,openvino,apps]",
-    "torch>=2.5.1",
-    "torch-geometric>=2.6.0",
+all = [
+    "torch>=2.10.0",
+    "torch-geometric>=2.7.0",
 ]
 
 [dependency-groups]
@@ -106,8 +64,8 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/bjoernbethge/marimo-flow"
-Repository = "https://github.com/bjoernbethge/marimo-flow"
+Homepage = "https://github.com/synapticore-io/marimo-flow"
+Repository = "https://github.com/synapticore-io/marimo-flow"
 
 [tool.setuptools]
 include-package-data = true
@@ -137,11 +95,6 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.uv.sources]
-# transformers = { git = "https://github.com/huggingface/transformers" }  # Use PyPI version unless needed
-
-
-
-
 
 
 

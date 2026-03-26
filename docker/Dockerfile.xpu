@@ -23,8 +23,8 @@ RUN chmod +x ./start.sh
 
 USER 1000
 
-# Install dependencies (torch already in base image)
-RUN uv sync --no-dev --extra cuda
+# Install dependencies (torch already in base image, just need torch-geometric)
+RUN uv sync --no-dev --extra all
 
 # Activate virtualenv
 ENV VIRTUAL_ENV=/app/.venv

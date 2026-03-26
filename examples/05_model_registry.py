@@ -13,7 +13,6 @@
 # ///
 
 import marimo
-import marimo as mo
 
 __generated_with = "0.18.0"
 app = marimo.App(width="medium")
@@ -27,7 +26,6 @@ def _():
 
     import altair as alt
     import marimo as mo
-    import mlflow
     import mlflow.pytorch
     import numpy as np
     import plotly.express as px
@@ -37,9 +35,11 @@ def _():
     import torch.nn as nn
     import torch.optim as optim
     from sklearn.datasets import load_wine
-    from sklearn.preprocessing import StandardScaler
     from sklearn.metrics import accuracy_score, classification_report
     from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import StandardScaler
+
+    import mlflow
 
     warnings.filterwarnings("ignore")
 
@@ -111,12 +111,12 @@ def _(mlflow, mlflow_uri):
 
     mlflow.set_tracking_uri(mlflow_uri.value)
 
-    f"MLflow initialized"
+    "MLflow initialized"
     return
 
 
 @app.cell
-@mo.cache
+@marimo.cache
 def _(load_wine, pl):
     """Load Dataset"""
 
@@ -147,9 +147,7 @@ def _(X, train_test_split, y):
 def _(mo):
     """Model Training & Registration"""
 
-    train_new_model = mo.ui.button(
-        value=False, label="🚀 Train & Register New Model"
-    )
+    train_new_model = mo.ui.button(value=False, label="🚀 Train & Register New Model")
 
     model_params = mo.ui.form(
         {
@@ -158,7 +156,8 @@ def _(mo):
             "learning_rate": mo.ui.slider(0.0001, 0.01, value=0.001, step=0.0001),
             "epochs": mo.ui.slider(50, 500, value=200, step=50),
             "description": mo.ui.text_area(
-                placeholder="Model description...", value="PINA/PyTorch Neural Network for wine dataset"
+                placeholder="Model description...",
+                value="PINA/PyTorch Neural Network for wine dataset",
             ),
         }
     )
@@ -178,6 +177,7 @@ def _(
     X_train,
     accuracy_score,
     mlflow,
+    mo,
     model_params,
     nn,
     np,
@@ -205,30 +205,30 @@ def _(
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-    
+
     # Convert to PyTorch tensors
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     X_train_tensor = torch.FloatTensor(X_train_scaled).to(device)
     y_train_tensor = torch.LongTensor(y_train).to(device)
     X_test_tensor = torch.FloatTensor(X_test_scaled).to(device)
-    
+
     n_features = X_train.shape[1]
     n_classes = len(np.unique(y_train))
 
     # Define neural network model
     class Classifier(nn.Module):
         def __init__(self, input_size, hidden_size, num_layers, num_classes):
-            super(Classifier, self).__init__()
+            super().__init__()
             layers = []
             layers.append(nn.Linear(input_size, hidden_size))
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(0.2))
-            
+
             for _ in range(num_layers - 1):
                 layers.append(nn.Linear(hidden_size, hidden_size))
                 layers.append(nn.ReLU())
                 layers.append(nn.Dropout(0.2))
-            
+
             layers.append(nn.Linear(hidden_size, num_classes))
             self.network = nn.Sequential(*layers)
 
@@ -237,12 +237,12 @@ def _(
 
     # Create and train model
     model = Classifier(n_features, hidden_size, num_layers, n_classes).to(device)
-    
+
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    
+
     model.train()
-    for epoch in range(epochs):
+    for _epoch in range(epochs):
         optimizer.zero_grad()
         outputs = model(X_train_tensor)
         loss = criterion(outputs, y_train_tensor)
@@ -279,40 +279,38 @@ def _(
         )
 
     f"✅ Model registered: {registered_model.name} (Version {registered_model.version})"
-    return accuracy, model, model_uri, registered_model, run, y_pred
+    return accuracy, model, model_uri, registered_model, run, scaler, y_pred
 
 
 @app.cell
-def _(mlflow, registry_name):
+def _(mlflow, pl, registry_name):
     """List Registered Models"""
+
+    model_info = []
+    models_df = None
 
     try:
         registered_models = mlflow.search_registered_models(
             filter_string=f"name='{registry_name.value}'"
         )
 
-        if registered_models:
-            model_info = []
-            for model in registered_models:
-                latest_version = model.latest_versions[0] if model.latest_versions else None
-                if latest_version:
-                    model_info.append(
-                        {
-                            "Name": model.name,
-                            "Latest Version": latest_version.version,
-                            "Stage": latest_version.current_stage,
-                            "Created": str(latest_version.creation_timestamp)[:19],
-                        }
-                    )
+        for model in registered_models:
+            latest_version = model.latest_versions[0] if model.latest_versions else None
+            if latest_version:
+                model_info.append(
+                    {
+                        "Name": model.name,
+                        "Latest Version": latest_version.version,
+                        "Stage": latest_version.current_stage,
+                        "Created": str(latest_version.creation_timestamp)[:19],
+                    }
+                )
 
-            models_df = pl.DataFrame(model_info) if model_info else None
-        else:
-            models_df = None
-    except Exception as e:
-        models_df = None
-        error_msg = str(e)
+        models_df = pl.DataFrame(model_info) if model_info else None
+    except Exception:
+        pass
 
-    return error_msg, model_info, models_df, models_info, registered_models
+    return model_info, models_df
 
 
 @app.cell
@@ -331,13 +329,15 @@ def _(mo, models_df):
 
 
 @app.cell
-def _(mlflow, registry_name):
+def _(mlflow, pl, registry_name):
     """Get Model Versions"""
+
+    versions_data = []
+    versions_df = None
 
     try:
         model_versions = mlflow.search_model_versions(f"name='{registry_name.value}'")
 
-        versions_data = []
         for version in model_versions:
             versions_data.append(
                 {
@@ -348,12 +348,15 @@ def _(mlflow, registry_name):
                 }
             )
 
-        versions_df = pl.DataFrame(versions_data).sort("Version", descending=True) if versions_data else None
-    except Exception as e:
-        versions_df = None
-        version_error = str(e)
+        versions_df = (
+            pl.DataFrame(versions_data).sort("Version", descending=True)
+            if versions_data
+            else None
+        )
+    except Exception:
+        pass
 
-    return version_error, versions_data, versions_df, model_versions
+    return versions_data, versions_df
 
 
 @app.cell
@@ -385,9 +388,7 @@ def _(mo):
         label="Target stage",
     )
 
-    transition_button = mo.ui.button(
-        value=False, label="🔄 Transition Model Stage"
-    )
+    transition_button = mo.ui.button(value=False, label="🔄 Transition Model Stage")
 
     mo.md(f"""
     ## 🚀 Model Stage Management
@@ -402,6 +403,7 @@ def _(mo):
 @app.cell
 def _(
     mlflow,
+    mo,
     registry_name,
     target_stage,
     transition_button,
@@ -419,14 +421,16 @@ def _(
             mlflow.tracking.MlflowClient().transition_model_version_stage(
                 name=registry_name.value, version=version, stage=stage
             )
-            result = f"✅ Model {registry_name.value} v{version} transitioned to {stage}"
+            result = (
+                f"✅ Model {registry_name.value} v{version} transitioned to {stage}"
+            )
         else:
             result = "⚠️ Select a valid stage"
     except Exception as e:
         result = f"❌ Error: {str(e)}"
 
     result
-    return result,
+    return (result,)
 
 
 @app.cell
@@ -450,7 +454,7 @@ def _(mlflow, registry_name):
 
         if production_model:
             model_uri = f"models:/{registry_name.value}/{production_model.current_stage or production_model.version}"
-            loaded_model = mlflow.sklearn.load_model(model_uri)
+            loaded_model = mlflow.pytorch.load_model(model_uri)
             model_info = f"✅ Loaded: {registry_name.value} v{production_model.version} ({production_model.current_stage or 'None'})"
         else:
             loaded_model = None
@@ -463,12 +467,20 @@ def _(mlflow, registry_name):
 
 
 @app.cell
-def _(X_test, loaded_model, model_info, mo, y_test):
+def _(X_test, accuracy_score, loaded_model, model_info, mo, scaler, torch, y_test):
     """Test Loaded Model"""
 
+    predictions = None
+    test_accuracy = None
+
     if loaded_model is not None:
-        # Make predictions
-        predictions = loaded_model.predict(X_test)
+        X_scaled = scaler.transform(X_test)
+        X_tensor = torch.FloatTensor(X_scaled)
+        loaded_model.eval()
+        with torch.no_grad():
+            outputs = loaded_model(X_tensor)
+            _, preds = torch.max(outputs, 1)
+            predictions = preds.numpy()
         test_accuracy = accuracy_score(y_test, predictions)
 
         mo.md(f"""
@@ -477,8 +489,6 @@ def _(X_test, loaded_model, model_info, mo, y_test):
         {model_info}
 
         **Test Accuracy**: {test_accuracy:.4f}
-
-        Model successfully loaded and tested!
         """)
     else:
         mo.md(f"""
@@ -498,7 +508,7 @@ def _(go, mo, predictions, y_test):
         from sklearn.metrics import confusion_matrix
 
         cm = confusion_matrix(y_test, predictions)
-        
+
         confusion_fig = go.Figure(
             data=go.Heatmap(
                 z=cm,
@@ -559,4 +569,3 @@ def _(mlflow_uri, mo):
 
 if __name__ == "__main__":
     app.run()
-

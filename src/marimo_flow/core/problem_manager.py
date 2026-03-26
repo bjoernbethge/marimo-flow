@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import torch
 from pina import Condition
 from pina.domain import CartesianDomain
 from pina.equation import Equation, FixedValue
-from pina.problem import AbstractProblem, SpatialProblem, TimeDependentProblem
+from pina.problem import SpatialProblem, TimeDependentProblem
 from pina.problem.zoo import SupervisedProblem
 
 
@@ -22,18 +23,17 @@ class ProblemManager:
         output_cols: list[str],
     ) -> SupervisedProblem:
         """Create a SupervisedProblem from a DataFrame (Polars/Pandas).
-        
+
         Args:
             df: Polars or Pandas DataFrame
             input_cols: List of column names for input features
             output_cols: List of column names for target values
-        
+
         Returns:
             SupervisedProblem instance
         """
-        import numpy as np
         import polars as pl
-        
+
         # Convert to numpy first
         if isinstance(df, pl.DataFrame):
             input_arr = df.select(input_cols).to_numpy()
@@ -41,19 +41,21 @@ class ProblemManager:
         else:  # Pandas
             input_arr = df[input_cols].to_numpy()
             target_arr = df[output_cols].to_numpy()
-            
+
         # Convert to torch tensors
         input_tensor = torch.from_numpy(input_arr).float()
         target_tensor = torch.from_numpy(target_arr).float()
-        
+
         return SupervisedProblem(input_=input_tensor, output_=target_tensor)
 
+    @staticmethod
+    def create_domain(variables: dict[str, list[float]]) -> CartesianDomain:
         """Create a Cartesian domain from variable definitions.
-        
+
         Args:
             variables: Dictionary mapping variable names to [min, max] lists
                       e.g., {"x": [0, 1], "y": [0, 1]}
-        
+
         Returns:
             Configured CartesianDomain object
         """
@@ -65,11 +67,11 @@ class ProblemManager:
         target_data: torch.Tensor,
     ) -> SupervisedProblem:
         """Create a supervised learning problem from data.
-        
+
         Args:
             input_data: Input tensor
             target_data: Target tensor
-        
+
         Returns:
             SupervisedProblem instance
         """
@@ -83,13 +85,13 @@ class ProblemManager:
         conditions: dict[str, Condition] | None = None,
     ) -> type[SpatialProblem]:
         """Create a spatial problem class.
-        
+
         Args:
             output_variables: List of output variable names
             spatial_domain: Spatial domain definition
             domains: Optional dictionary of named domains
             conditions: Optional dictionary of conditions
-        
+
         Returns:
             Problem class (not instance)
         """
@@ -113,14 +115,14 @@ class ProblemManager:
         conditions: dict[str, Condition] | None = None,
     ) -> type[TimeDependentProblem]:
         """Create a time-dependent problem class.
-        
+
         Args:
             output_variables: List of output variable names
             spatial_domain: Spatial domain definition
             temporal_domain: Temporal domain definition
             domains: Optional dictionary of named domains
             conditions: Optional dictionary of conditions
-        
+
         Returns:
             Problem class (not instance)
         """
@@ -142,12 +144,12 @@ class ProblemManager:
         source_term: Callable | None = None,
     ) -> type[SpatialProblem]:
         """Create a Poisson problem class with configurable domain and source term.
-        
+
         Args:
             domain_bounds: Domain bounds, e.g., {"x": [0, 1], "y": [0, 1]}
                          Defaults to unit square
             source_term: Source term function. Defaults to sin(pi*x)*sin(pi*y)
-        
+
         Returns:
             Problem class (not instance)
         """
@@ -157,10 +159,12 @@ class ProblemManager:
         spatial_domain = CartesianDomain(domain_bounds)
 
         if source_term is None:
+
             def default_source(input_, output_):
                 x = input_.extract(["x"])
                 y = input_.extract(["y"])
                 return -torch.sin(torch.pi * x) * torch.sin(torch.pi * y)
+
             source_term = default_source
 
         from pina.operator import laplacian

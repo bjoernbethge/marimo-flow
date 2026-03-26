@@ -1,7 +1,5 @@
 # Marimo Flow 🌊
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N71WOHZ3)
-
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![Marimo](https://img.shields.io/badge/Marimo-Latest-orange?logo=python&logoColor=white)](https://marimo.io)
@@ -65,7 +63,7 @@ This combination eliminates the reproducibility issues of traditional notebooks 
 
 ```bash
 # Clone repository
-git clone https://github.com/bjoernbethge/marimo-flow.git
+git clone https://github.com/synapticore-io/marimo-flow.git
 cd marimo-flow
 
 # Build and start services
@@ -86,9 +84,9 @@ docker compose -f docker/docker-compose.yaml down
 
 | Variant | Image Tag | Use Case |
 |---------|-----------|----------|
-| **CPU** | `ghcr.io/bjoernbethge/marimo-flow:latest` | No GPU (lightweight) |
-| **CUDA** | `ghcr.io/bjoernbethge/marimo-flow:cuda` | NVIDIA GPUs |
-| **XPU** | `ghcr.io/bjoernbethge/marimo-flow:xpu` | Intel Arc/Data Center GPUs |
+| **CPU** | `ghcr.io/synapticore-io/marimo-flow:latest` | No GPU (lightweight) |
+| **CUDA** | `ghcr.io/synapticore-io/marimo-flow:cuda` | NVIDIA GPUs |
+| **XPU** | `ghcr.io/synapticore-io/marimo-flow:xpu` | Intel Arc/Data Center GPUs |
 
 ```bash
 # NVIDIA GPU (requires nvidia-docker)

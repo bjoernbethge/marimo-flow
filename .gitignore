@@ -43,6 +43,7 @@ models/
 data/mlflow/db/
 data/experiments/
 mlruns/
+mlflow/
 
 # DuckDB files
 *.duckdb

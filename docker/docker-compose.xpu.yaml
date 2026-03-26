@@ -1,6 +1,6 @@
 services:
   marimo-flow:
-    image: ghcr.io/bjoernbethge/marimo-flow:xpu
+    image: ghcr.io/synapticore-io/marimo-flow:xpu
     build:
       context: ..
       dockerfile: docker/Dockerfile.xpu

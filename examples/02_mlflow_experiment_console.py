@@ -1,3 +1,13 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "altair>=5.4.0",
+#     "marimo",
+#     "mlflow>=2.17.0",
+#     "polars>=1.12.0",
+# ]
+# ///
+
 import marimo
 
 __generated_with = "0.18.0"
@@ -11,9 +21,10 @@ def _():
 
     import altair as alt
     import marimo as mo
-    import mlflow
     import polars as pl
     from mlflow.tracking import MlflowClient
+
+    import mlflow
 
     return Any, MlflowClient, Path, alt, mlflow, mo, pl
 
@@ -141,8 +152,7 @@ def _(client, exp_dropdown, pl, runs_to_dataframe):
 def _(exp_dropdown, mo, runs_df):
     if not runs_df.is_empty() and exp_dropdown is not None:
         mo.md(
-            f"### Runs for experiment `{exp_dropdown.value}` "
-            f"({runs_df.height} found)"
+            f"### Runs for experiment `{exp_dropdown.value}` ({runs_df.height} found)"
         )
         mo.ui.table(runs_df.head(20))
     elif exp_dropdown is not None:

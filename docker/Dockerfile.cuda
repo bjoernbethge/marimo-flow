@@ -28,8 +28,8 @@ RUN chmod +x ./start.sh
 
 USER marimo-flow
 
-# Install dependencies (torch already in base image)
-RUN uv sync --no-dev --extra cuda
+# Install dependencies (torch already in base image, just need torch-geometric)
+RUN uv sync --no-dev --extra all
 
 # Install PyG CUDA packages (matching PyTorch version in base image)
 RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.7.0+cu126.html

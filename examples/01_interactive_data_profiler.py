@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.12"
+# requires-python = ">=3.11"
 # dependencies = [
 #     "marimo[mcp]",
 #     "pyzmq",
@@ -23,7 +23,9 @@ def _():
     import duckdb
     import marimo as mo
     import polars as pl
+
     from marimo_flow.snippets import build_interactive_scatter, filter_dataframe
+
     return build_interactive_scatter, duckdb, filter_dataframe, mo, pl
 
 
@@ -61,6 +63,7 @@ def _(duckdb, pl):
             return result
         finally:
             conn.close()
+
     return (run_query,)
 
 
@@ -95,8 +98,6 @@ def _(df, mo, table_select):
 
 @app.cell
 def _(df, mo):
-
-
     column_filter = mo.ui.dropdown(
         options=df.columns,
         label="Column to filter",
@@ -118,37 +119,37 @@ def _(column_filter, df, filter_dataframe, max_rows, mo, text_filter):
     return (filtered,)
 
 
-app._unparsable_cell(
-    r"""
-    if filtered.is_empty():
-        return ()
+@app.cell
+def _(filtered, mo, pl):
+    mo.stop(filtered.is_empty())
 
     numeric_cols = [
         col
         for col, dtype in zip(filtered.columns, filtered.dtypes)
-        if pl.datatypes.is_numeric(dtype)
+        if dtype in pl.NUMERIC_DTYPES
     ]
 
     if len(numeric_cols) < 2:
-        mo.md(\"_Need at least two numeric columns for a scatter plot._\")
-        return ()
+        mo.md("_Need at least two numeric columns for a scatter plot._")
+        x_axis = None
+        y_axis = None
+        color = None
+    else:
+        x_axis = mo.ui.dropdown(numeric_cols, value=numeric_cols[0], label="X axis")
+        y_axis = mo.ui.dropdown(numeric_cols, value=numeric_cols[1], label="Y axis")
+        color = mo.ui.dropdown(
+            options=[None, *filtered.columns],
+            value=None,
+            label="Color by",
+        )
+        mo.hstack([x_axis, y_axis, color])
 
-    x_axis = mo.ui.dropdown(numeric_cols, value=numeric_cols[0], label=\"X axis\")
-    y_axis = mo.ui.dropdown(numeric_cols, value=numeric_cols[1], label=\"Y axis\")
-    color = mo.ui.dropdown(
-        options=[None, *filtered.columns],
-        value=None,
-        label=\"Color by\",
-    )
-    mo.hstack([x_axis, y_axis, color])
-
-    """,
-    name="_"
-)
+    return color, x_axis, y_axis
 
 
 @app.cell
-def _(build_interactive_scatter, color, filtered, x_axis, y_axis):
+def _(build_interactive_scatter, color, filtered, mo, x_axis, y_axis):
+    mo.stop(x_axis is None or y_axis is None)
     chart = build_interactive_scatter(
         filtered,
         x_field=x_axis.value,

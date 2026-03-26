@@ -20,6 +20,7 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
@@ -41,17 +42,16 @@ def _(mo):
 @app.cell
 def _():
     import torch
+    from pina.trainer import Trainer
+
     from marimo_flow.core import (
         MarimoLivePlotter,
         ModelFactory,
         ProblemManager,
         SolverManager,
         build_comparison_chart,
-        build_heatmap_chart,
         generate_error_data,
-        generate_heatmap_data,
     )
-    from pina.trainer import Trainer
 
     # 1. Define Problem (Poisson Equation)
     # We use a predefined Poisson problem with analytical solution for validation
@@ -81,9 +81,7 @@ def _(mo):
 
     # Solver type selection
     solver_type = mo.ui.dropdown(
-        options=["PINN", "SAPINN"],
-        value="PINN",
-        label="Solver Type"
+        options=["PINN", "SAPINN"], value="PINN", label="Solver Type"
     )
 
     train_btn = mo.ui.run_button(label="Start Live Training")
@@ -107,14 +105,17 @@ def _(mo):
 
 @app.cell
 def _(ModelFactory, layer_size, num_layers, problem):
-    # Create model based on UI configuration
-    model = ModelFactory.create_model_for_problem(problem)
+    model = ModelFactory.create_model_for_problem(
+        problem,
+        layers=[layer_size.value] * num_layers.value,
+    )
     return (model,)
 
 
 @app.cell
 def _(
     MarimoLivePlotter,
+    mo,
     SolverManager,
     Trainer,
     epochs_slider,
@@ -123,17 +124,10 @@ def _(
     problem,
     train_btn,
 ):
-    # Training Logic
-    import marimo as mo
-
     mo.stop(not train_btn.value, "Click start to begin training.")
 
     # 3. Create Solver
-    solver = SolverManager.create_pinn(
-        problem, 
-        model, 
-        learning_rate=lr_input.value
-    )
+    solver = SolverManager.create_pinn(problem, model, learning_rate=lr_input.value)
 
     # 4. Setup Live Plotter Callback
     plotter = MarimoLivePlotter(update_every_n_epochs=20)

@@ -44,4 +44,3 @@ def build_problem() -> PoissonProblem:
     """Return a configured Poisson problem."""
 
     return PoissonProblem()
-
