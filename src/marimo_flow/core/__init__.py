@@ -1,37 +1,27 @@
 """Public helpers for building PINA demos."""
 
-# Legacy exports (for backward compatibility)
-# New manager-based API
-from .callbacks import MarimoLivePlotter
-from .model_factory import ModelFactory
-from .modeling import build_model, build_solver
-from .problem import PoissonProblem, build_problem
+from .model_factory import create_model_for_problem
 from .problem_manager import ProblemManager
 from .solver_manager import SolverManager
 from .training import train_solver
 from .visualization import (
-    build_comparison_chart,
-    build_heatmap_chart,
-    generate_error_data,
-    generate_heatmap_data,
+    build_optuna_history_figure,
+    build_optuna_parallel_figure,
+    build_optuna_param_importance_figure,
+    build_trials_scatter_chart,
+    study_trials_dataframe,
 )
-from .walrus import WalrusAdapter
+from .walrus import FoundationModelAdapter
 
 __all__ = [
-    # Legacy
-    "PoissonProblem",
-    "WalrusAdapter",
-    "build_comparison_chart",
-    "build_heatmap_chart",
-    "build_model",
-    "build_problem",
-    "build_solver",
-    "generate_error_data",
-    "generate_heatmap_data",
-    "train_solver",
-    # New managers
-    "MarimoLivePlotter",
-    "ModelFactory",
+    "build_optuna_history_figure",
+    "build_optuna_parallel_figure",
+    "build_optuna_param_importance_figure",
+    "build_trials_scatter_chart",
+    "create_model_for_problem",
+    "FoundationModelAdapter",
     "ProblemManager",
     "SolverManager",
+    "study_trials_dataframe",
+    "train_solver",
 ]

@@ -1,20 +1,50 @@
-"""Problem Manager for creating and managing PINA problems."""
+"""Problem manager for creating PINA problems via a single API."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
 
+import polars as pl
 import torch
 from pina import Condition
 from pina.domain import CartesianDomain
 from pina.equation import Equation, FixedValue
+from pina.operator import grad, laplacian
 from pina.problem import SpatialProblem, TimeDependentProblem
 from pina.problem.zoo import SupervisedProblem
 
 
+def _sin_product_ic(input_: Any, output_: Any) -> Any:
+    """u(x,y,0) = sin(πx)·sin(πy) initial condition."""
+    x = input_.extract(["x"])
+    y = input_.extract(["y"])
+    u = output_.extract(["u"])
+    return u - torch.sin(torch.pi * x) * torch.sin(torch.pi * y)
+
+
+def _build_time_dependent_domains(
+    x_min: float,
+    x_max: float,
+    y_min: float,
+    y_max: float,
+    t_min: float,
+    t_max: float,
+) -> dict[str, CartesianDomain]:
+    """Build standard 2D time-dependent domain dict (4 walls + IC + interior)."""
+    return {
+        "g1": CartesianDomain({"x": [x_min, x_max], "y": y_max, "t": [t_min, t_max]}),
+        "g2": CartesianDomain({"x": [x_min, x_max], "y": y_min, "t": [t_min, t_max]}),
+        "g3": CartesianDomain({"x": x_max, "y": [y_min, y_max], "t": [t_min, t_max]}),
+        "g4": CartesianDomain({"x": x_min, "y": [y_min, y_max], "t": [t_min, t_max]}),
+        "t0": CartesianDomain({"x": [x_min, x_max], "y": [y_min, y_max], "t": t_min}),
+        "D": CartesianDomain({"x": [x_min, x_max], "y": [y_min, y_max], "t": [t_min, t_max]}),
+    }
+
+
 class ProblemManager:
-    """Manager for creating and configuring PINA problems."""
+    """Single entry point for creating problem classes/instances."""
+    _PRESETS: dict[str, Callable[..., Any]] = {}
 
     @staticmethod
     def create_from_dataframe(
@@ -32,9 +62,6 @@ class ProblemManager:
         Returns:
             SupervisedProblem instance
         """
-        import polars as pl
-
-        # Convert to numpy first
         if isinstance(df, pl.DataFrame):
             input_arr = df.select(input_cols).to_numpy()
             target_arr = df.select(output_cols).to_numpy()
@@ -42,24 +69,10 @@ class ProblemManager:
             input_arr = df[input_cols].to_numpy()
             target_arr = df[output_cols].to_numpy()
 
-        # Convert to torch tensors
         input_tensor = torch.from_numpy(input_arr).float()
         target_tensor = torch.from_numpy(target_arr).float()
 
         return SupervisedProblem(input_=input_tensor, output_=target_tensor)
-
-    @staticmethod
-    def create_domain(variables: dict[str, list[float]]) -> CartesianDomain:
-        """Create a Cartesian domain from variable definitions.
-
-        Args:
-            variables: Dictionary mapping variable names to [min, max] lists
-                      e.g., {"x": [0, 1], "y": [0, 1]}
-
-        Returns:
-            Configured CartesianDomain object
-        """
-        return CartesianDomain(variables)
 
     @staticmethod
     def create_supervised_problem(
@@ -95,14 +108,14 @@ class ProblemManager:
         Returns:
             Problem class (not instance)
         """
-        domains = domains or {}
-        conditions = conditions or {}
+        _ov, _sd = output_variables, spatial_domain
+        _dom, _cond = domains or {}, conditions or {}
 
         class CustomSpatialProblem(SpatialProblem):
-            output_variables = output_variables
-            spatial_domain = spatial_domain
-            domains = domains
-            conditions = conditions
+            output_variables = _ov
+            spatial_domain = _sd
+            domains = _dom
+            conditions = _cond
 
         return CustomSpatialProblem
 
@@ -126,15 +139,15 @@ class ProblemManager:
         Returns:
             Problem class (not instance)
         """
-        domains = domains or {}
-        conditions = conditions or {}
+        _ov, _sd, _td = output_variables, spatial_domain, temporal_domain
+        _dom, _cond = domains or {}, conditions or {}
 
         class CustomTimeDependentProblem(TimeDependentProblem, SpatialProblem):
-            output_variables = output_variables
-            spatial_domain = spatial_domain
-            temporal_domain = temporal_domain
-            domains = domains
-            conditions = conditions
+            output_variables = _ov
+            spatial_domain = _sd
+            temporal_domain = _td
+            domains = _dom
+            conditions = _cond
 
         return CustomTimeDependentProblem
 
@@ -167,8 +180,6 @@ class ProblemManager:
 
             source_term = default_source
 
-        from pina.operator import laplacian
-
         def poisson_equation(input_, output_):
             lap_u = laplacian(output_, input_, components=["u"], d=["x", "y"])
             f = source_term(input_, output_)
@@ -193,10 +204,175 @@ class ProblemManager:
             "D": Condition(domain="D", equation=Equation(poisson_equation)),
         }
 
+        _sd, _dom, _cond = spatial_domain, domains, conditions
+
         class Poisson(SpatialProblem):
             output_variables = ["u"]
-            spatial_domain = spatial_domain
-            domains = domains
-            conditions = conditions
+            spatial_domain = _sd
+            domains = _dom
+            conditions = _cond
 
         return Poisson
+
+    @staticmethod
+    def create_heat_problem(
+        domain_bounds: dict[str, list[float]] | None = None,
+        diffusivity: float = 0.01,
+    ) -> type[TimeDependentProblem]:
+        """Create a heat equation problem: du/dt = alpha * laplacian(u).
+
+        Args:
+            domain_bounds: Spatial and temporal bounds.
+                         Defaults to {"x": [0,1], "y": [0,1], "t": [0,1]}
+            diffusivity: Thermal diffusivity alpha. Defaults to 0.01
+
+        Returns:
+            Problem class (not instance)
+        """
+        if domain_bounds is None:
+            domain_bounds = {"x": [0, 1], "y": [0, 1], "t": [0, 1]}
+
+        spatial_vars = {k: v for k, v in domain_bounds.items() if k != "t"}
+        spatial_domain = CartesianDomain(spatial_vars)
+        temporal_domain = CartesianDomain({"t": domain_bounds["t"]})
+
+        def heat_equation(input_, output_):
+            du_dt = grad(output_, input_, components=["u"], d=["t"])
+            lap_u = laplacian(output_, input_, components=["u"], d=list(spatial_vars))
+            return du_dt - diffusivity * lap_u
+
+        x_min, x_max = domain_bounds["x"]
+        y_min, y_max = domain_bounds["y"]
+        t_min, t_max = domain_bounds["t"]
+
+        domains = _build_time_dependent_domains(x_min, x_max, y_min, y_max, t_min, t_max)
+        conditions = {
+            "g1": Condition(domain="g1", equation=FixedValue(0.0)),
+            "g2": Condition(domain="g2", equation=FixedValue(0.0)),
+            "g3": Condition(domain="g3", equation=FixedValue(0.0)),
+            "g4": Condition(domain="g4", equation=FixedValue(0.0)),
+            "t0": Condition(domain="t0", equation=Equation(_sin_product_ic)),
+            "D": Condition(domain="D", equation=Equation(heat_equation)),
+        }
+
+        _sd, _td, _dom, _cond = spatial_domain, temporal_domain, domains, conditions
+
+        class Heat(TimeDependentProblem, SpatialProblem):
+            output_variables = ["u"]
+            spatial_domain = _sd
+            temporal_domain = _td
+            domains = _dom
+            conditions = _cond
+
+        return Heat
+
+    @staticmethod
+    def create_wave_problem(
+        domain_bounds: dict[str, list[float]] | None = None,
+        wave_speed: float = 1.0,
+    ) -> type[TimeDependentProblem]:
+        """Create a wave equation problem: d2u/dt2 = c^2 * laplacian(u).
+
+        Args:
+            domain_bounds: Spatial and temporal bounds.
+                         Defaults to {"x": [0,1], "y": [0,1], "t": [0,1]}
+            wave_speed: Wave propagation speed c. Defaults to 1.0
+
+        Returns:
+            Problem class (not instance)
+        """
+        if domain_bounds is None:
+            domain_bounds = {"x": [0, 1], "y": [0, 1], "t": [0, 1]}
+
+        spatial_vars = {k: v for k, v in domain_bounds.items() if k != "t"}
+        spatial_domain = CartesianDomain(spatial_vars)
+        temporal_domain = CartesianDomain({"t": domain_bounds["t"]})
+
+        def wave_equation(input_, output_):
+            du_dt = grad(output_, input_, components=["u"], d=["t"])
+            d2u_dt2 = grad(du_dt, input_, components=["u"], d=["t"])
+            lap_u = laplacian(output_, input_, components=["u"], d=list(spatial_vars))
+            return d2u_dt2 - wave_speed**2 * lap_u
+
+        x_min, x_max = domain_bounds["x"]
+        y_min, y_max = domain_bounds["y"]
+        t_min, t_max = domain_bounds["t"]
+
+        domains = _build_time_dependent_domains(x_min, x_max, y_min, y_max, t_min, t_max)
+
+        def initial_velocity(input_, output_):
+            du_dt = grad(output_, input_, components=["u"], d=["t"])
+            return du_dt
+
+        conditions = {
+            "g1": Condition(domain="g1", equation=FixedValue(0.0)),
+            "g2": Condition(domain="g2", equation=FixedValue(0.0)),
+            "g3": Condition(domain="g3", equation=FixedValue(0.0)),
+            "g4": Condition(domain="g4", equation=FixedValue(0.0)),
+            "t0_u": Condition(domain="t0", equation=Equation(_sin_product_ic)),
+            "t0_v": Condition(domain="t0", equation=Equation(initial_velocity)),
+            "D": Condition(domain="D", equation=Equation(wave_equation)),
+        }
+
+        _sd, _td, _dom, _cond = spatial_domain, temporal_domain, domains, conditions
+
+        class Wave(TimeDependentProblem, SpatialProblem):
+            output_variables = ["u"]
+            spatial_domain = _sd
+            temporal_domain = _td
+            domains = _dom
+            conditions = _cond
+
+        return Wave
+
+    @classmethod
+    def available(cls) -> tuple[str, ...]:
+        """Return supported built-ins and registered presets."""
+        builtin = ("poisson", "heat", "wave", "spatial", "time_dependent", "supervised", "from_dataframe")
+        return tuple(sorted(set(builtin) | set(cls._PRESETS)))
+
+    @classmethod
+    def register(cls, kind: str, builder: Callable[..., Any]) -> None:
+        """Register a custom problem builder under a kind name."""
+        key = kind.strip().lower()
+        cls._PRESETS[key] = builder
+
+    @classmethod
+    def create(cls, kind: str, **kwargs: Any) -> Any:
+        """Create a problem by kind.
+
+        Supported:
+        - `poisson`: returns problem class
+        - `heat`: returns problem class
+        - `wave`: returns problem class
+        - `spatial`: returns custom SpatialProblem class
+        - `time_dependent`: returns custom TimeDependentProblem class
+        - `supervised`: returns SupervisedProblem instance
+        - `from_dataframe`: returns SupervisedProblem instance from table-like input
+        - `<registered kind>`: calls custom registered builder
+
+        Pass-through:
+        - `problem`: if provided as instance/class, returned directly.
+        """
+        provided_problem = kwargs.pop("problem", None)
+        if provided_problem is not None:
+            return provided_problem
+
+        key = kind.strip().lower()
+        if key in cls._PRESETS:
+            return cls._PRESETS[key](**kwargs)
+        if key == "poisson":
+            return cls.create_poisson_problem(**kwargs)
+        if key == "heat":
+            return cls.create_heat_problem(**kwargs)
+        if key == "wave":
+            return cls.create_wave_problem(**kwargs)
+        if key == "spatial":
+            return cls.create_spatial_problem(**kwargs)
+        if key == "time_dependent":
+            return cls.create_time_dependent_problem(**kwargs)
+        if key == "supervised":
+            return cls.create_supervised_problem(**kwargs)
+        if key == "from_dataframe":
+            return cls.create_from_dataframe(**kwargs)
+        raise ValueError(f"Unknown problem kind '{kind}'. Available: {', '.join(cls.available())}")
