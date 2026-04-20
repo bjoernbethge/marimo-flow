@@ -1,133 +1,60 @@
-"""Visualization utilities for the PINA demo."""
+"""Visualization utilities built on Optuna's native plotting APIs."""
 
 from __future__ import annotations
 
 import altair as alt
-import numpy as np
+import optuna
 import polars as pl
-import torch
-from pina import LabelTensor
-from pina.solver import PINN
+from optuna.visualization import (
+    plot_optimization_history as build_optuna_history_figure,
+)
+from optuna.visualization import (
+    plot_parallel_coordinate as build_optuna_parallel_figure,
+)
+from optuna.visualization import (
+    plot_param_importances as build_optuna_param_importance_figure,
+)
+
+__all__ = [
+    "build_optuna_history_figure",
+    "build_optuna_parallel_figure",
+    "build_optuna_param_importance_figure",
+    "build_trials_scatter_chart",
+    "study_trials_dataframe",
+]
 
 
-def generate_heatmap_data(
-    solver: PINN,
-    grid_size: int = 50,
-) -> tuple[pl.DataFrame, np.ndarray, np.ndarray]:
-    """Evaluate the solver on a regular grid and return the results."""
+def study_trials_dataframe(study: optuna.Study) -> pl.DataFrame:
+    """Return completed Optuna trials as a typed dataframe."""
 
-    x = np.linspace(0, 1, grid_size)
-    y = np.linspace(0, 1, grid_size)
-    X, Y = np.meshgrid(x, y)
-
-    pts = torch.tensor(np.column_stack([X.ravel(), Y.ravel()]), dtype=torch.float32)
-    pts.requires_grad = True
-    input_tensor = LabelTensor(pts, labels=["x", "y"])
-
-    with torch.no_grad():
-        u_pred = solver.model(input_tensor).numpy().flatten()
-
-    df = pl.DataFrame({"x": X.ravel(), "y": Y.ravel(), "u": u_pred})
-    return df, X, Y
+    rows: list[dict[str, object]] = []
+    for trial in study.trials:
+        if trial.value is None:
+            continue
+        row = {"trial": trial.number, "loss": float(trial.value)}
+        row.update(trial.params)
+        rows.append(row)
+    return pl.DataFrame(rows).sort("loss")
 
 
-def build_heatmap_chart(
-    df: pl.DataFrame, title: str = "PINN Solution u(x,y)"
-) -> alt.Chart:
-    """Return an Altair heatmap for the predicted solution."""
+def build_trials_scatter_chart(df: pl.DataFrame, color_by: str | None = None) -> alt.Chart:
+    """Build a lightweight Altair scatter chart for trial/loss overview."""
+    if df.is_empty():
+        return alt.Chart(pl.DataFrame({"trial": [], "loss": []}).to_pandas()).mark_point()
 
-    return (
-        alt.Chart(df.to_pandas())
-        .mark_rect()
-        .encode(
-            x="x:Q",
-            y="y:Q",
-            color="u:Q",
-            tooltip=["x", "y", "u"],
+    base_chart = alt.Chart(df.to_pandas()).mark_point(filled=True, size=80)
+    if color_by and color_by in df.columns:
+        chart = base_chart.encode(
+            x=alt.X("trial:Q", title="Trial"),
+            y=alt.Y("loss:Q", scale=alt.Scale(type="log"), title="Loss"),
+            color=alt.Color(f"{color_by}:N"),
+            tooltip=list(df.columns),
         )
-        .properties(title=title)
-    )
-
-
-def generate_error_data(
-    solver: PINN,
-    exact_solution_fn: callable,
-    grid_size: int = 50,
-) -> pl.DataFrame:
-    """Generate prediction, exact solution, and error data on a grid.
-
-    Args:
-        solver: Trained PINA solver
-        exact_solution_fn: Function that takes input tensor and returns exact solution tensor
-        grid_size: Resolution of the evaluation grid
-
-    Returns:
-        DataFrame with x, y, u_pred, u_exact, error
-    """
-    x = np.linspace(0, 1, grid_size)
-    y = np.linspace(0, 1, grid_size)
-    X, Y = np.meshgrid(x, y)
-
-    pts_np = np.column_stack([X.ravel(), Y.ravel()])
-    pts = torch.tensor(pts_np, dtype=torch.float32)
-    pts.requires_grad = True
-    input_tensor = LabelTensor(pts, labels=["x", "y"])
-
-    with torch.no_grad():
-        u_pred = solver.model(input_tensor).numpy().flatten()
-
-        # Calculate exact solution
-        # Note: exact_solution_fn might expect LabelTensor or just tensor
-        try:
-            u_exact = exact_solution_fn(input_tensor)
-        except Exception:
-            u_exact = exact_solution_fn(pts)
-
-        if hasattr(u_exact, "numpy"):
-            u_exact = u_exact.numpy()
-        u_exact = u_exact.flatten()
-
-    error = np.abs(u_pred - u_exact)
-
-    df = pl.DataFrame(
-        {
-            "x": X.ravel(),
-            "y": Y.ravel(),
-            "u_pred": u_pred,
-            "u_exact": u_exact,
-            "error": error,
-        }
-    )
-    return df
-
-
-def build_comparison_chart(df: pl.DataFrame) -> alt.Chart:
-    """Create a side-by-side comparison chart: Prediction | Exact | Error.
-
-    Args:
-        df: DataFrame with columns x, y, u_pred, u_exact, error
-
-    Returns:
-        Altair chart with 3 faceted heatmaps
-    """
-    # Convert to long format for faceting
-    df_long = df.unpivot(
-        index=["x", "y"],
-        on=["u_pred", "u_exact", "error"],
-        variable_name="type",
-        value_name="value",
-    )
-
-    return (
-        alt.Chart(df_long.to_pandas())
-        .mark_rect()
-        .encode(
-            x="x:Q",
-            y="y:Q",
-            color=alt.Color("value:Q", scale=alt.Scale(scheme="viridis")),
-            column=alt.Column("type:N", title=None),
-            tooltip=["x", "y", "value"],
+    else:
+        chart = base_chart.encode(
+            x=alt.X("trial:Q", title="Trial"),
+            y=alt.Y("loss:Q", scale=alt.Scale(type="log"), title="Loss"),
+            tooltip=list(df.columns),
         )
-        .properties(title="Solution Comparison")
-        .resolve_scale(color="independent")
-    )
+    return chart.properties(height=260, title="Loss per Trial").interactive()
+
