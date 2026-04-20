@@ -1,4 +1,4 @@
-FROM intel/intel-extension-for-pytorch:2.5.10-xpu
+FROM intel/intel-extension-for-pytorch:2.8.10-xpu
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:0.10.12 /uv /uvx /bin/

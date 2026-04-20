@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.7.0-cuda12.6-cudnn9-devel
+FROM pytorch/pytorch:2.11.0-cuda13.0-cudnn9-devel
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -32,7 +32,7 @@ USER marimo-flow
 RUN uv sync --no-dev --extra all
 
 # Install PyG CUDA packages (matching PyTorch version in base image)
-RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.7.0+cu126.html
+RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.11.0+cu130.html
 
 # Activate virtualenv
 ENV VIRTUAL_ENV=/app/.venv
