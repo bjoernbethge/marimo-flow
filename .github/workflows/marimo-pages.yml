@@ -100,13 +100,9 @@ jobs:
           notebooks = []
 
           descriptions = {
-              "01_interactive_data_profiler": "Interactive dataset analysis with statistical summaries",
-              "02_mlflow_experiment_console": "MLflow experiment tracking and visualization",
-              "03_pina_walrus_solver": "Physics-Informed Neural Networks with PINA",
-              "04_hyperparameter_tuning": "Automated hyperparameter optimization with Optuna",
-              "05_model_registry": "Model versioning and deployment with MLflow",
-              "06_production_pipeline": "Complete end-to-end production workflow",
-              "09_pina_live_monitoring": "Live training monitoring and visualization",
+              "01_mlflow_experiment_console": "MLflow experiment tracking and visualization",
+              "02_pina_walrus_solver": "Physics-Informed Neural Networks with PINA",
+              "03_pina_live_monitoring": "Live training monitoring and visualization",
           }
 
           for html_file in sorted(site_dir.glob("*.html")):
@@ -154,7 +150,7 @@ jobs:
               </div>
               <footer>
                 <p>Built with ❤️ using <a href="https://marimo.io" target="_blank">Marimo</a> and <a href="https://mlflow.org" target="_blank">MLflow</a></p>
-                <p><a href="https://github.com/bjoernbethge/marimo-flow" target="_blank">View on GitHub</a></p>
+                <p><a href="https://github.com/synapticore-io/marimo-flow" target="_blank">View on GitHub</a></p>
               </footer>
             </div>
           </body>

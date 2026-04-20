@@ -44,8 +44,8 @@ jobs:
       - name: Install Dependencies
         run: |
           # Install core dependencies with MCP support
-          uv pip install --system "marimo[mcp]>=0.18.0"
-          uv pip install --system "mlflow[mcp]>=2.19.0"
+          uv pip install --system "marimo[mcp]>=0.21.0"
+          uv pip install --system "mlflow[mcp]>=3.10.1"
 
           # Install project dependencies
           uv sync --no-dev
@@ -210,18 +210,19 @@ jobs:
             - **Prefer Polars** over Pandas for performance
             - Use Context7 to get latest Polars patterns
             - Leverage DuckDB for SQL analytics
-            - Check `snippets/data_explorer_pattern.py` for reusable patterns
 
             ### When Working with ML
             - Check MLflow experiments before creating new ones
             - Log all hyperparameters and metrics to MLflow
-            - Follow patterns in `examples/04_hyperparameter_tuning.py`
-            - Use `snippets/pina_basics.py` for PINA workflows
+            - Follow patterns in `examples/01_mlflow_experiment_console.py`
+
+            ### When Working with PINA
+            - See `examples/02_pina_walrus_solver.py` for PINA solver setup
+            - See `examples/03_pina_live_monitoring.py` for live training monitoring
 
             ### When Creating Visualizations
-            - **Altair** for declarative charts (see `snippets/altair_visualization.py`)
+            - **Altair** for declarative charts
             - **Plotly** for 3D plots and complex interactions
-            - Follow patterns in `examples/tutorials/`
 
             ### Code Standards
             - Marimo cells must be idempotent (no hidden state)
@@ -231,8 +232,7 @@ jobs:
             - Format with Black (line length 79 for local, 88 for docker)
 
             ### Directory Structure
-            - `examples/`: Production notebooks (01-09 + tutorials/)
-            - `snippets/`: Reusable modules for import
+            - `examples/`: Production notebooks (01-03)
             - `data/mlflow/`: Experiment tracking storage
             - `docs/`: Reference documentation
 
