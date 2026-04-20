@@ -118,8 +118,8 @@ environment variables and default configurations.
 
 ### Python Style
 
-- **Formatter**: Black (line length: 88)
-- **Linter**: Ruff
+- **Formatter**: Ruff (`ruff format .`)
+- **Linter**: Ruff (`ruff check --fix .`)
 - **Type Checker**: MyPy
 - **Docstrings**: Google style
 
@@ -127,10 +127,10 @@ Run formatting and linting:
 
 ```bash
 # Format code
-uv run black .
+uv run ruff format .
 
-# Lint code
-uv run ruff check .
+# Lint and auto-fix
+uv run ruff check --fix .
 
 # Type check
 uv run mypy .
@@ -207,10 +207,10 @@ def test_example_notebook_executes():
 2. **Run quality checks**:
    ```bash
    # Format
-   uv run black .
+   uv run ruff format .
 
-   # Lint
-   uv run ruff check .
+   # Lint and auto-fix
+   uv run ruff check --fix .
 
    # Type check
    uv run mypy .
@@ -262,7 +262,7 @@ Describe how you tested your changes
 ### Adding Examples
 
 New example notebooks should:
-1. Fit the progressive learning structure (00-08)
+1. Fit the progressive learning structure (01-03)
 2. Demonstrate practical ML workflows
 3. Include MLflow tracking
 4. Be well-documented with markdown cells

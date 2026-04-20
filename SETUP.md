@@ -90,9 +90,9 @@ Get docs for polars DataFrame
 # Or click any .py file in examples/ if using VSCode
 
 # Try these notebooks:
-# - examples/01_interactive_data_profiler.py
-# - examples/02_mlflow_experiment_console.py
-# - examples/03_pina_walrus_solver.py
+# - examples/01_mlflow_experiment_console.py
+# - examples/02_pina_walrus_solver.py
+# - examples/03_pina_live_monitoring.py
 ```
 
 ## 🚀 Quick Test
@@ -129,12 +129,9 @@ Get polars documentation for lazy evaluation
 - **Docs**: https://mlflow.org/docs
 
 ### Explore Examples
-- `01_interactive_data_profiler.py` - DuckDB data explorer
-- `02_mlflow_experiment_console.py` - MLflow experiment viewer
-- `03_pina_walrus_solver.py` - Physics-Informed Neural Networks
-- `04_hyperparameter_tuning.py` - Optuna + MLflow
-- `05_model_registry.py` - Model lifecycle management
-- `06_production_pipeline.py` - Full ML pipeline
+- `01_mlflow_experiment_console.py` - MLflow experiment viewer
+- `02_pina_walrus_solver.py` - Physics-Informed Neural Networks
+- `03_pina_live_monitoring.py` - Live training monitoring
 
 ### Use MCP Servers
 - **Marimo MCP**: Introspect running notebooks, find errors
@@ -157,7 +154,7 @@ Get polars documentation for lazy evaluation
 uv run pytest
 
 # Format code
-uv run black --line-length=79 examples/
+ruff format . && ruff check --fix .
 
 # Start only MLflow
 ./scripts/start-dev.sh --mlflow-only

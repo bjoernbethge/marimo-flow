@@ -224,7 +224,7 @@ examples/
 - `SolverManager` - Training management ✓
 - `build_interactive_scatter` - Charting ✓
 - `filter_dataframe` - Data manipulation ✓
-- `MarimoLivePlotter` - Live visualization ✓
+- `build_optuna_history_figure` / `build_optuna_param_importance_figure` - Optuna visualization ✓
 
 ### Need to Add:
 - Data profiling layer (for Pattern 1)

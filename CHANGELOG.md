@@ -7,21 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-01-25
+## [0.2.0] - 2026-03-26
 
 ### Added
-- Multi-platform Docker images for CUDA and Intel XPU
-- `docker/Dockerfile.cuda` - NVIDIA GPU support (PyTorch 2.6.0, CUDA 12.4)
-- `docker/Dockerfile.xpu` - Intel GPU support (Intel Extension for PyTorch)
-- `docker/docker-compose.cuda.yaml` - NVIDIA GPU compose configuration
-- `docker/docker-compose.xpu.yaml` - Intel GPU compose configuration
-- GitHub Actions workflow for Docker image publishing (GHCR + Docker Hub)
-- CONTRIBUTING.md with comprehensive contribution guidelines
+- Multi-platform Docker images (CPU, CUDA, XPU) published to GHCR
+- PINA integration: ProblemManager, ModelFactory, SolverManager, WalrusAdapter, Optuna visualization helpers
+- MCP integration: marimo, mlflow, context7 servers pre-configured
+- Claude Code skills for marimo, mlflow, and pina
+- Tag-based PyPI publish workflow with auto GitHub Release
+- Security: pinned minimum versions for all Dependabot-flagged transitive deps (authlib, pillow, cryptography)
+- Dependabot auto-merge workflow
 
 ### Changed
-- Improved .gitignore with Python cache directories
-- Moved data files to organized locations (data/ directory)
-- Simplified CPU Dockerfile (removed GPU-specific packages)
+- Examples reduced to 3 focused notebooks (MLflow Console, PINA Walrus Solver, PINA Live Monitoring)
+- Dependencies simplified to 3 core (marimo, mlflow, pina-mathlab) + optional `[all]` extra for torch/torch-geometric
+
+### Removed
+- Redundant tutorials and snippets module
+- CONTRIBUTING.md and docs/ reference documentation
 
 ## [0.1.3] - 2025-11-23
 
@@ -118,15 +121,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
-- **0.2.0** (2026-01-25) - Multi-platform Docker images (CUDA, Intel XPU)
+- **0.2.0** (2026-03-26) - Multi-platform Docker, PINA integration, MCP servers, simplified deps
 - **0.1.3** (2025-11-23) - Major restructuring, advanced examples, comprehensive docs
 - **0.1.2** (2025-10-18) - PINA and PyG integration
 - **0.1.1** (2025-07-14) - Docker and CI/CD improvements
 - **0.1.0** (2025-07-08) - Initial release
 
-[Unreleased]: https://github.com/bjoernbethge/marimo-flow/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/bjoernbethge/marimo-flow/compare/v0.1.3...v0.2.0
-[0.1.3]: https://github.com/bjoernbethge/marimo-flow/compare/v0.1.2...v0.1.3
-[0.1.2]: https://github.com/bjoernbethge/marimo-flow/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/bjoernbethge/marimo-flow/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/bjoernbethge/marimo-flow/releases/tag/v0.1.0
+[Unreleased]: https://github.com/synapticore-io/marimo-flow/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/synapticore-io/marimo-flow/compare/v0.1.3...v0.2.0
+[0.1.3]: https://github.com/synapticore-io/marimo-flow/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/synapticore-io/marimo-flow/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/synapticore-io/marimo-flow/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/synapticore-io/marimo-flow/releases/tag/v0.1.0

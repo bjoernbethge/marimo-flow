@@ -13,10 +13,10 @@ Reactive Python notebooks with MLflow tracking and PINA physics-informed neural 
 
 ## MCP Servers
 
-- **marimo**: `marimo edit --mcp --no-token --port 2718 --headless`
-- **mlflow**: `mlflow mcp run` (set MLFLOW_TRACKING_URI)
+- **marimo**: start manually with `marimo edit --mcp --no-token --port 2718 --headless`
+- **mlflow**: `mlflow mcp run` (set `MLFLOW_TRACKING_URI`)
 - VS Code config: `.vscode/mcp.json` (uses `servers` key, not `mcpServers`)
-- Claude Code config: `.mcp.json` (uses `mcpServers` key)
+- No `.mcp.json` for Claude Code — MCP is wired in some other way here.
 
 ## context7 Library IDs
 

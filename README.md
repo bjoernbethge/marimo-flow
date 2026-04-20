@@ -52,10 +52,9 @@ This combination eliminates the reproducibility issues of traditional notebooks 
 - **💾 SQLite Backend**: Lightweight, file-based storage for experiments
 
 ### 🚀 Production Ready
-- **🐳 Docker Deployment**: One-command setup with docker-compose
-- **📦 Curated Snippets & Tutorials**: 4 reusable snippet modules plus 15+ tutorial notebooks covering Polars, Plotly, Marimo UI patterns, RAG, and OpenVINO
-- **📚 Comprehensive Docs**: Built-in reference guides with 100+ code examples
-- **🌐 GitHub Pages**: Auto-deploy interactive notebooks with WASM
+- **🐳 Docker Deployment**: One-command setup with docker-compose (CPU, CUDA, XPU)
+- **🧠 PINA Integration**: Physics-informed neural networks with Walrus foundation model
+- **📚 MCP-Powered Docs**: Live documentation via Context7 and Marimo MCP servers
 
 ## Quick Start 🏃‍♂️
 
@@ -118,81 +117,35 @@ uv run marimo edit examples/
 
 All notebooks live in `examples/` and can be opened with `uv run marimo edit examples/<file>.py`.
 
-- **`01_interactive_data_profiler.py`** – DuckDB-powered data explorer with filters, previews, and interactive scatter plots for any local database.
-- **`02_mlflow_experiment_console.py`** – Connect to an MLflow tracking directory, inspect experiments, and visualize metric trends inline with Altair.
-- **`03_pina_walrus_solver.py`** – Toggle between baseline PINNs and the Walrus adapter to solve a Poisson equation with live training controls.
-- **`04_hyperparameter_tuning.py`** – Optuna-based hyperparameter search for PINA/PyTorch models with MLflow tracking and interactive study settings.
-- **`05_model_registry.py`** – Train, register, and promote MLflow models end-to-end, including stage transitions and inference checks.
-- **`06_production_pipeline.py`** – Production-style pipeline featuring validation gates, training, registry integration, deployment steps, and monitoring hooks.
-- **`09_pina_live_monitoring.py`** – Live training monitoring with real-time loss plotting, error analysis, and comprehensive visualization tools.
-
-Additional learning material lives in `examples/tutorials/` (15+ focused notebooks covering marimo UI patterns, Polars, Plotly, DuckDB, OpenVINO, RAG, and PYG) plus `examples/tutorials/legacy/` for the retired 00–03 pipeline.
+- **`01_pina_poisson_solver.py`** – Solve the Poisson equation with baseline PINNs or the Walrus foundation model. Training is tracked in MLflow with integrated Optuna sweep analytics and experiment history.
 
 ## Project Structure 📁
 
 ```
 marimo-flow/
-├── .claude/                     # Claude Code configuration
-│   ├── Skills/                  # Domain-specific skills
-│   │   ├── marimo/              # Marimo notebook development
-│   │   ├── mlflow/              # MLflow tracking & GenAI
-│   │   ├── pina/                # Physics-informed neural networks
-│   │   └── _integration/        # Cross-skill workflows
-│   └── settings.json            # Hooks (format, lint, protection)
-├── .vscode/
-│   └── mcp.json                 # VS Code Copilot MCP config
-├── .mcp.json                    # Claude Code MCP config
-├── examples/                    # Production-ready marimo notebooks
-│   ├── 01_interactive_data_profiler.py
-│   ├── 02_mlflow_experiment_console.py
-│   ├── 03_pina_walrus_solver.py
-│   ├── 04_hyperparameter_tuning.py
-│   ├── 05_model_registry.py
-│   ├── 06_production_pipeline.py
-│   ├── 09_pina_live_monitoring.py
-│   └── tutorials/               # Learning notebooks
-│       ├── pina/                # PINA tutorials (5 notebooks)
-│       ├── mlflow/              # MLflow tutorials (5 notebooks)
-│       └── *.py                 # Marimo, Polars, Plotly patterns
+├── examples/                    # Marimo notebooks
+│   └── 01_pina_poisson_solver.py
 ├── src/marimo_flow/             # Installable package
-│   ├── core/                    # PINA solvers, training, visualization
-│   └── snippets/                # Reusable chart/dataframe helpers
-├── docs/                        # Reference documentation
-│   ├── marimo-quickstart.md        # Marimo guide
-│   ├── polars-quickstart.md        # Polars guide
-│   ├── plotly-quickstart.md        # Plotly guide
-│   ├── pina-quickstart.md          # PINA guide
-│   └── integration-patterns.md     # Integration examples
-├── data/
-│   └── mlflow/                  # MLflow storage
-│       ├── artifacts/           # Model artifacts
-│       ├── db/                  # SQLite database
-│       └── prompts/             # Prompt templates
-├── docker/                      # Docker configuration
-├── pyproject.toml              # Dependencies
-└── README.md                   # This file
+│   └── core/                    # PINA solvers, training, visualization
+├── docs/                        # Project documentation
+├── docker/                      # Dockerfiles + compose (CPU, CUDA, XPU)
+├── data/mlflow/                 # MLflow storage (artifacts, db)
+└── pyproject.toml               # Dependencies
 ```
 
-### 📝 About the Library
-
-The `marimo_flow` package provides reusable components:
+### The `marimo_flow` Package
 
 ```python
-# Chart and dataframe helpers
-from marimo_flow.snippets import build_interactive_scatter, filter_dataframe
-
-# PINA solver components
-from marimo_flow.core import ModelFactory, ProblemManager, SolverManager
+from marimo_flow.core import (
+    ModelFactory,        # Create PINA neural network models
+    ProblemManager,      # Define PDE problems and domains
+    SolverManager,       # Configure PINN / SAPINN solvers
+    WalrusAdapter,       # Walrus foundation model adapter
+    build_optuna_history_figure,
+    build_optuna_param_importance_figure,
+    build_optuna_parallel_figure,
+)
 ```
-
-Tutorial notebooks in `examples/tutorials/` demonstrate these patterns with progressive examples for PINA, MLflow, and common visualization tasks.
-
-### 📚 About References
-
-The `docs/` directory contains comprehensive LLM-friendly documentation for key technologies:
-- Quick-start guides for Marimo, Polars, Plotly, and PINA
-- Integration patterns and best practices
-- Code examples and common workflows
 
 ## MCP (Model Context Protocol) Integration 🔌
 
@@ -385,43 +338,7 @@ The Docker container runs both services via `docker/start.sh`:
 - **Marimo**: Port 2718 - Interactive notebook environment
 - **MLflow**: Port 5000 - Experiment tracking UI
 
-**GPU Support**: NVIDIA GPU support is enabled by default. Remove the `deploy.resources` section in `docker-compose.yaml` if running without GPU.
-
-## Pre-installed ML & Data Science Stack 📦
-
-### Machine Learning & Scientific Computing
-- **[scikit-learn](https://scikit-learn.org/)** `^1.5.2` - Machine learning library
-- **[NumPy](https://numpy.org/)** `^2.1.3` - Numerical computing
-- **[pandas](https://pandas.pydata.org/)** `^2.2.3` - Data manipulation and analysis
-- **[PyArrow](https://arrow.apache.org/docs/python/)** `^18.0.0` - Columnar data processing
-- **[SciPy](https://scipy.org/)** `^1.14.1` - Scientific computing
-- **[matplotlib](https://matplotlib.org/)** `^3.9.2` - Plotting library
-
-### High-Performance Data Processing
-- **[Polars](https://pola.rs/)** `^1.12.0` - Lightning-fast DataFrame library
-- **[DuckDB](https://duckdb.org/)** `^1.1.3` - In-process analytical database
-- **[Altair](https://altair-viz.github.io/)** `^5.4.1` - Declarative statistical visualization
-
-### AI & LLM Integration
-- **[OpenAI](https://platform.openai.com/docs/)** `^1.54.4` - GPT API integration
-- **[FastAPI](https://fastapi.tiangolo.com/)** `^0.115.4` - Modern web framework
-- **[Pydantic](https://docs.pydantic.dev/)** `^2.10.2` - Data validation
-
-### Database & Storage
-- **[SQLAlchemy](https://www.sqlalchemy.org/)** `^2.0.36` - SQL toolkit and ORM
-- **[Alembic](https://alembic.sqlalchemy.org/)** `^1.14.0` - Database migrations
-- **[SQLGlot](https://sqlglot.com/)** `^25.30.2` - SQL parser and transpiler
-
-### Web & API
-- **[Starlette](https://www.starlette.io/)** `^0.41.2` - ASGI framework
-- **[Uvicorn](https://www.uvicorn.org/)** `^0.32.0` - ASGI server
-- **[httpx](https://www.python-httpx.org/)** `^0.27.2` - HTTP client
-
-### Development Tools
-- **[Black](https://black.readthedocs.io/)** `^24.10.0` - Code formatter
-- **[Ruff](https://docs.astral.sh/ruff/)** `^0.7.4` - Fast Python linter
-- **[pytest](https://docs.pytest.org/)** `^8.3.3` - Testing framework
-- **[MyPy](https://mypy.readthedocs.io/)** `^1.13.0` - Static type checker
+**GPU Support**: Use `docker-compose.cuda.yaml` for NVIDIA GPUs or `docker-compose.xpu.yaml` for Intel GPUs. The default `docker-compose.yaml` is CPU-only.
 
 ## API Endpoints 🔌
 
