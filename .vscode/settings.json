@@ -4,8 +4,10 @@
   "editor.formatOnPaste": false,
   "editor.tabSize": 4,
   "editor.insertSpaces": true,
-  "editor.rulers": [79, 88],
-
+  "editor.rulers": [
+    79,
+    88
+  ],
   // === Language-Specific Formatters ===
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
@@ -20,18 +22,18 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-
   // === Marimo Extension Settings ===
-  "marimo.browserType": "embedded",
-  "marimo.autoStartServer": true,
-  "marimo.pythonPath": "${workspaceFolder}/.venv/bin/python",
-  "marimo.port": 2718,
-  "marimo.serverArgs": ["--mcp"],  // Enable MCP by default
-
+  "marimo.disableManagedLanguageFeatures": false,
+  "marimo.disableUvIntegration": false,
+  "marimo.lsp.path": [
+    "D:\\projects\\synapticore-io\\marimo-flow\\.venv\\Scripts\\uvx.exe",
+    "marimo-lsp"
+  ],
+  "marimo.ruff.path": "D:\\projects\\synapticore-io\\marimo-flow\\.venv\\Scripts\\ruff.exe",
+  "marimo.uv.path": "D:\\projects\\synapticore-io\\marimo-flow\\.venv\\Scripts\\uv.exe",
   // === Python Interpreter Settings ===
-  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   "python.terminal.activateEnvironment": true,
-
   // === Python Analysis Settings ===
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.autoImportCompletions": true,
@@ -43,24 +45,20 @@
   ],
   "python.analysis.importFormat": "absolute",
   "python.analysis.autoSearchPaths": true,
-
   // === Black Formatter ===
   "black-formatter.args": [
     "--line-length=79"
   ],
-
   // === Ruff Linter ===
   "ruff.lint.args": [
     "--line-length=79"
   ],
-
   // === Python Testing ===
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
   "python.testing.pytestArgs": [
     "tests"
   ],
-
   // === Files ===
   "files.exclude": {
     "**/__pycache__": true,
@@ -71,7 +69,6 @@
     "**/mlruns": true,
     "**/.marimo": true
   },
-
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
@@ -79,7 +76,6 @@
     "**/.venv/**": true,
     "**/data/mlflow/**": true
   },
-
   // === Search Settings ===
   "search.exclude": {
     "**/node_modules": true,
@@ -89,18 +85,20 @@
     "**/__pycache__": true,
     "**/.pytest_cache": true
   },
-
   // === Terminal ===
-  "terminal.integrated.defaultProfile.linux": "bash",
-  "terminal.integrated.env.linux": {
+  "terminal.integrated.env.windows": {
     "MLFLOW_TRACKING_URI": "http://localhost:5000",
-    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src:${workspaceFolder}/snippets"
+    "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src"
   },
-  "terminal.integrated.env.osx": {
-    "MLFLOW_TRACKING_URI": "http://localhost:5000",
-    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src:${workspaceFolder}/snippets"
-  },
-
   // === Tasks (for running MLflow, Marimo, etc.) ===
-  "tasks.autoDetect": "on"
+  "tasks.autoDetect": "on",
+  "cursorpyright.analysis.autoImportCompletions": true,
+  "cursorpyright.analysis.autoSearchPaths": true,
+  "cursorpyright.analysis.diagnosticMode": "workspace",
+  "cursorpyright.analysis.extraPaths": [
+    "${workspaceFolder}",
+    "${workspaceFolder}/src",
+    "${workspaceFolder}/snippets"
+  ],
+  "cursorpyright.analysis.typeCheckingMode": "basic"
 }

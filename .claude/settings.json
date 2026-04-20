@@ -1,15 +1,5 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'if command -v marimo &>/dev/null && ! nc -z 127.0.0.1 2718 2>/dev/null; then marimo edit --mcp --no-token --port 2718 --headless & sleep 2; fi' 2>/dev/null || powershell -ExecutionPolicy Bypass -File scripts/start-marimo-mcp.ps1"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",

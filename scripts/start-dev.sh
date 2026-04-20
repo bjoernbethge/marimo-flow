@@ -196,10 +196,12 @@ start_marimo() {
 
     # Set environment variables
     export MLFLOW_TRACKING_URI="http://localhost:${MLFLOW_PORT}"
-    export PYTHONPATH="${PROJECT_ROOT}:${PROJECT_ROOT}/src:${PROJECT_ROOT}/snippets"
+    export PYTHONPATH="${PROJECT_ROOT}:${PROJECT_ROOT}/src"
 
-    uv run marimo edit examples/ \
+    uv run marimo edit \
         --mcp \
+        --no-token \
+        --headless \
         --port ${MARIMO_PORT} \
         --host 0.0.0.0 \
         > "${PROJECT_ROOT}/marimo.log" 2>&1 &
