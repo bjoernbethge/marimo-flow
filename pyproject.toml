@@ -88,6 +88,9 @@ marimo_flow = ["py.typed", "*.yaml", "*.yml", "*.json", "*.css", "*.mp4"]
 
 [tool.uv]
 link-mode = "copy"
+# Override mlflow's `fastmcp<3` pin to pick up security fixes (CVE-2026-32871,
+# CVE-2026-27124, CVE-2025-64340). Revisit once mlflow supports fastmcp 3.
+override-dependencies = ["fastmcp>=3.2.0"]
 
 [tool.ruff]
 line-length = 88
