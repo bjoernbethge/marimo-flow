@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "marimo-flow"
-version = "0.2.0"
-description = "Marimo Flow - Interactive ML notebooks with MLflow integration"
+version = "0.3.0"
+description = "Reactive marimo notebooks for ML with MLflow tracking, PINA physics-informed neural networks, and a multi-agent team on pydantic-graph + Ollama Cloud."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -13,7 +13,20 @@ license-files = ["LICENSE"]
 authors = [
     {name = "Björn Bethge", email = "bjoern.bethge@gmail.com"},
 ]
-keywords = ["marimo", "mlflow", "machine-learning", "notebooks", "interactive"]
+keywords = [
+    "marimo",
+    "mlflow",
+    "pina",
+    "physics-informed-neural-networks",
+    "pde-solver",
+    "reactive-notebooks",
+    "machine-learning",
+    "pydantic-ai",
+    "pydantic-graph",
+    "ollama",
+    "mcp",
+    "model-context-protocol",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -97,6 +110,7 @@ override-dependencies = ["fastmcp>=3.2.0"]
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+extend-exclude = [".claude/Skills/*/examples"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

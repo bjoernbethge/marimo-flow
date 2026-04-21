@@ -138,7 +138,9 @@ def _(mo, nn):
 
 @app.cell
 def _(ProblemManager, problem_type):
-    _kind = {"Poisson": "poisson", "Heat Equation": "heat", "Wave Equation": "wave"}[problem_type.value]
+    _kind = {"Poisson": "poisson", "Heat Equation": "heat", "Wave Equation": "wave"}[
+        problem_type.value
+    ]
     problem_class = ProblemManager.create(_kind)
     problem = problem_class()
     is_time_dependent = problem_type.value in ("Heat Equation", "Wave Equation")
@@ -174,7 +176,9 @@ def _(
         )
 
     _solver_kind = "sapinn" if solver_type.value == "SAPINN" else "pinn"
-    solver = SolverManager.create(_solver_kind, problem=problem, model=model, learning_rate=lr.value)
+    solver = SolverManager.create(
+        _solver_kind, problem=problem, model=model, learning_rate=lr.value
+    )
     return model, solver
 
 
@@ -398,11 +402,19 @@ def _(
 
     def _objective(trial: optuna.Trial) -> float:
         _lr = trial.suggest_float("lr", lr_min.value, lr_max.value, log=True)
-        _n_layers = trial.suggest_int("num_layers", sweep_layers_min.value, sweep_layers_max.value)
-        _layer_size = trial.suggest_int("layer_size", sweep_size_min.value, sweep_size_max.value, step=16)
+        _n_layers = trial.suggest_int(
+            "num_layers", sweep_layers_min.value, sweep_layers_max.value
+        )
+        _layer_size = trial.suggest_int(
+            "layer_size", sweep_size_min.value, sweep_size_max.value, step=16
+        )
         _act = trial.suggest_categorical("activation", ["Tanh", "SiLU", "Softplus"])
 
-        _kind = {"Poisson": "poisson", "Heat Equation": "heat", "Wave Equation": "wave"}[problem_type.value]
+        _kind = {
+            "Poisson": "poisson",
+            "Heat Equation": "heat",
+            "Wave Equation": "wave",
+        }[problem_type.value]
         _problem_cls = ProblemManager.create(_kind)
         _problem = _problem_cls()
         _model = create_model_for_problem(
@@ -410,7 +422,9 @@ def _(
             layers=[_layer_size] * _n_layers,
             activation=_act_map[_act],
         )
-        _solver = SolverManager.create("pinn", problem=_problem, model=_model, learning_rate=_lr)
+        _solver = SolverManager.create(
+            "pinn", problem=_problem, model=_model, learning_rate=_lr
+        )
 
         _tracker = MetricTracker()
         with mlflow.start_run(run_name=f"trial-{trial.number}", nested=True) as _run:
@@ -424,14 +438,21 @@ def _(
                 _solver,
                 max_epochs=sweep_epochs.value,
                 logger=_ml_logger,
-                callbacks=[_tracker, PyTorchLightningPruningCallback(trial, monitor="train_loss")],
+                callbacks=[
+                    _tracker,
+                    PyTorchLightningPruningCallback(trial, monitor="train_loss"),
+                ],
             )
             _metrics = _tracker.metrics
-            _loss = float(next(iter(_metrics.values())).min()) if _metrics else float("inf")
+            _loss = (
+                float(next(iter(_metrics.values())).min()) if _metrics else float("inf")
+            )
             mlflow.log_metric("objective_loss", _loss)
 
         mo.output.replace(
-            mo.md(f"Trial **{trial.number + 1} / {n_trials.value}** — loss: `{_loss:.4e}`")
+            mo.md(
+                f"Trial **{trial.number + 1} / {n_trials.value}** — loss: `{_loss:.4e}`"
+            )
         )
         return _loss
 

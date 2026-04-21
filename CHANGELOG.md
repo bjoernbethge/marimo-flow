@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-21
+
 ### Added
 - Multi-agent PINA team (`marimo_flow.agents`) built on `pydantic-graph` + MLflow.
 - `RouteNode` classifier dispatching to `Notebook`, `Problem`, `Model`, `Solver`, `MLflow` sub-nodes.
@@ -18,10 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A2A AgentCard with one `Skill` per sub-node role for capability discovery by external agents.
 - Ollama-Cloud `OpenAIChatModel` factory (`get_model`) — single endpoint for local + cloud `:cloud` models, no separate proxy.
 - `examples/lab.py` rewritten as full PINA team chat demo with state inspector and live mermaid diagram.
+- `CITATION.cff` for Zenodo DOI integration on GitHub Releases.
 
 ### Changed
 - `pydantic-ai-slim` upgraded to `[a2a, ag-ui, openai]` extras for protocol support.
 - `OpenAIModel` → `OpenAIChatModel` (deprecation in pydantic-ai 1.84).
+- `pyproject.toml` description + keywords updated to reflect PINA, agents, MCP, and Ollama integration.
+- README: dropped marketing claims (`Production Ready` subsection, etc.), removed obsolete `docs/RESEARCH_SUMMARY.md`.
 
 ### Fixed
 - `_define_*` helpers now use `MlflowClient` with explicit `state.mlflow_run_id` to avoid silent artifact misroute when no module-level active run exists (e.g. inside `await graph.run(...)`).
@@ -140,13 +145,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **0.3.0** (2026-04-21) - Multi-agent PINA team (`pydantic-graph` + MLflow + Ollama Cloud), CITATION.cff
 - **0.2.0** (2026-03-26) - Multi-platform Docker, PINA integration, MCP servers, simplified deps
 - **0.1.3** (2025-11-23) - Major restructuring, advanced examples, comprehensive docs
 - **0.1.2** (2025-10-18) - PINA and PyG integration
 - **0.1.1** (2025-07-14) - Docker and CI/CD improvements
 - **0.1.0** (2025-07-08) - Initial release
 
-[Unreleased]: https://github.com/synapticore-io/marimo-flow/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/synapticore-io/marimo-flow/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/synapticore-io/marimo-flow/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/synapticore-io/marimo-flow/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/synapticore-io/marimo-flow/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/synapticore-io/marimo-flow/compare/v0.1.1...v0.1.2

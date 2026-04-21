@@ -38,12 +38,15 @@ def _build_time_dependent_domains(
         "g3": CartesianDomain({"x": x_max, "y": [y_min, y_max], "t": [t_min, t_max]}),
         "g4": CartesianDomain({"x": x_min, "y": [y_min, y_max], "t": [t_min, t_max]}),
         "t0": CartesianDomain({"x": [x_min, x_max], "y": [y_min, y_max], "t": t_min}),
-        "D": CartesianDomain({"x": [x_min, x_max], "y": [y_min, y_max], "t": [t_min, t_max]}),
+        "D": CartesianDomain(
+            {"x": [x_min, x_max], "y": [y_min, y_max], "t": [t_min, t_max]}
+        ),
     }
 
 
 class ProblemManager:
     """Single entry point for creating problem classes/instances."""
+
     _PRESETS: dict[str, Callable[..., Any]] = {}
 
     @staticmethod
@@ -245,7 +248,9 @@ class ProblemManager:
         y_min, y_max = domain_bounds["y"]
         t_min, t_max = domain_bounds["t"]
 
-        domains = _build_time_dependent_domains(x_min, x_max, y_min, y_max, t_min, t_max)
+        domains = _build_time_dependent_domains(
+            x_min, x_max, y_min, y_max, t_min, t_max
+        )
         conditions = {
             "g1": Condition(domain="g1", equation=FixedValue(0.0)),
             "g2": Condition(domain="g2", equation=FixedValue(0.0)),
@@ -298,7 +303,9 @@ class ProblemManager:
         y_min, y_max = domain_bounds["y"]
         t_min, t_max = domain_bounds["t"]
 
-        domains = _build_time_dependent_domains(x_min, x_max, y_min, y_max, t_min, t_max)
+        domains = _build_time_dependent_domains(
+            x_min, x_max, y_min, y_max, t_min, t_max
+        )
 
         def initial_velocity(input_, output_):
             du_dt = grad(output_, input_, components=["u"], d=["t"])
@@ -328,7 +335,15 @@ class ProblemManager:
     @classmethod
     def available(cls) -> tuple[str, ...]:
         """Return supported built-ins and registered presets."""
-        builtin = ("poisson", "heat", "wave", "spatial", "time_dependent", "supervised", "from_dataframe")
+        builtin = (
+            "poisson",
+            "heat",
+            "wave",
+            "spatial",
+            "time_dependent",
+            "supervised",
+            "from_dataframe",
+        )
         return tuple(sorted(set(builtin) | set(cls._PRESETS)))
 
     @classmethod
@@ -375,4 +390,6 @@ class ProblemManager:
             return cls.create_supervised_problem(**kwargs)
         if key == "from_dataframe":
             return cls.create_from_dataframe(**kwargs)
-        raise ValueError(f"Unknown problem kind '{kind}'. Available: {', '.join(cls.available())}")
+        raise ValueError(
+            f"Unknown problem kind '{kind}'. Available: {', '.join(cls.available())}"
+        )

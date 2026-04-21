@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "marimo-flow"
+abstract: >-
+  Reactive marimo notebooks for ML experimentation, with MLflow tracking,
+  PINA physics-informed neural networks, and a multi-agent team built on
+  pydantic-graph and Ollama Cloud.
+type: software
+authors:
+  - family-names: Bethge
+    given-names: Björn
+    email: helloworld@synapticore.io
+    orcid: "https://orcid.org/0009-0003-4500-0274"
+repository-code: "https://github.com/synapticore-io/marimo-flow"
+url: "https://github.com/synapticore-io/marimo-flow"
+license: MIT
+version: 0.3.0
+date-released: "2026-04-21"
+keywords:
+  - marimo
+  - mlflow
+  - pina
+  - physics-informed-neural-networks
+  - pde-solver
+  - reactive-notebooks
+  - machine-learning
+  - pydantic-ai
+  - pydantic-graph
+  - ollama
+  - mcp
+  - model-context-protocol

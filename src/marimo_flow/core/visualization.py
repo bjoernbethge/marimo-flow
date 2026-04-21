@@ -37,10 +37,14 @@ def study_trials_dataframe(study: optuna.Study) -> pl.DataFrame:
     return pl.DataFrame(rows).sort("loss")
 
 
-def build_trials_scatter_chart(df: pl.DataFrame, color_by: str | None = None) -> alt.Chart:
+def build_trials_scatter_chart(
+    df: pl.DataFrame, color_by: str | None = None
+) -> alt.Chart:
     """Build a lightweight Altair scatter chart for trial/loss overview."""
     if df.is_empty():
-        return alt.Chart(pl.DataFrame({"trial": [], "loss": []}).to_pandas()).mark_point()
+        return alt.Chart(
+            pl.DataFrame({"trial": [], "loss": []}).to_pandas()
+        ).mark_point()
 
     base_chart = alt.Chart(df.to_pandas()).mark_point(filled=True, size=80)
     if color_by and color_by in df.columns:
@@ -57,4 +61,3 @@ def build_trials_scatter_chart(df: pl.DataFrame, color_by: str | None = None) ->
             tooltip=list(df.columns),
         )
     return chart.properties(height=260, title="Loss per Trial").interactive()
-

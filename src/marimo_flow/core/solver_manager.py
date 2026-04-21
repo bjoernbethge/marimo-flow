@@ -122,5 +122,7 @@ class SolverManager:
         """Create a solver by kind (`pinn`, `sapinn`, `supervised`)."""
         key = kind.strip().lower()
         if key not in cls._REGISTRY:
-            raise ValueError(f"Unknown solver kind '{kind}'. Available: {', '.join(cls.available())}")
+            raise ValueError(
+                f"Unknown solver kind '{kind}'. Available: {', '.join(cls.available())}"
+            )
         return cls._REGISTRY[key](problem=problem, model=model, **kwargs)

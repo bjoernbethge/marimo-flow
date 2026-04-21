@@ -13,7 +13,17 @@ from marimo_flow.agents.nodes.solver import SolverNode
 
 def test_graph_contains_all_six_nodes():
     graph = build_graph()
-    expected = {cls.__name__ for cls in (RouteNode, NotebookNode, ProblemNode, ModelNode, SolverNode, MLflowNode)}
+    expected = {
+        cls.__name__
+        for cls in (
+            RouteNode,
+            NotebookNode,
+            ProblemNode,
+            ModelNode,
+            SolverNode,
+            MLflowNode,
+        )
+    }
     assert expected.issubset(set(graph.node_defs.keys()))
 
 

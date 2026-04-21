@@ -4,6 +4,7 @@ Live, non-serialisable objects (pina.Problem, torch.nn.Module, pina.Trainer)
 are NOT held here. Only their MLflow artifact URIs are kept; the live
 instances live in FlowDeps.registry, keyed by URI.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
