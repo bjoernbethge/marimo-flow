@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pydantic_ai import Agent
 from pydantic_graph import BaseNode, GraphRunContext
@@ -12,6 +13,9 @@ from marimo_flow.agents.mcp import build_mlflow_mcp
 from marimo_flow.agents.skills import build_skill_instructions
 from marimo_flow.agents.state import FlowState
 
+if TYPE_CHECKING:
+    from marimo_flow.agents.nodes.route import RouteNode
+
 MLFLOW_SKILLS = ["mlflow"]
 
 
@@ -19,7 +23,7 @@ MLFLOW_SKILLS = ["mlflow"]
 class MLflowNode(BaseNode[FlowState, FlowDeps, str]):
     model_override: object | None = None
 
-    async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]):
+    async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
 
         model = self.model_override or get_model(

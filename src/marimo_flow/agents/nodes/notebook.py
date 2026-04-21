@@ -9,6 +9,7 @@ The agent is initialised with:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pydantic_ai import Agent, RunContext
 from pydantic_graph import BaseNode, GraphRunContext
@@ -22,6 +23,9 @@ from marimo_flow.agents.skills import (
 )
 from marimo_flow.agents.state import FlowState
 
+if TYPE_CHECKING:
+    from marimo_flow.agents.nodes.route import RouteNode
+
 NOTEBOOK_SKILLS = ["marimo", "marimo-pair"]
 
 
@@ -29,7 +33,7 @@ NOTEBOOK_SKILLS = ["marimo", "marimo-pair"]
 class NotebookNode(BaseNode[FlowState, FlowDeps, str]):
     model_override: object | None = None
 
-    async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]):
+    async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
 
         model = self.model_override or get_model(

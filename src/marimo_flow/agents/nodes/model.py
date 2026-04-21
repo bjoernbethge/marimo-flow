@@ -11,7 +11,7 @@ import json
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import mlflow
 from pydantic_ai import Agent, RunContext
@@ -20,6 +20,9 @@ from pydantic_graph import BaseNode, GraphRunContext
 from marimo_flow.agents.deps import FlowDeps, get_model
 from marimo_flow.agents.skills import build_skill_instructions
 from marimo_flow.agents.state import FlowState
+
+if TYPE_CHECKING:
+    from marimo_flow.agents.nodes.route import RouteNode
 
 MODEL_SKILLS = ["pina"]
 
@@ -42,7 +45,7 @@ def _define_model(spec: dict[str, Any], deps: FlowDeps, state: FlowState) -> str
 class ModelNode(BaseNode[FlowState, FlowDeps, str]):
     model_override: object | None = None
 
-    async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]):
+    async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
 
         model = self.model_override or get_model(
