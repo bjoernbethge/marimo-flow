@@ -1,9 +1,18 @@
 """Tests for FlowDeps and the Ollama-Cloud model factory."""
-from marimo_flow.agents.deps import FlowDeps, DEFAULT_MODELS, get_model
+
+from marimo_flow.agents.deps import DEFAULT_MODELS, FlowDeps, get_model
 
 
 def test_default_models_cover_all_roles():
-    expected_roles = {"route", "notebook", "problem", "model", "solver", "mlflow", "lead"}
+    expected_roles = {
+        "route",
+        "notebook",
+        "problem",
+        "model",
+        "solver",
+        "mlflow",
+        "lead",
+    }
     assert set(DEFAULT_MODELS.keys()) == expected_roles
 
 

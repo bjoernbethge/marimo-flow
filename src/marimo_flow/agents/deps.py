@@ -1,17 +1,18 @@
 """FlowDeps — in-memory side-channel for live objects + per-role model config.
 
-`get_model()` returns a pydantic-ai OpenAIModel pointed at Ollama's
+`get_model()` returns a pydantic-ai OpenAIChatModel pointed at Ollama's
 OpenAI-compatible endpoint (default: http://localhost:11434/v1).
 Cloud-backed Ollama models use the ':cloud' suffix and are routed by
 Ollama itself — no extra proxy needed.
 """
+
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
 from typing import Any
 
-from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
 DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434/v1"
@@ -27,11 +28,13 @@ DEFAULT_MODELS: dict[str, str] = {
 }
 
 
-def get_model(role: str, *, override: str | None = None, base_url: str | None = None) -> OpenAIModel:
+def get_model(
+    role: str, *, override: str | None = None, base_url: str | None = None
+) -> OpenAIChatModel:
     name = override or DEFAULT_MODELS[role]
     url = base_url or os.environ.get("OLLAMA_BASE_URL", DEFAULT_OLLAMA_BASE_URL)
     provider = OpenAIProvider(base_url=url, api_key="ollama")
-    return OpenAIModel(name, provider=provider)
+    return OpenAIChatModel(name, provider=provider)
 
 
 @dataclass
