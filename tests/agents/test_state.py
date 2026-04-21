@@ -1,6 +1,8 @@
 """Tests for FlowState — the serialisable shared state across graph nodes."""
+
 import json
 from dataclasses import asdict
+
 from marimo_flow.agents.state import FlowState
 
 
