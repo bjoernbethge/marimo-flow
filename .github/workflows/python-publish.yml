@@ -83,3 +83,8 @@ jobs:
             --title "Release ${{ steps.version.outputs.VERSION }}" \
             --generate-notes \
             dist/*
+
+      - name: Trigger docker-publish workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run docker-publish.yml --repo ${{ github.repository }} --ref ${{ github.ref_name }}

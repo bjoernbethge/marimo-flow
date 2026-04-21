@@ -11,7 +11,7 @@ RUN groupadd --gid 1000 marimo-flow \
     && useradd --uid 1000 --gid marimo-flow --shell /bin/bash --create-home marimo-flow
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.10.12 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.7 /uv /uvx /bin/
 
 # Set working directory and give ownership to marimo-flow user
 WORKDIR /app
@@ -36,7 +36,7 @@ USER marimo-flow
 RUN uv sync --no-dev --extra all
 
 # Install PyG packages for CPU (no CUDA)
-RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.10.0+cpu.html
+RUN uv pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.11.0+cpu.html
 
 # Activate virtualenv by default
 ENV VIRTUAL_ENV=/app/.venv

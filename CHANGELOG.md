@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `Dockerfile.xpu`: switched base from archived `intel/intel-extension-for-pytorch:2.8.10-xpu` (IPEX archived 2026-03-30) to `ubuntu:22.04` + Intel GPU runtime (`libze-intel-gpu1`, `libze1`, `intel-opencl-icd`); torch/torchvision/torchaudio/triton-xpu installed from the official PyTorch XPU index per Intel's "use PyTorch directly" guidance.
+- `Dockerfile` (CPU): bumped PyG wheel URL from `torch-2.10.0+cpu` to `torch-2.11.0+cpu` to match the locked torch version.
+- `uv` base image bumped to `ghcr.io/astral-sh/uv:0.11.7` across all three Dockerfiles.
+
+### Fixed
+- `python-publish.yml` now dispatches `docker-publish.yml` after creating the GitHub Release; previously the release was created via `GITHUB_TOKEN`, which by GitHub policy does not trigger downstream workflows, so Docker images were not built automatically.
+- `docker-publish.yml` removed dead Docker Hub login (workflow only pushes to GHCR); the `if: ${{ secrets.DOCKERHUB_USERNAME != '' }}` pattern was rejected by GitHub's workflow validator.
+
 ## [0.3.0] - 2026-04-22
 
 ### Added
