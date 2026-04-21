@@ -28,6 +28,18 @@ wheels = [
 ]
 
 [[package]]
+name = "ag-ui-protocol"
+version = "0.1.17"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cb/0f/5a8ce5eb5cd7adf3f733da87d7a5a8a38f24ec9e029c1300f9495ae9c7fa/ag_ui_protocol-0.1.17.tar.gz", hash = "sha256:5fae4cfced8245c8ac329b85702fd166ff226d99dc1ea8a1ae95890826aa69e5", size = 6273, upload-time = "2026-04-20T21:09:19.436Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/82/e5f1686b4c4e232818c75598d651b82088f584e59adef71802920d74f82f/ag_ui_protocol-0.1.17-py3-none-any.whl", hash = "sha256:6a9065590d21c7b9b8ae9bb1a3410ecf4d18cb8041a077d25574f792dfa504fe", size = 8648, upload-time = "2026-04-20T21:09:20.488Z" },
+]
+
+[[package]]
 name = "aiofile"
 version = "3.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2728,7 +2740,7 @@ dependencies = [
     { name = "plotly", extra = ["express", "kaleido"] },
     { name = "protobuf" },
     { name = "pyasn1" },
-    { name = "pydantic-ai-slim", extra = ["a2a"] },
+    { name = "pydantic-ai-slim", extra = ["a2a", "ag-ui"] },
     { name = "pyjwt" },
     { name = "python-multipart" },
     { name = "sqlparse" },
@@ -2775,7 +2787,7 @@ requires-dist = [
     { name = "plotly", extras = ["express", "kaleido"], specifier = ">=6.7.0" },
     { name = "protobuf", specifier = ">=6.33.6" },
     { name = "pyasn1", specifier = ">=0.6.3" },
-    { name = "pydantic-ai-slim", extras = ["a2a"], specifier = ">=1.84.1" },
+    { name = "pydantic-ai-slim", extras = ["a2a", "ag-ui"], specifier = ">=1.84.1" },
     { name = "pyjwt", specifier = ">=2.12.1" },
     { name = "python-multipart", specifier = ">=0.0.22" },
     { name = "sqlparse", specifier = ">=0.5.5" },
@@ -4445,6 +4457,10 @@ wheels = [
 [package.optional-dependencies]
 a2a = [
     { name = "fasta2a" },
+]
+ag-ui = [
+    { name = "ag-ui-protocol" },
+    { name = "starlette" },
 ]
 openai = [
     { name = "openai" },

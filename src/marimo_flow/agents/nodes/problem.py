@@ -32,10 +32,11 @@ def _define_problem(spec: dict[str, Any], deps: FlowDeps, state: FlowState) -> s
     if state.mlflow_run_id is None:
         run = mlflow.start_run(nested=mlflow.active_run() is not None)
         state.mlflow_run_id = run.info.run_id
+    client = mlflow.MlflowClient()
     with tempfile.TemporaryDirectory() as td:
         p = Path(td) / "problem_spec.json"
         p.write_text(json.dumps(spec, indent=2))
-        mlflow.log_artifact(str(p), artifact_path="problem")
+        client.log_artifact(state.mlflow_run_id, str(p), artifact_path="problem")
     uri = f"runs:/{state.mlflow_run_id}/problem/problem_spec.json"
     deps.registry[uri] = spec
     state.problem_artifact_uri = uri

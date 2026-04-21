@@ -32,10 +32,11 @@ def _define_solver(spec: dict[str, Any], deps: FlowDeps, state: FlowState) -> st
     if state.mlflow_run_id is None:
         run = mlflow.start_run(nested=mlflow.active_run() is not None)
         state.mlflow_run_id = run.info.run_id
+    client = mlflow.MlflowClient()
     with tempfile.TemporaryDirectory() as td:
         p = Path(td) / "solver_spec.json"
         p.write_text(json.dumps(spec, indent=2))
-        mlflow.log_artifact(str(p), artifact_path="solver")
+        client.log_artifact(state.mlflow_run_id, str(p), artifact_path="solver")
     uri = f"runs:/{state.mlflow_run_id}/solver/solver_spec.json"
     deps.registry[uri] = spec
     state.solver_artifact_uri = uri

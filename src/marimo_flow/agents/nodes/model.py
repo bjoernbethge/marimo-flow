@@ -31,10 +31,11 @@ def _define_model(spec: dict[str, Any], deps: FlowDeps, state: FlowState) -> str
     if state.mlflow_run_id is None:
         run = mlflow.start_run(nested=mlflow.active_run() is not None)
         state.mlflow_run_id = run.info.run_id
+    client = mlflow.MlflowClient()
     with tempfile.TemporaryDirectory() as td:
         p = Path(td) / "model_spec.json"
         p.write_text(json.dumps(spec, indent=2))
-        mlflow.log_artifact(str(p), artifact_path="model")
+        client.log_artifact(state.mlflow_run_id, str(p), artifact_path="model")
     uri = f"runs:/{state.mlflow_run_id}/model/model_spec.json"
     deps.registry[uri] = spec
     state.model_artifact_uri = uri
