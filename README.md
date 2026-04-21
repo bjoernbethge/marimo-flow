@@ -13,7 +13,7 @@
 
 ---
 
-*Like marimo algae drifting in crystal waters, your code flows and evolves – each cell a living sphere of computation, gently touching others, creating ripples of reactive change. In this digital ocean, data streams like currents, models grow like organic formations, and insights emerge naturally from the depths. Let your ML experiments flow freely, tracked and nurtured, as nature intended.*
+*Like marimo algae drifting in crystal waters, your data flows and evolves – each cell a living sphere of computation, gently touching others, creating ripples of reactive change. In this digital ocean, data streams like currents, models grow like organic formations, and insights emerge naturally from the depths. Let your ML experiments flow freely, tracked and nurtured, as nature intended.*
 
 
 
@@ -51,8 +51,8 @@ This combination eliminates the reproducibility issues of traditional notebooks 
 - **🎯 Interactive Development**: Real-time parameter tuning with instant visual feedback
 - **💾 SQLite Backend**: Lightweight, file-based storage for experiments
 
-### 🚀 Production Ready
-- **🐳 Docker Deployment**: One-command setup with docker-compose (CPU, CUDA, XPU)
+### 🐳 Deployment
+- **Docker**: docker-compose setup with CPU, CUDA, and XPU image variants
 - **🧠 PINA Integration**: Physics-informed neural networks with Walrus foundation model
 - **📚 MCP-Powered Docs**: Live documentation via Context7 and Marimo MCP servers
 

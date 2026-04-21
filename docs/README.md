@@ -26,12 +26,6 @@ Welcome to the marimo-flow reference documentation library. This directory conta
   - File descriptions
   - Usage recommendations
 
-- **[RESEARCH_SUMMARY.md](RESEARCH_SUMMARY.md)** - Documentation research report
-  - What was researched and why
-  - Quality metrics
-  - Version information
-  - Maintenance guidelines
-
 ### Technology Reference Guides
 
 - **[marimo-quickstart.md](marimo-quickstart.md)** - Reactive Python Notebooks
@@ -272,7 +266,6 @@ By Topic:
 docs/
 ├── README.md                   ← You are here
 ├── INDEX.md                    ← Navigation & overview
-├── RESEARCH_SUMMARY.md         ← Research details
 ├── marimo-quickstart.md        ← Marimo reference
 ├── polars-quickstart.md        ← Polars reference
 ├── plotly-quickstart.md        ← Plotly reference
