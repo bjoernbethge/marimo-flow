@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Multi-agent PINA team (`marimo_flow.agents`) built on `pydantic-graph` + MLflow.
+- `RouteNode` classifier dispatching to `Notebook`, `Problem`, `Model`, `Solver`, `MLflow` sub-nodes.
+- `FlowState` (JSON-serialisable) + `FlowDeps` (in-memory registry) — non-serialisable PINA/torch objects live in `FlowDeps.registry` keyed by MLflow artifact URIs.
+- `MLflowStatePersistence` — `pydantic-graph` persistence backend logging snapshots as MLflow artifacts.
+- Skill loader (`marimo_flow.agents.skills`) — agents load `.claude/Skills/<name>/SKILL.md` as lazy `instructions=` callables; supports concatenating multiple skills per role.
+- `_define_problem` / `_define_model` / `_define_solver` — open-form spec tools (no fixed enum); the agent designs the spec to fit the problem.
+- Lead agent (`build_lead_agent`) wraps the graph as one tool; exposed via marimo chat (`lead_chat`), A2A (`server.a2a`), and AG-UI (`server.ag_ui`).
+- A2A AgentCard with one `Skill` per sub-node role for capability discovery by external agents.
+- Ollama-Cloud `OpenAIChatModel` factory (`get_model`) — single endpoint for local + cloud `:cloud` models, no separate proxy.
+- `examples/lab.py` rewritten as full PINA team chat demo with state inspector and live mermaid diagram.
+
+### Changed
+- `pydantic-ai-slim` upgraded to `[a2a, ag-ui, openai]` extras for protocol support.
+- `OpenAIModel` → `OpenAIChatModel` (deprecation in pydantic-ai 1.84).
+
+### Fixed
+- `_define_*` helpers now use `MlflowClient` with explicit `state.mlflow_run_id` to avoid silent artifact misroute when no module-level active run exists (e.g. inside `await graph.run(...)`).
+
 ## [0.2.0] - 2026-03-26
 
 ### Added

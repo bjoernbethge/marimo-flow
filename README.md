@@ -351,6 +351,43 @@ The Docker container runs both services via `docker/start.sh`:
 - **Notebooks**: `GET /` - File browser and editor
 - **Apps**: `GET /run/<notebook>` - Run notebook as web app
 
+## PINA Multi-Agent Team (`marimo_flow.agents`) 🧑‍🚀🧑‍🚀🧑‍🚀
+
+Reactive multi-agent team that orchestrates PINA workflows via `pydantic-graph`,
+backed by MLflow for tracing + persistence, exposed via marimo's chat UI and
+optionally as A2A and AG-UI ASGI servers.
+
+```python
+from marimo_flow.agents import lead_chat, FlowDeps
+import marimo as mo
+
+deps = FlowDeps(mlflow_tracking_uri="sqlite:///mlruns.db")
+chat = mo.ui.chat(lead_chat(deps=deps))
+chat
+```
+
+**Roles** (each loads its `.claude/Skills/<name>/SKILL.md` as `instructions=`):
+- `notebook` — marimo MCP cell ops (skills: `marimo`, `marimo-pair`)
+- `problem` — defines a PINA Problem from an open spec (skill: `pina`)
+- `model` — designs a neural architecture for the problem (skill: `pina`)
+- `solver` — wires Solver + Trainer config (skill: `pina`)
+- `mlflow` — MLflow MCP tracking + registry (skill: `mlflow`)
+
+A `RouteNode` classifier dispatches between sub-nodes; the lead agent wraps the
+graph as a single tool so the same backend powers marimo chat, A2A, and AG-UI.
+
+**Models:** Ollama Cloud at `http://localhost:11434/v1` (`:cloud`-suffixed tags).
+Defaults in `marimo_flow.agents.deps.DEFAULT_MODELS`.
+
+**Standalone servers:**
+
+```bash
+uv run python -m marimo_flow.agents.server.a2a    # A2A on :8000
+uv run python -m marimo_flow.agents.server.ag_ui  # AG-UI on :8001
+```
+
+See `examples/lab.py` for the full demo notebook.
+
 ## Contributing 🤝
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
