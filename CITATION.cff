@@ -15,7 +15,7 @@ repository-code: "https://github.com/synapticore-io/marimo-flow"
 url: "https://github.com/synapticore-io/marimo-flow"
 license: MIT
 version: 0.3.0
-date-released: "2026-04-21"
+date-released: "2026-04-22"
 keywords:
   - marimo
   - mlflow
@@ -29,3 +29,60 @@ keywords:
   - ollama
   - mcp
   - model-context-protocol
+references:
+  - type: article
+    title: "Walrus: A Cross-Domain Foundation Model for Continuum Dynamics"
+    authors:
+      - family-names: McCabe
+        given-names: Michael
+      - family-names: Mukhopadhyay
+        given-names: Payel
+      - family-names: Marwah
+        given-names: Tanya
+      - family-names: Regaldo-Saint Blancard
+        given-names: Bruno
+      - family-names: Rozet
+        given-names: Francois
+      - family-names: Diaconu
+        given-names: Cristiana
+      - family-names: Meyer
+        given-names: Lucas
+      - family-names: Wong
+        given-names: Kaze W. K.
+      - family-names: Sotoudeh
+        given-names: Hadi
+      - family-names: Bietti
+        given-names: Alberto
+      - family-names: Espejo
+        given-names: Irina
+      - family-names: Fear
+        given-names: Rio
+      - family-names: Golkar
+        given-names: Siavash
+      - family-names: Hehir
+        given-names: Tom
+      - family-names: Hirashima
+        given-names: Keiya
+      - family-names: Krawezik
+        given-names: Geraud
+      - family-names: Lanusse
+        given-names: Francois
+      - family-names: Morel
+        given-names: Rudy
+      - family-names: Ohana
+        given-names: Ruben
+      - family-names: Parker
+        given-names: Liam
+      - family-names: Pettee
+        given-names: Mariel
+      - family-names: Shen
+        given-names: Jeff
+      - family-names: Cho
+        given-names: Kyunghyun
+      - family-names: Cranmer
+        given-names: Miles
+      - family-names: Ho
+        given-names: Shirley
+    year: 2025
+    url: "https://arxiv.org/abs/2511.15684"
+    notes: "arXiv:2511.15684 [cs.LG] — foundation model used via marimo_flow.core.WalrusAdapter"
