@@ -265,8 +265,16 @@ chat
 A `RouteNode` classifier dispatches between sub-nodes; the lead agent wraps the
 graph as a single tool so the same backend powers marimo chat, A2A, and AG-UI.
 
-**Models:** Ollama Cloud at `http://localhost:11434/v1` (`:cloud`-suffixed tags).
-Defaults in `marimo_flow.agents.deps.DEFAULT_MODELS`.
+**Models:** provider-prefixed specs (`"<provider>:<model>"`) resolved through
+pydantic-ai's `infer_model`. Defaults in
+`marimo_flow.agents.deps.DEFAULT_MODELS` all point at Ollama Cloud
+(`http://localhost:11434/v1`, `:cloud`-suffixed tags).
+
+Override per role either via `config.yaml` at the repo root
+(see `config.yaml.example`) or with `MARIMO_FLOW_MODEL_<ROLE>=<spec>`
+env vars. Any provider in the pydantic-ai catalogue works — openai,
+anthropic, groq, mistral, google-gla, bedrock, together, fireworks,
+openrouter, deepseek, cerebras, xai, ollama, huggingface, ...
 
 **Standalone servers:**
 

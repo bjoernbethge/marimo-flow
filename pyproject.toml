@@ -62,6 +62,7 @@ dependencies = [
     "optuna-integration[pytorch-lightning]>=4.8.0",
     "plotly[express,kaleido]>=6.7.0",
     "pydantic-ai-slim[a2a,ag-ui]>=1.84.1",
+    "pyyaml>=6.0.3",
 ]
 
 [project.optional-dependencies]
