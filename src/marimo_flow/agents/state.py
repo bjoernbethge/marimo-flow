@@ -17,6 +17,8 @@ class FlowState:
     problem_artifact_uri: str | None = None
     model_artifact_uri: str | None = None
     solver_artifact_uri: str | None = None
+    training_artifact_uri: str | None = None
+    training_run_id: str | None = None
     mlflow_run_id: str | None = None
     last_node: str | None = None
     history: dict[str, list[dict[str, Any]]] = field(default_factory=dict)

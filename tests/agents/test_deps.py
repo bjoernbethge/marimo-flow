@@ -10,6 +10,7 @@ def test_default_models_cover_all_roles():
         "problem",
         "model",
         "solver",
+        "training",
         "mlflow",
         "lead",
     }
@@ -17,18 +18,19 @@ def test_default_models_cover_all_roles():
 
 
 def test_default_role_models():
-    assert DEFAULT_MODELS["route"] == "gemma4-fast:latest"
+    assert DEFAULT_MODELS["route"] == "gemma4:31b-cloud"
     assert DEFAULT_MODELS["notebook"] == "qwen3-coder:480b-cloud"
-    assert DEFAULT_MODELS["problem"] == "deepseek-v3.2:cloud"
-    assert DEFAULT_MODELS["model"] == "qwen3.5:397b-cloud"
+    assert DEFAULT_MODELS["problem"] == "qwen3-coder:480b-cloud"
+    assert DEFAULT_MODELS["model"] == "qwen3.5:cloud"
     assert DEFAULT_MODELS["solver"] == "qwen3-coder:480b-cloud"
+    assert DEFAULT_MODELS["training"] == "qwen3-coder:480b-cloud"
     assert DEFAULT_MODELS["mlflow"] == "gpt-oss:20b-cloud"
     assert DEFAULT_MODELS["lead"] == "kimi-k2.5:cloud"
 
 
 def test_get_model_returns_openai_model_with_ollama_base_url():
     model = get_model("route")
-    assert model.model_name == "gemma4-fast:latest"
+    assert model.model_name == "gemma4:31b-cloud"
     assert "11434/v1" in str(model.client.base_url)
 
 

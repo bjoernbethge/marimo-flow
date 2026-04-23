@@ -43,7 +43,7 @@ def _():
         train_solver,
     )
 
-    mlflow.set_tracking_uri("sqlite:///data/experiments/db/mlflow.db")
+    mlflow.set_tracking_uri("sqlite:///data/mlflow/db/mlflow.db")
 
     return (
         MLFlowLogger,

@@ -42,9 +42,15 @@ models/
 
 # MLflow data
 data/mlflow/db/
-data/experiments/
 mlruns/
 mlflow/
+mlruns.db
+mlflow.db
+mlartifacts/
+/1/
+
+# Lightning / PyTorch training artifacts
+lightning_logs/
 
 # DuckDB files
 *.duckdb

@@ -85,4 +85,4 @@ references:
         given-names: Shirley
     year: 2025
     url: "https://arxiv.org/abs/2511.15684"
-    notes: "arXiv:2511.15684 [cs.LG] — foundation model used via marimo_flow.core.WalrusAdapter"
+    notes: "arXiv:2511.15684 [cs.LG] — foundation model used via marimo_flow.core.FoundationModelAdapter"

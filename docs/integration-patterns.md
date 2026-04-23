@@ -879,7 +879,7 @@ print(output.shape, output.dtype)
 
 ## References
 
-- **Marimo State**: marimo-quickstart.md → State Management
-- **Polars Operations**: polars-quickstart.md → Core Concepts
-- **Plotly Customization**: plotly-quickstart.md → Customization & Styling
-- **PINA Workflow**: pina-quickstart.md → Four-Step Workflow
+- **marimo**: https://docs.marimo.io
+- **Polars**: https://docs.pola.rs
+- **Plotly**: https://plotly.com/python/
+- **PINA**: https://mathlab.github.io/PINA/

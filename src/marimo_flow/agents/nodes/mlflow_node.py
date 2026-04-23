@@ -29,17 +29,18 @@ class MLflowNode(BaseNode[FlowState, FlowDeps, str]):
         model = self.model_override or get_model(
             "mlflow", override=ctx.deps.models["mlflow"]
         )
-        toolsets = [build_mlflow_mcp(tracking_uri=ctx.deps.mlflow_tracking_uri)]
+        ctx.deps.state = ctx.state
         agent = Agent(
             model,
+            deps_type=FlowDeps,
             instructions=build_skill_instructions(MLFLOW_SKILLS),
-            toolsets=toolsets,
+            toolsets=[build_mlflow_mcp(tracking_uri=ctx.deps.mlflow_tracking_uri)],
         )
-
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"
             f"Active MLflow run: {ctx.state.mlflow_run_id}\n"
-            "Use the MLflow MCP tools to satisfy the request."
+            "Use the MLflow MCP tools to satisfy the request.",
+            deps=ctx.deps,
         )
         ctx.state.last_node = "mlflow"
         ctx.state.history.setdefault("mlflow", []).append(

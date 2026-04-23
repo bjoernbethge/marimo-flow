@@ -6,8 +6,6 @@ Project-specific documentation for marimo-flow.
 
 | File | Description |
 |------|-------------|
-| [README.md](README.md) | Project overview and setup |
-| [CODEBASE-ANALYSIS.md](CODEBASE-ANALYSIS.md) | Architecture and codebase walkthrough |
 | [integration-patterns.md](integration-patterns.md) | How marimo, MLflow, PINA, Polars, and Plotly connect |
 | [mcp-setup.md](mcp-setup.md) | MCP server configuration for marimo and MLflow |
 

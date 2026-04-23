@@ -104,13 +104,13 @@ marimo edit examples/ --mcp --port 2718
 ```
 User: "List active marimo notebooks"
 Claude: [Uses get_active_notebooks]
-→ Returns: ["01_data_profiler.py", "02_mlflow_console.py"]
+→ Returns: ["01_pina_poisson_solver.py", "lab.py"]
 
 User: "Find errors in the PINA solver notebook"
-Claude: [Uses get_notebook_errors for 03_pina_walrus_solver.py]
+Claude: [Uses get_notebook_errors for 01_pina_poisson_solver.py]
 → Returns: Cell execution errors with stack traces
 
-User: "Show me the DataFrames in the data profiler"
+User: "Show me the variables in the Poisson solver notebook"
 Claude: [Uses get_tables_and_variables]
 → Returns: Schema, row count, column types
 ```
@@ -449,7 +449,7 @@ mcp_servers: |
 
 **Issue Comment**:
 ```markdown
-@claude Analyze notebook 03_pina_walrus_solver.py for performance issues
+@claude Analyze notebook 01_pina_poisson_solver.py for performance issues
 ```
 
 Claude will:
@@ -484,8 +484,8 @@ Returns list of currently open notebooks.
 ```json
 {
   "notebooks": [
-    "01_interactive_data_profiler.py",
-    "03_pina_walrus_solver.py"
+    "01_pina_poisson_solver.py",
+    "lab.py"
   ]
 }
 ```

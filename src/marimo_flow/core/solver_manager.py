@@ -1,4 +1,10 @@
-"""Solver manager for creating PINA solvers via a single API."""
+"""Solver manager for creating PINA solvers via a single API.
+
+Registers the common PINN-family solvers (PINN, SAPINN, CausalPINN,
+GradientPINN, RBAPINN) and the SupervisedSolver. Advanced solvers that
+need auxiliary nets (CompetitivePINN, GAROM) are left out of the default
+registry; register them per-project via `SolverManager.register(...)`.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +15,13 @@ import torch
 import torch.nn as nn
 from pina.optim import TorchOptimizer
 from pina.problem import AbstractProblem
-from pina.solver import PINN, SupervisedSolver
+from pina.solver import (
+    PINN,
+    CausalPINN,
+    GradientPINN,
+    RBAPINN,
+    SupervisedSolver,
+)
 from pina.solver import SelfAdaptivePINN as SAPINN
 
 
@@ -25,26 +37,35 @@ def _resolve_optimizer(
     return TorchOptimizer(resolved_type, lr=learning_rate), resolved_type
 
 
-def _create_pinn(
-    problem: AbstractProblem,
-    model: nn.Module,
-    optimizer: torch.optim.Optimizer | TorchOptimizer | None = None,
-    learning_rate: float = 1e-3,
-    optimizer_type: type[torch.optim.Optimizer] | None = None,
-    **solver_kwargs: Any,
-) -> PINN:
-    """Create a PINN solver."""
-    resolved_optimizer, _ = _resolve_optimizer(
-        optimizer=optimizer,
-        learning_rate=learning_rate,
-        optimizer_type=optimizer_type,
-    )
-    return PINN(
-        problem=problem,
-        model=model,
-        optimizer=resolved_optimizer,
-        **solver_kwargs,
-    )
+def _make_standard_pinn_factory(
+    solver_cls: type,
+) -> Callable[..., Any]:
+    """Factory builder for PINN-family solvers sharing the standard signature
+    `(problem, model, optimizer, ...)`. Covers PINN, CausalPINN, GradientPINN,
+    RBAPINN.
+    """
+
+    def _factory(
+        problem: AbstractProblem,
+        model: nn.Module,
+        optimizer: torch.optim.Optimizer | TorchOptimizer | None = None,
+        learning_rate: float = 1e-3,
+        optimizer_type: type[torch.optim.Optimizer] | None = None,
+        **solver_kwargs: Any,
+    ) -> Any:
+        resolved_optimizer, _ = _resolve_optimizer(
+            optimizer=optimizer,
+            learning_rate=learning_rate,
+            optimizer_type=optimizer_type,
+        )
+        return solver_cls(
+            problem=problem,
+            model=model,
+            optimizer=resolved_optimizer,
+            **solver_kwargs,
+        )
+
+    return _factory
 
 
 def _create_supervised_solver(
@@ -57,7 +78,6 @@ def _create_supervised_solver(
     use_lt: bool = False,
     **solver_kwargs: Any,
 ) -> SupervisedSolver:
-    """Create a supervised solver."""
     resolved_optimizer, _ = _resolve_optimizer(
         optimizer=optimizer,
         learning_rate=learning_rate,
@@ -81,7 +101,6 @@ def _create_sapinn(
     optimizer_type: type[torch.optim.Optimizer] | None = None,
     **solver_kwargs: Any,
 ) -> SAPINN:
-    """Create a self-adaptive PINN solver."""
     optimizer_model, resolved_type = _resolve_optimizer(
         optimizer=optimizer,
         learning_rate=learning_rate,
@@ -99,16 +118,22 @@ def _create_sapinn(
 class SolverManager:
     """Single entry point for creating solver instances."""
 
-    _REGISTRY: dict[str, Callable[..., PINN | SAPINN | SupervisedSolver]] = {
-        "pinn": _create_pinn,
+    _REGISTRY: dict[str, Callable[..., Any]] = {
+        "pinn": _make_standard_pinn_factory(PINN),
+        "causalpinn": _make_standard_pinn_factory(CausalPINN),
+        "gradientpinn": _make_standard_pinn_factory(GradientPINN),
+        "rbapinn": _make_standard_pinn_factory(RBAPINN),
         "sapinn": _create_sapinn,
         "supervised": _create_supervised_solver,
     }
 
     @classmethod
     def available(cls) -> tuple[str, ...]:
-        """Return supported solver kinds."""
         return tuple(sorted(cls._REGISTRY))
+
+    @classmethod
+    def register(cls, kind: str, builder: Callable[..., Any]) -> None:
+        cls._REGISTRY[kind.strip().lower()] = builder
 
     @classmethod
     def create(
@@ -118,8 +143,7 @@ class SolverManager:
         problem: AbstractProblem,
         model: nn.Module,
         **kwargs: Any,
-    ) -> PINN | SAPINN | SupervisedSolver:
-        """Create a solver by kind (`pinn`, `sapinn`, `supervised`)."""
+    ) -> Any:
         key = kind.strip().lower()
         if key not in cls._REGISTRY:
             raise ValueError(

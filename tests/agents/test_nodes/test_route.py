@@ -20,6 +20,7 @@ from marimo_flow.agents.state import FlowState
         ("problem", "ProblemNode"),
         ("model", "ModelNode"),
         ("solver", "SolverNode"),
+        ("training", "TrainingNode"),
         ("mlflow", "MLflowNode"),
     ],
 )
@@ -50,4 +51,12 @@ async def test_route_end_returns_end_with_summary():
 
 def test_route_decision_schema_lists_all_options():
     options = set(typing.get_args(RouteDecision.model_fields["next_node"].annotation))
-    assert options == {"notebook", "problem", "model", "solver", "mlflow", "end"}
+    assert options == {
+        "notebook",
+        "problem",
+        "model",
+        "solver",
+        "training",
+        "mlflow",
+        "end",
+    }

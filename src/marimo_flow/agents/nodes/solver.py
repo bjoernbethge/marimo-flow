@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import mlflow
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent
 from pydantic_graph import BaseNode, GraphRunContext
 
 from marimo_flow.agents.deps import FlowDeps, get_model
@@ -25,7 +25,7 @@ from marimo_flow.agents.state import FlowState
 if TYPE_CHECKING:
     from marimo_flow.agents.nodes.route import RouteNode
 
-SOLVER_SKILLS = ["pina"]
+SOLVER_SKILLS = ["pina-solver"]
 
 
 def _define_solver(spec: dict[str, Any], deps: FlowDeps, state: FlowState) -> str:
@@ -49,28 +49,25 @@ class SolverNode(BaseNode[FlowState, FlowDeps, str]):
 
     async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
+        from marimo_flow.agents.toolsets.solver import solver_toolset
 
         model = self.model_override or get_model(
             "solver", override=ctx.deps.models["solver"]
         )
-        agent = Agent(model, instructions=build_skill_instructions(SOLVER_SKILLS))
-
-        @agent.tool
-        def define_solver(rc: RunContext[None], spec: dict[str, Any]) -> str:
-            """Define a Solver+Trainer spec tailored to the problem and model.
-
-            `spec` is free-form JSON the agent designs (e.g.
-            {kind:"PINN", optimiser:"adam", lr:1e-3, max_epochs:5000,
-             loss_weights:{interior:1.0, boundary:10.0}}). Returns MLflow URI.
-            """
-            return _define_solver(spec, ctx.deps, ctx.state)
-
+        ctx.deps.state = ctx.state
+        agent = Agent(
+            model,
+            deps_type=FlowDeps,
+            instructions=build_skill_instructions(SOLVER_SKILLS),
+            toolsets=[solver_toolset],
+        )
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"
             f"Problem URI: {ctx.state.problem_artifact_uri}\n"
             f"Model URI:   {ctx.state.model_artifact_uri}\n"
             "Inspect the problem and model, then design a solver+trainer spec "
-            "and call define_solver."
+            "and call define_solver.",
+            deps=ctx.deps,
         )
         ctx.state.last_node = "solver"
         ctx.state.history.setdefault("solver", []).append(

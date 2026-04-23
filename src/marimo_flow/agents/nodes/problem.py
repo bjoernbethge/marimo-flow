@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import mlflow
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent
 from pydantic_graph import BaseNode, GraphRunContext
 
 from marimo_flow.agents.deps import FlowDeps, get_model
@@ -19,7 +19,7 @@ from marimo_flow.agents.state import FlowState
 if TYPE_CHECKING:
     from marimo_flow.agents.nodes.route import RouteNode
 
-PROBLEM_SKILLS = ["pina"]
+PROBLEM_SKILLS = ["pina-problem"]
 
 
 def _define_problem(spec: dict[str, Any], deps: FlowDeps, state: FlowState) -> str:
@@ -49,20 +49,22 @@ class ProblemNode(BaseNode[FlowState, FlowDeps, str]):
 
     async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
+        from marimo_flow.agents.toolsets.problem import problem_toolset
 
         model = self.model_override or get_model(
             "problem", override=ctx.deps.models["problem"]
         )
-        agent = Agent(model, instructions=build_skill_instructions(PROBLEM_SKILLS))
-
-        @agent.tool
-        def define_problem(rc: RunContext[None], spec: dict[str, Any]) -> str:
-            """Register a PINA problem spec. Returns the MLflow artifact URI."""
-            return _define_problem(spec, ctx.deps, ctx.state)
-
+        ctx.deps.state = ctx.state
+        agent = Agent(
+            model,
+            deps_type=FlowDeps,
+            instructions=build_skill_instructions(PROBLEM_SKILLS),
+            toolsets=[problem_toolset],
+        )
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"
-            "Define the Problem and call define_problem with the spec."
+            "Define the Problem and call define_problem with the spec.",
+            deps=ctx.deps,
         )
         ctx.state.last_node = "problem"
         ctx.state.history.setdefault("problem", []).append(

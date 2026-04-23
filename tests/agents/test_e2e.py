@@ -1,4 +1,9 @@
-"""End-to-end smoke test — real MLflow file:// store, TestModel for all LLMs."""
+"""End-to-end smoke test — real MLflow file:// store, TestModel for all LLMs.
+
+Drives the full sequence problem -> model -> solver -> training -> end with
+the Managers + register_artifact stubbed so no torch work is needed, but
+real MLflow artifacts are logged to verify persistence.
+"""
 
 from __future__ import annotations
 
@@ -24,70 +29,92 @@ def tmp_mlflow(tmp_path):
         yield run.info.run_id
 
 
-def _make_fake_define(kind: str):
-    """Build a `_define_<kind>` replacement that logs a real MLflow artifact.
+def _make_fake_register_artifact(kind: str):
+    """Write a small JSON artifact into the active MLflow run and return its URI."""
 
-    TestModel auto-arg synthesis for tools whose signature is
-    `define_<kind>(spec: dict[str, Any])` produces a single trivial dict
-    (`{"additionalProperty": "a"}`) — usable here because the stub ignores
-    the spec content. Crucially, we route the artifact through an explicit
-    `MlflowClient().log_artifact(run_id, ...)` call: inside `await graph.run`
-    there is no module-level active run, so `mlflow.log_artifact` (used by
-    the production `_define_*` helpers) would silently no-op or auto-create
-    a fresh run instead of writing to the test's `tmp_mlflow` run.
-    """
-
-    def _fake(spec, deps, state):
+    def _fake(*, deps, state, artifact_path, filename, record, instance):
         run_id = state.mlflow_run_id
         with tempfile.TemporaryDirectory() as td:
-            p = Path(td) / f"{kind}_spec.json"
-            p.write_text(json.dumps({"stub": True, "kind": kind}, indent=2))
-            mlflow.MlflowClient().log_artifact(run_id, str(p), artifact_path=kind)
-        uri = f"runs:/{run_id}/{kind}/{kind}_spec.json"
-        deps.registry[uri] = {"stub": True, "kind": kind}
-        setattr(state, f"{kind}_artifact_uri", uri)
+            p = Path(td) / filename
+            p.write_text(json.dumps({"stub": True, "kind": kind, **record}, indent=2))
+            mlflow.MlflowClient().log_artifact(
+                run_id, str(p), artifact_path=artifact_path
+            )
+        uri = f"runs:/{run_id}/{artifact_path}/{filename}"
+        deps.registry[uri] = instance
         return uri
 
     return _fake
 
 
 async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
-    # Drive each node deterministically:
-    # route -> problem -> route -> model -> route -> solver -> route -> end
+    """problem -> model -> solver -> training -> end; all artifacts logged."""
     decisions = iter(
         [
             {"next_node": "problem", "rationale": "need problem first"},
             {"next_node": "model", "rationale": "need architecture"},
-            {"next_node": "solver", "rationale": "ready to wire solver"},
-            {"next_node": "end", "rationale": "all set; ready to train"},
+            {"next_node": "solver", "rationale": "wire solver"},
+            {"next_node": "training", "rationale": "fit it"},
+            {"next_node": "end", "rationale": "all done; solver trained"},
         ]
     )
+
+    fake_problem = object()
+    fake_model = object()
+    fake_solver = object()
+    fake_trainer = type("FT", (), {"callback_metrics": {"train_loss": 0.1}})()
 
     def fake_get_model(role, **_kw):
         if role == "route":
             return TestModel(custom_output_args=next(decisions))
         if role in ("problem", "model", "solver"):
-            return TestModel(call_tools=[f"define_{role}"])
+            return TestModel(call_tools=[f"build_{role}"])
+        if role == "training":
+            return TestModel(call_tools=["train"])
         return TestModel(call_tools=[])
 
     monkeypatch.setattr("marimo_flow.agents.nodes.route.get_model", fake_get_model)
     monkeypatch.setattr("marimo_flow.agents.nodes.problem.get_model", fake_get_model)
     monkeypatch.setattr("marimo_flow.agents.nodes.model.get_model", fake_get_model)
     monkeypatch.setattr("marimo_flow.agents.nodes.solver.get_model", fake_get_model)
+    monkeypatch.setattr("marimo_flow.agents.nodes.training.get_model", fake_get_model)
 
+    # Stub Manager.create + register_artifact for each toolset module
     monkeypatch.setattr(
-        "marimo_flow.agents.nodes.problem._define_problem",
-        _make_fake_define("problem"),
+        "marimo_flow.agents.toolsets.problem.ProblemManager.create",
+        lambda kind, **_kw: fake_problem,
     )
     monkeypatch.setattr(
-        "marimo_flow.agents.nodes.model._define_model", _make_fake_define("model")
+        "marimo_flow.agents.toolsets.model.ModelManager.create",
+        lambda kind, *, problem, **_kw: fake_model,
     )
     monkeypatch.setattr(
-        "marimo_flow.agents.nodes.solver._define_solver", _make_fake_define("solver")
+        "marimo_flow.agents.toolsets.solver.SolverManager.create",
+        lambda kind, *, problem, model, **_kw: fake_solver,
+    )
+    monkeypatch.setattr(
+        "marimo_flow.agents.toolsets.training.train_solver",
+        lambda solver, **_kw: fake_trainer,  # noqa: ARG005
+    )
+    monkeypatch.setattr(
+        "marimo_flow.agents.toolsets.problem.register_artifact",
+        _make_fake_register_artifact("problem"),
+    )
+    monkeypatch.setattr(
+        "marimo_flow.agents.toolsets.model.register_artifact",
+        _make_fake_register_artifact("model"),
+    )
+    monkeypatch.setattr(
+        "marimo_flow.agents.toolsets.solver.register_artifact",
+        _make_fake_register_artifact("solver"),
+    )
+    monkeypatch.setattr(
+        "marimo_flow.agents.toolsets.training.register_artifact",
+        _make_fake_register_artifact("training"),
     )
 
     graph = build_graph()
-    state = FlowState(user_intent="solve poisson 1d", mlflow_run_id=tmp_mlflow)
+    state = FlowState(user_intent="solve burgers 1d", mlflow_run_id=tmp_mlflow)
     deps = FlowDeps()
     persistence = MLflowStatePersistence(run_id=tmp_mlflow)
     persistence.set_graph_types(graph)
@@ -95,11 +122,12 @@ async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
     result = await graph.run(
         start_node(), state=state, deps=deps, persistence=persistence
     )
-    assert "set" in result.output.lower() or "ready" in result.output.lower()
+    assert "done" in result.output.lower() or "trained" in result.output.lower()
 
     client = mlflow.MlflowClient()
     artifacts = {a.path for a in client.list_artifacts(tmp_mlflow)}
     assert "problem" in artifacts
     assert "model" in artifacts
     assert "solver" in artifacts
+    assert "training" in artifacts
     assert "agent_state" in artifacts

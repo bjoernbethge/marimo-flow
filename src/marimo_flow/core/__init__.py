@@ -1,6 +1,7 @@
 """Public helpers for building PINA demos."""
 
 from .model_factory import create_model_for_problem
+from .model_manager import ModelManager
 from .problem_manager import ProblemManager
 from .solver_manager import SolverManager
 from .training import train_solver
@@ -20,6 +21,7 @@ __all__ = [
     "build_trials_scatter_chart",
     "create_model_for_problem",
     "FoundationModelAdapter",
+    "ModelManager",
     "ProblemManager",
     "SolverManager",
     "study_trials_dataframe",

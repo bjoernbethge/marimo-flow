@@ -10,11 +10,13 @@ from marimo_flow.agents.lead import build_lead_agent
 
 async def test_lead_agent_exposes_run_pina_workflow_tool(monkeypatch):
     monkeypatch.setattr("marimo_flow.agents.lead._ensure_autolog", lambda: None)
+    from marimo_flow.agents.toolsets.lead import lead_toolset
+
     deps = FlowDeps()
     agent = build_lead_agent(model=TestModel(), deps=deps)
-    # pydantic-ai 1.84: registered function tools live on agent._function_toolset.tools
-    tool_names = list(agent._function_toolset.tools.keys())  # noqa: SLF001
-    assert "run_pina_workflow" in tool_names
+    # Tool lives on the external lead_toolset attached via toolsets=[...]
+    assert "run_pina_workflow" in lead_toolset.tools
+    assert lead_toolset in agent.toolsets
 
 
 async def test_lead_agent_skips_workflow_when_model_responds_directly(monkeypatch):

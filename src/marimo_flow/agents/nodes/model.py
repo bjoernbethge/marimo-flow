@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import mlflow
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent
 from pydantic_graph import BaseNode, GraphRunContext
 
 from marimo_flow.agents.deps import FlowDeps, get_model
@@ -24,7 +24,7 @@ from marimo_flow.agents.state import FlowState
 if TYPE_CHECKING:
     from marimo_flow.agents.nodes.route import RouteNode
 
-MODEL_SKILLS = ["pina"]
+MODEL_SKILLS = ["pina-model"]
 
 
 def _define_model(spec: dict[str, Any], deps: FlowDeps, state: FlowState) -> str:
@@ -48,25 +48,23 @@ class ModelNode(BaseNode[FlowState, FlowDeps, str]):
 
     async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
+        from marimo_flow.agents.toolsets.model import model_toolset
 
         model = self.model_override or get_model(
             "model", override=ctx.deps.models["model"]
         )
-        agent = Agent(model, instructions=build_skill_instructions(MODEL_SKILLS))
-
-        @agent.tool
-        def define_model(rc: RunContext[None], spec: dict[str, Any]) -> str:
-            """Define an architecture spec tailored to the registered Problem.
-
-            `spec` is free-form JSON the agent designs based on the problem
-            (e.g. {family:"FNO", modes:16, width:32}). Returns MLflow URI.
-            """
-            return _define_model(spec, ctx.deps, ctx.state)
-
+        ctx.deps.state = ctx.state
+        agent = Agent(
+            model,
+            deps_type=FlowDeps,
+            instructions=build_skill_instructions(MODEL_SKILLS),
+            toolsets=[model_toolset],
+        )
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"
             f"Problem URI: {ctx.state.problem_artifact_uri}\n"
-            "Inspect the problem and design an architecture, then call define_model."
+            "Inspect the problem and design an architecture, then call define_model.",
+            deps=ctx.deps,
         )
         ctx.state.last_node = "model"
         ctx.state.history.setdefault("model", []).append(

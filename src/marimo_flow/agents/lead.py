@@ -7,17 +7,21 @@ Used by:
 
 mlflow.pydantic_ai.autolog() is enabled here so every nested sub-agent
 call inside the graph produces traces under the active MLflow run.
+
+The single graph-dispatch tool lives in `toolsets.lead.lead_toolset` as a
+module-level `FunctionToolset[FlowDeps]` — the agent consumes it via
+`toolsets=[lead_toolset]` and callers pass `deps` at run time.
 """
 
 from __future__ import annotations
 
+import os
+
 import mlflow
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent
 
 from marimo_flow.agents.deps import FlowDeps, get_model
-from marimo_flow.agents.graph import build_graph, start_node
-from marimo_flow.agents.persistence import MLflowStatePersistence
-from marimo_flow.agents.state import FlowState
+from marimo_flow.agents.toolsets.lead import lead_toolset
 
 LEAD_INSTRUCTIONS = """\
 You are the lead of a PINA (Physics-Informed NN) team.
@@ -29,35 +33,32 @@ _AUTOLOG_ENABLED = False
 
 
 def _ensure_autolog() -> None:
+    """Enable MLflow autologging for the team.
+
+    `mlflow.pydantic_ai.autolog()` is disabled by default because mlflow
+    3.11.1 (latest PyPI release) raises `ValueError: Circular reference
+    detected` in `dump_span_attribute_value` when used with pydantic-ai
+    >= 1.80 — fix merged upstream in mlflow#22693 (2026-04-21) but not
+    yet released. Opt back in via `MLFLOW_PYDANTIC_AI_AUTOLOG=1` once
+    mlflow >= 3.11.2 is installed.
+    """
     global _AUTOLOG_ENABLED
     if _AUTOLOG_ENABLED:
         return
-    mlflow.pydantic_ai.autolog()
+    if os.environ.get("MLFLOW_PYDANTIC_AI_AUTOLOG") == "1":
+        mlflow.pydantic_ai.autolog()
     mlflow.pytorch.autolog()
     _AUTOLOG_ENABLED = True
 
 
-def build_lead_agent(*, model=None, deps: FlowDeps | None = None) -> Agent:
+def build_lead_agent(*, model=None, deps: FlowDeps | None = None) -> Agent:  # noqa: ARG001
+    """Build the lead agent. `deps` is accepted for API symmetry but not stored —
+    callers pass `deps` to `agent.run(..., deps=...)` / `agent.run_stream(...)`."""
     _ensure_autolog()
     model = model or get_model("lead")
-    deps = deps or FlowDeps()
-    graph = build_graph()
-    agent = Agent(model, instructions=LEAD_INSTRUCTIONS)
-
-    @agent.tool
-    async def run_pina_workflow(_rc: RunContext[None], intent: str) -> str:
-        """Run the PINA team graph end-to-end. Returns the team's final summary."""
-        if mlflow.active_run() is None:
-            run = mlflow.start_run()
-            run_id = run.info.run_id
-        else:
-            run_id = mlflow.active_run().info.run_id
-        state = FlowState(user_intent=intent, mlflow_run_id=run_id)
-        persistence = MLflowStatePersistence(run_id=run_id)
-        persistence.set_graph_types(graph)
-        result = await graph.run(
-            start_node(), state=state, deps=deps, persistence=persistence
-        )
-        return str(result.output)
-
-    return agent
+    return Agent(
+        model,
+        deps_type=FlowDeps,
+        instructions=LEAD_INSTRUCTIONS,
+        toolsets=[lead_toolset],
+    )

@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from marimo_flow.agents.nodes.notebook import NotebookNode
     from marimo_flow.agents.nodes.problem import ProblemNode
     from marimo_flow.agents.nodes.solver import SolverNode
+    from marimo_flow.agents.nodes.training import TrainingNode
 
 ROUTE_INSTRUCTIONS = """\
 You are a router for a PINA (Physics-Informed NN) workflow team.
@@ -25,18 +26,24 @@ Given the user intent and the current FlowState, choose exactly one next node:
 
 - notebook: edit/inspect/run marimo notebook cells
 - problem:  define a PINA Problem (PDE, BCs, domain, conditions)
-- model:    pick / configure a neural architecture (FNN, FNO, KAN, DeepONet)
-- solver:   wire a Solver (PINN, SAPINN, GAROM) and a Trainer
+- model:    pick / configure a neural architecture (FeedForward, FNO, DeepONet, ...)
+- solver:   wire a Solver (PINN, SAPINN, CausalPINN, ...)
+- training: fit the solver via pina.Trainer (requires problem+model+solver registered)
 - mlflow:   log/inspect/register experiments and runs
 - end:      the user's intent is satisfied; return a brief summary as rationale
 
+Typical sequence for a full solve:
+  problem -> model -> solver -> training -> (optional mlflow) -> end
+
 Pick `end` only when the FlowState clearly satisfies the user intent
-(e.g. solver was trained AND mlflow run id is set when the user asked for training).
+(e.g. training_run_id is set when the user asked to solve/train).
 """
 
 
 class RouteDecision(BaseModel):
-    next_node: Literal["notebook", "problem", "model", "solver", "mlflow", "end"]
+    next_node: Literal[
+        "notebook", "problem", "model", "solver", "training", "mlflow", "end"
+    ]
     rationale: str
 
 
@@ -46,12 +53,21 @@ class RouteNode(BaseNode[FlowState, FlowDeps, str]):
 
     async def run(
         self, ctx: GraphRunContext[FlowState, FlowDeps]
-    ) -> NotebookNode | ProblemNode | ModelNode | SolverNode | MLflowNode | End[str]:
+    ) -> (
+        NotebookNode
+        | ProblemNode
+        | ModelNode
+        | SolverNode
+        | TrainingNode
+        | MLflowNode
+        | End[str]
+    ):
         from marimo_flow.agents.nodes.mlflow_node import MLflowNode
         from marimo_flow.agents.nodes.model import ModelNode
         from marimo_flow.agents.nodes.notebook import NotebookNode
         from marimo_flow.agents.nodes.problem import ProblemNode
         from marimo_flow.agents.nodes.solver import SolverNode
+        from marimo_flow.agents.nodes.training import TrainingNode
 
         model = self.model_override or get_model(
             "route", override=ctx.deps.models["route"]
@@ -63,6 +79,7 @@ class RouteNode(BaseNode[FlowState, FlowDeps, str]):
             f"problem={'set' if ctx.state.problem_artifact_uri else 'unset'}, "
             f"model={'set' if ctx.state.model_artifact_uri else 'unset'}, "
             f"solver={'set' if ctx.state.solver_artifact_uri else 'unset'}, "
+            f"training_run_id={ctx.state.training_run_id}, "
             f"mlflow_run_id={ctx.state.mlflow_run_id}"
         )
         result = await agent.run(prompt)
@@ -74,6 +91,7 @@ class RouteNode(BaseNode[FlowState, FlowDeps, str]):
             "problem": ProblemNode,
             "model": ModelNode,
             "solver": SolverNode,
+            "training": TrainingNode,
             "mlflow": MLflowNode,
         }
         if decision.next_node == "end":

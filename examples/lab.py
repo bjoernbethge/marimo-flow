@@ -1,12 +1,19 @@
 """marimo-flow PINA team — interactive demo notebook."""
 
-import marimo as mo
+import marimo
 
-app = mo.App(width="medium")
+app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
+    import marimo as mo
+
+    return (mo,)
+
+
+@app.cell
+def _(mo):
     mo.md("""
     # marimo-flow PINA Team
 
@@ -14,10 +21,11 @@ def _():
     (`Notebook`, `Problem`, `Model`, `Solver`, `MLflow`) over a `pydantic-graph`
     state machine. All runs are tracked in MLflow.
     """)
+    return
 
 
 @app.cell
-def _():
+def _(mo):
     base_url = mo.ui.text("http://localhost:11434/v1", label="Ollama base_url")
     mlflow_uri = mo.ui.text("sqlite:///mlruns.db", label="MLflow tracking URI")
     marimo_mcp = mo.ui.text("http://127.0.0.1:2718/mcp/server", label="marimo MCP URL")
@@ -39,11 +47,11 @@ def _(base_url, mlflow_uri, marimo_mcp):
     )
     chat_fn = lead_chat(deps=deps)
     graph = build_graph()
-    return deps, chat_fn, graph
+    return chat_fn, deps, graph
 
 
 @app.cell
-def _(chat_fn):
+def _(chat_fn, mo):
     chat = mo.ui.chat(
         chat_fn,
         prompts=[
@@ -58,10 +66,11 @@ def _(chat_fn):
 
 
 @app.cell
-def _(graph):
+def _(graph, mo):
     from marimo_flow.agents.nodes.route import RouteNode
 
     mo.mermaid(graph.mermaid_code(start_node=RouteNode))
+    return
 
 
 if __name__ == "__main__":
