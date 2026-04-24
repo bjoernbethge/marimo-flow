@@ -122,9 +122,7 @@ def _preset_family_picker(mo):
         value="problem",
         label="Preset family",
     )
-    include_deprecated = mo.ui.checkbox(
-        value=False, label="include deprecated"
-    )
+    include_deprecated = mo.ui.checkbox(value=False, label="include deprecated")
     mo.md("## Preset-Bibliothek")
     mo.hstack([family, include_deprecated])
     return (family, include_deprecated)
@@ -156,6 +154,57 @@ def _presets(mo, store, family, include_deprecated):
             "by the agents as they go._"
         )
     return (df,)
+
+
+@app.cell
+def _preset_problem_detail_picker(mo, store):
+    rows = store.query(
+        "SELECT name FROM preset_problems WHERE status = 'active' "
+        "ORDER BY created_at DESC LIMIT 50"
+    )
+    names = [r["name"] for r in rows]
+    picker = mo.ui.dropdown(
+        options=names or ["—"],
+        value=names[0] if names else "—",
+        label="Inspect problem preset (3D view)",
+    )
+    picker
+    return (picker,)
+
+
+@app.cell
+def _problem_3d_view(mo, store, picker):
+    import pandas as pd
+
+    if picker.value == "—":
+        mo.md("_No stored problem compositions to visualise yet._")
+        return (None,)
+    rows = store.query(
+        "SELECT payload FROM preset_problems WHERE name = ? AND status = 'active'",
+        [picker.value],
+    )
+    if not rows:
+        mo.md("_Preset disappeared — refresh._")
+        return (None,)
+
+    from marimo_flow.agents.schemas import ProblemSpec
+    from marimo_flow.agents.services.composer import compose_problem
+    from marimo_flow.core.viz3d import domain_figure
+
+    spec_dict = rows[0]["payload"]
+    if isinstance(spec_dict, str):
+        import json
+
+        spec_dict = json.loads(spec_dict)
+    spec = ProblemSpec.model_validate(spec_dict)
+    try:
+        problem = compose_problem(spec)()
+        fig = domain_figure(problem)
+        mo.md(f"### Spatial domain of `{picker.value}`")
+        mo.ui.plotly(fig)
+    except Exception as exc:  # noqa: BLE001 — user-facing surface
+        mo.md(f"**Failed to render 3D view**: {exc}")
+    return (None,)
 
 
 if __name__ == "__main__":

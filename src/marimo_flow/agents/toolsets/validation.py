@@ -77,8 +77,7 @@ def record_validation(
     """
     if verdict not in {"accept", "retry", "escalate", "reject"}:
         raise ModelRetry(
-            f"Unknown verdict {verdict!r}. Allowed: accept, retry, "
-            "escalate, reject."
+            f"Unknown verdict {verdict!r}. Allowed: accept, retry, escalate, reject."
         )
     state = require_state(ctx.deps)
     task_id = state.task_spec.task_id if state.task_spec else None

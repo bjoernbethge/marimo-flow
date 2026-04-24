@@ -44,9 +44,7 @@ def resolve_builder(ref: str) -> Callable[..., Any]:
     on Manager classes can be referenced without pre-binding.
     """
     if ":" not in ref:
-        raise ValueError(
-            f"builder_ref must be 'module:Attr[.nested]', got {ref!r}"
-        )
+        raise ValueError(f"builder_ref must be 'module:Attr[.nested]', got {ref!r}")
     mod_path, obj_path = ref.split(":", 1)
     obj: Any = importlib.import_module(mod_path)
     for part in obj_path.split("."):
@@ -114,9 +112,10 @@ class PresetCatalog:
         query_lower = query.strip().lower()
         filtered: list[PresetRecord] = []
         for rec in records:
-            if query_lower and query_lower not in (
-                rec.name + " " + rec.description
-            ).lower():
+            if (
+                query_lower
+                and query_lower not in (rec.name + " " + rec.description).lower()
+            ):
                 continue
             if tags and not all(t in rec.tags for t in tags):
                 continue

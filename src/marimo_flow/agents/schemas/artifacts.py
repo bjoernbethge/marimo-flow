@@ -26,9 +26,7 @@ class ArtifactRef(BaseModel):
     kind: ArtifactKind
     uri: str = Field(description="MLflow artifact URI — also the registry key")
     label: str | None = None
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class DatasetBinding(BaseModel):

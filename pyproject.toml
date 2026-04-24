@@ -66,6 +66,7 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "typer>=0.24.1",
     "sympy>=1.14.0",
+    "meshio>=5.3.5",
 ]
 
 [project.optional-dependencies]

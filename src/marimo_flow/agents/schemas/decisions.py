@@ -27,6 +27,8 @@ AgentRole = Literal[
     "data",
     "validation",
     "orchestrator",
+    "design",
+    "control",
 ]
 
 
@@ -51,9 +53,7 @@ class AgentDecision(BaseModel):
     output_schema: str | None = None
     summary: str
     payload: dict[str, object] = Field(default_factory=dict)
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class HandoffRecord(BaseModel):
@@ -68,9 +68,7 @@ class HandoffRecord(BaseModel):
     to_agent: AgentRole
     reason: str
     artifact_uris: list[str] = Field(default_factory=list)
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class ValidationReport(BaseModel):
@@ -92,9 +90,7 @@ class ValidationReport(BaseModel):
     )
     verdict: Literal["accept", "retry", "escalate", "reject"] = "accept"
     rationale: str | None = None
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class ExperimentRecord(BaseModel):
@@ -115,7 +111,5 @@ class ExperimentRecord(BaseModel):
     training_artifact_uri: str | None = None
     validation_report_id: str | None = None
     status: Literal["pending", "running", "completed", "failed"] = "pending"
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     finished_at: datetime | None = None

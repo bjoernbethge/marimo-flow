@@ -14,7 +14,6 @@ import asyncio
 import json
 import logging
 import subprocess
-import sys
 from pathlib import Path
 
 import typer
@@ -61,8 +60,7 @@ def solve(
         None,
         "--model",
         "-m",
-        help="Override a role: --model lead=anthropic:claude-sonnet-4-6 "
-        "(repeatable).",
+        help="Override a role: --model lead=anthropic:claude-sonnet-4-6 (repeatable).",
     ),
     timeout: float = typer.Option(
         900.0, "--timeout", help="Overall graph timeout in seconds."
@@ -88,8 +86,7 @@ def solve(
     typer.echo(f"mlflow: {deps.mlflow_tracking_uri}", err=True)
 
     full_intent = (
-        f"{intent}\n"
-        f"(Training hints: max_epochs={max_epochs}, n_points={n_points}.)"
+        f"{intent}\n(Training hints: max_epochs={max_epochs}, n_points={n_points}.)"
     )
     state = FlowState(user_intent=full_intent)
     graph = build_graph()
@@ -105,7 +102,7 @@ def solve(
 
     try:
         output = asyncio.run(_run())
-    except asyncio.TimeoutError:
+    except TimeoutError:
         typer.echo(
             f"graph timed out after {timeout:.0f}s, last_node={state.last_node}",
             err=True,

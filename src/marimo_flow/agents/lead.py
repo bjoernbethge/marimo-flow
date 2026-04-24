@@ -46,7 +46,7 @@ def _ensure_tracking_uri(uri: str | None = None) -> None:
     """
     global _TRACKING_URI_APPLIED
     target = uri or resolve_mlflow_tracking_uri()
-    if _TRACKING_URI_APPLIED == target:
+    if target == _TRACKING_URI_APPLIED:
         return
     mlflow.set_tracking_uri(target)
     _TRACKING_URI_APPLIED = target

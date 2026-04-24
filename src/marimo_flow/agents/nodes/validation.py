@@ -61,9 +61,7 @@ class ValidationNode(BaseNode[FlowState, FlowDeps, str]):
             toolsets=[validation_toolset],
             retries=3,
         )
-        constraints = (
-            ctx.state.task_spec.constraints if ctx.state.task_spec else []
-        )
+        constraints = ctx.state.task_spec.constraints if ctx.state.task_spec else []
         review_required = bool(
             ctx.state.task_spec and ctx.state.task_spec.review_required
         )

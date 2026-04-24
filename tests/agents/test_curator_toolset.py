@@ -180,9 +180,7 @@ def test_deprecate_user_preset(deps):
 
     listing = curator_toolset.tools["list_presets"].function
     assert listing(_Ctx(deps), family="problem") == []
-    everything = listing(
-        _Ctx(deps), family="problem", include_deprecated=True
-    )
+    everything = listing(_Ctx(deps), family="problem", include_deprecated=True)
     assert any(r["name"] == "tmp_preset" for r in everything)
 
 

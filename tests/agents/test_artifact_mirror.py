@@ -139,9 +139,7 @@ def test_register_artifact_records_training_lineage(deps_and_state):
         record={"final_loss": 0.01},
         instance=object(),
     )
-    edges = [
-        e for e in _query_lineage(deps) if e["to_uri"] == training_uri
-    ]
+    edges = [e for e in _query_lineage(deps) if e["to_uri"] == training_uri]
     assert len(edges) == 1
     assert edges[0]["from_uri"] == state.solver_artifact_uri
     assert edges[0]["relation"] == "produced_for_training"

@@ -136,9 +136,7 @@ def test_record_artifact_and_replace_on_conflict(store):
     # Re-record with a new label — PRIMARY KEY (uri) must replace.
     ref2 = ArtifactRef(kind="problem", uri=ref.uri, label="v2")
     store.record_artifact(ref2, task_id="task-a")
-    rows = store.query(
-        "SELECT label FROM artifacts WHERE uri = ?", [ref.uri]
-    )
+    rows = store.query("SELECT label FROM artifacts WHERE uri = ?", [ref.uri])
     assert len(rows) == 1
     assert rows[0]["label"] == "v2"
 
@@ -160,8 +158,7 @@ def test_record_experiment_and_metrics(store):
         step=1,
     )
     rows = store.query(
-        "SELECT name, value, step FROM metrics "
-        "WHERE experiment_id = ? ORDER BY step",
+        "SELECT name, value, step FROM metrics WHERE experiment_id = ? ORDER BY step",
         [exp.experiment_id],
     )
     assert len(rows) == 2
@@ -179,8 +176,7 @@ def test_record_decision(store):
     )
     store.record_decision(d)
     rows = store.query(
-        "SELECT agent, tool, summary FROM agent_decisions "
-        "WHERE decision_id = ?",
+        "SELECT agent, tool, summary FROM agent_decisions WHERE decision_id = ?",
         [d.decision_id],
     )
     assert rows[0]["agent"] == "problem"
@@ -197,8 +193,7 @@ def test_record_handoff(store):
     )
     store.record_handoff(h)
     rows = store.query(
-        "SELECT from_agent, to_agent, reason FROM handoff_records "
-        "WHERE handoff_id = ?",
+        "SELECT from_agent, to_agent, reason FROM handoff_records WHERE handoff_id = ?",
         [h.handoff_id],
     )
     assert rows[0]["from_agent"] == "problem"

@@ -76,9 +76,7 @@ def test_condition_spec_fixed_value():
 
 def test_condition_spec_rejects_unknown_kind():
     with pytest.raises(ValidationError):
-        ConditionSpec(
-            subdomain="left", kind="whatever", value=0.0
-        )  # type: ignore[arg-type]
+        ConditionSpec(subdomain="left", kind="whatever", value=0.0)  # type: ignore[arg-type]
 
 
 def test_problem_spec_time_dependent_flag():

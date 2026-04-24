@@ -191,9 +191,7 @@ def clone_preset(
 
 
 @curator_toolset.tool
-def deprecate_preset(
-    ctx: RunContext[FlowDeps], family: str, name: str
-) -> str:
+def deprecate_preset(ctx: RunContext[FlowDeps], family: str, name: str) -> str:
     """Mark a preset as deprecated. Hidden from ``search_presets`` by default."""
     _require_family(family)
     if name.startswith("builtin."):

@@ -75,9 +75,7 @@ async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
             return TestModel(call_tools=["train"])
         return TestModel(call_tools=[])
 
-    monkeypatch.setattr(
-        "marimo_flow.agents.deps.FlowDeps.model_for", fake_model_for
-    )
+    monkeypatch.setattr("marimo_flow.agents.deps.FlowDeps.model_for", fake_model_for)
 
     # Stub the composer and Manager.create + register_artifact for each
     # toolset module. Problem goes through the composer now, not a kind
@@ -87,9 +85,7 @@ async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
     def _fake_compose(spec):  # noqa: ARG001 — we ignore spec shape in the test
         return fake_problem_cls
 
-    monkeypatch.setattr(
-        "marimo_flow.agents.toolsets.problem._compose", _fake_compose
-    )
+    monkeypatch.setattr("marimo_flow.agents.toolsets.problem._compose", _fake_compose)
     # ProblemSpec validation still runs; TestModel auto-generates kwargs
     # for compose_problem and that dict won't parse as a ProblemSpec.
     # Monkeypatch ProblemSpec.model_validate to return a minimal valid spec.

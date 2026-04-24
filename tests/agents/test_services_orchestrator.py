@@ -66,10 +66,7 @@ def test_default_experiment_status_pending_when_nothing_ran():
 
 
 def test_default_experiment_status_completed_after_training():
-    assert (
-        default_experiment_status(FlowState(training_run_id="run-1"))
-        == "completed"
-    )
+    assert default_experiment_status(FlowState(training_run_id="run-1")) == "completed"
 
 
 def test_default_experiment_status_failed_on_escalation():

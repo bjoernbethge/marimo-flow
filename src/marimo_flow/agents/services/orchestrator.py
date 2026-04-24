@@ -51,7 +51,10 @@ def default_experiment_status(state: FlowState) -> str:
     * ``completed`` when training finished, with or without a verdict.
     * ``pending`` otherwise (nothing ran).
     """
-    if state.validation_report and state.validation_report.verdict in ESCALATION_VERDICTS:
+    if (
+        state.validation_report
+        and state.validation_report.verdict in ESCALATION_VERDICTS
+    ):
         return "failed"
     if state.training_run_id:
         return "completed"

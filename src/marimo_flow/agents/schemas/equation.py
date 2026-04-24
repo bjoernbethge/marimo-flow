@@ -14,6 +14,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+DerivativeKind = Literal["classical", "fractional_laplacian"]
+
 
 class DerivativeSpec(BaseModel):
     """One symbolic derivative used in an equation.
@@ -21,6 +23,11 @@ class DerivativeSpec(BaseModel):
     Example for ``u_t`` (∂u/∂t): ``name="u_t"``, ``field="u"``, ``wrt=["t"]``.
     For ``u_xx`` (∂²u/∂x²): ``wrt=["x", "x"]``. For mixed ``u_xy``:
     ``wrt=["x", "y"]``.
+
+    ``kind="fractional_laplacian"`` switches to a spectral / Riesz-kernel
+    quadrature with order ``alpha`` (0 < α < 2). ``wrt`` then lists the
+    spatial axes the fractional Laplacian integrates over (usually all
+    spatial coords).
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -29,6 +36,15 @@ class DerivativeSpec(BaseModel):
     field: str = Field(description="output variable being differentiated, e.g. 'u'")
     wrt: list[str] = Field(
         description="input vars to differentiate against in order, e.g. ['x','x']"
+    )
+    kind: DerivativeKind = "classical"
+    alpha: float | None = Field(
+        default=None,
+        description="fractional order α in (0, 2); required for fractional_laplacian",
+    )
+    quadrature_points: int = Field(
+        default=64,
+        description="kernel quadrature resolution for fractional derivatives",
     )
 
 
@@ -71,22 +87,32 @@ class EquationSpec(BaseModel):
 class SubdomainSpec(BaseModel):
     """A named sub-region of the full domain.
 
-    ``bounds`` is a dict of axis → range. A single-element list or a
-    scalar pins the coordinate (boundary wall / initial-time slice);
-    a 2-element list is an interval. Example 1D time-dependent
-    interior ``D`` on x∈[-1,1], t∈[0,1]::
+    Two mutually exclusive ways to declare the region:
 
-        SubdomainSpec(name="D", bounds={"x": [-1.0, 1.0], "t": [0.0, 1.0]})
+    * ``bounds`` — axis → range dict. A single-element list or a scalar
+      pins the coordinate (boundary wall / initial-time slice); a
+      2-element list is an interval. 1D time-dependent interior ``D``
+      on x∈[-1,1], t∈[0,1]::
 
-    Left wall (x=-1, t∈[0,1])::
+          SubdomainSpec(name="D", bounds={"x": [-1.0, 1.0], "t": [0.0, 1.0]})
 
-        SubdomainSpec(name="left", bounds={"x": -1.0, "t": [0.0, 1.0]})
+      Left wall (x=-1, t∈[0,1])::
+
+          SubdomainSpec(name="left", bounds={"x": -1.0, "t": [0.0, 1.0]})
+
+    * ``mesh_ref`` — human tag name declared under
+      ``MeshSpec.cell_tags`` / ``point_tags``. The composer resolves
+      the tag to a subset of the mesh and wraps it in a MeshDomain.
     """
 
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    bounds: dict[str, float | list[float]]
+    bounds: dict[str, float | list[float]] = Field(default_factory=dict)
+    mesh_ref: str | None = Field(
+        default=None,
+        description="tag name declared on the attached MeshSpec",
+    )
 
 
 ConditionKind = Literal["fixed_value", "equation"]

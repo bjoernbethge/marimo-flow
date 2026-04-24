@@ -236,9 +236,7 @@ class ProvenanceStore:
     def __exit__(self, *exc: Any) -> None:
         self.close()
 
-    def query(
-        self, sql: str, params: list[Any] | None = None
-    ) -> list[dict[str, Any]]:
+    def query(self, sql: str, params: list[Any] | None = None) -> list[dict[str, Any]]:
         """Read-only convenience wrapper. Returns a list of row dicts."""
         rel = self.conn.execute(sql, params or [])
         if rel.description is None:
@@ -316,9 +314,7 @@ class ProvenanceStore:
             ],
         )
 
-    def record_dataset_binding(
-        self, task_id: str, binding: DatasetBinding
-    ) -> None:
+    def record_dataset_binding(self, task_id: str, binding: DatasetBinding) -> None:
         self.conn.execute(
             """INSERT INTO dataset_bindings
                (task_id, name, source, location, created_at, payload)
@@ -333,9 +329,7 @@ class ProvenanceStore:
             ],
         )
 
-    def record_artifact(
-        self, ref: ArtifactRef, task_id: str | None = None
-    ) -> None:
+    def record_artifact(self, ref: ArtifactRef, task_id: str | None = None) -> None:
         self.conn.execute(
             """INSERT OR REPLACE INTO artifacts
                (uri, task_id, kind, label, created_at, payload)
@@ -438,9 +432,7 @@ class ProvenanceStore:
             ],
         )
 
-    def record_lineage_edge(
-        self, *, from_uri: str, to_uri: str, relation: str
-    ) -> None:
+    def record_lineage_edge(self, *, from_uri: str, to_uri: str, relation: str) -> None:
         self.conn.execute(
             """INSERT INTO lineage_edges
                (from_uri, to_uri, relation, created_at)

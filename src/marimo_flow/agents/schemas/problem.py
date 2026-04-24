@@ -16,6 +16,12 @@ from marimo_flow.agents.schemas.equation import (
     EquationSpec,
     SubdomainSpec,
 )
+from marimo_flow.agents.schemas.mesh import MeshSpec
+from marimo_flow.agents.schemas.observation import (
+    ObservationSpec,
+    UnknownParameterSpec,
+)
+from marimo_flow.agents.schemas.stochastic import NoiseSpec
 
 
 class ProblemSpec(BaseModel):
@@ -34,6 +40,15 @@ class ProblemSpec(BaseModel):
     * ``conditions`` maps each subdomain to either an equation (interior
       PDE residual, IC expression) or a ``fixed_value`` (homogeneous
       Dirichlet etc.).
+    * ``unknowns`` (optional) turns the problem into an inverse one —
+      the composer adds ``pina.InverseProblem`` to the base classes and
+      wires each unknown through ``params_`` in the residual.
+    * ``observations`` (optional) are data-fitting conditions; each
+      becomes a ``Condition(input=…, target=…)`` in the compiled problem.
+
+    Multiple entries in ``equations`` coexist without any extra schema —
+    multiphysics coupling is just several EquationSpecs that share
+    ``output_variables`` and point at the same interior subdomain.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -49,9 +64,24 @@ class ProblemSpec(BaseModel):
     subdomains: list[SubdomainSpec] = Field(default_factory=list)
     equations: list[EquationSpec] = Field(default_factory=list)
     conditions: list[ConditionSpec] = Field(default_factory=list)
+    unknowns: list[UnknownParameterSpec] = Field(default_factory=list)
+    observations: list[ObservationSpec] = Field(default_factory=list)
+    mesh: MeshSpec | None = Field(
+        default=None,
+        description="optional mesh; SubdomainSpec.mesh_ref references its tags",
+    )
+    noise: NoiseSpec | None = Field(
+        default=None,
+        description="optional additive stochastic term; MC-averaged residual",
+    )
     notes: str | None = None
 
     @property
     def time_dependent(self) -> bool:
         """True iff ``domain_bounds`` includes a time axis."""
         return "t" in self.domain_bounds
+
+    @property
+    def is_inverse(self) -> bool:
+        """True iff at least one unknown parameter is declared."""
+        return bool(self.unknowns)

@@ -188,6 +188,8 @@ _VALID_AGENT_ROLES: frozenset[str] = frozenset(
         "data",
         "validation",
         "orchestrator",
+        "design",
+        "control",
     }
 )
 # Pin import so the AgentRole Literal stays referenced.

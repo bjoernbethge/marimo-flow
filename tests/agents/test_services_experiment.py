@@ -76,9 +76,7 @@ def test_complete_experiment_marks_failed_on_explicit_status():
 def test_complete_experiment_picks_failed_on_escalation():
     state = FlowState(
         training_run_id="ml-1",
-        validation_report=ValidationReport(
-            verdict="escalate", rationale="uncertain"
-        ),
+        validation_report=ValidationReport(verdict="escalate", rationale="uncertain"),
         task_spec=TaskSpec(title="t", description="d"),
     )
     deps = FlowDeps(state=state, provenance_db_path=":memory:")

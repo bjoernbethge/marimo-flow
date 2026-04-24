@@ -87,13 +87,8 @@ class TriageNode(BaseNode[FlowState, FlowDeps, str]):
             return RouteNode()
 
         model = self.model_override or ctx.deps.model_for("triage")
-        agent = Agent(
-            model, output_type=TaskSpec, instructions=TRIAGE_INSTRUCTIONS
-        )
-        prompt = (
-            f"User intent: {ctx.state.user_intent!r}\n"
-            "Produce a TaskSpec."
-        )
+        agent = Agent(model, output_type=TaskSpec, instructions=TRIAGE_INSTRUCTIONS)
+        prompt = f"User intent: {ctx.state.user_intent!r}\nProduce a TaskSpec."
         result = await agent.run(prompt)
         task = result.output
         ctx.state.task_spec = task

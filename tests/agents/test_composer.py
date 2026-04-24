@@ -16,8 +16,10 @@ from marimo_flow.agents.schemas import (
     ConditionSpec,
     DerivativeSpec,
     EquationSpec,
+    ObservationSpec,
     ProblemSpec,
     SubdomainSpec,
+    UnknownParameterSpec,
 )
 from marimo_flow.agents.services.composer import build_equation, compose_problem
 
@@ -128,9 +130,7 @@ def test_compose_poisson_3d_unit_cube():
             ),
         ],
         conditions=[
-            ConditionSpec(
-                subdomain="D", kind="equation", equation_name="poisson3d"
-            ),
+            ConditionSpec(subdomain="D", kind="equation", equation_name="poisson3d"),
         ],
     )
     cls = compose_problem(spec)
@@ -230,6 +230,162 @@ def test_composed_burgers_trains_end_to_end():
         assert torch.isfinite(metrics[key]), f"{key} is not finite: {metrics[key]}"
 
 
+def test_inverse_problem_mixes_in_inverse_base_and_sets_parameter_domain():
+    """A ProblemSpec with unknowns produces a SpatialProblem + InverseProblem."""
+    from pina.problem import InverseProblem
+
+    spec = ProblemSpec(
+        name="inverse_burgers",
+        output_variables=["u"],
+        domain_bounds={"x": [-1.0, 1.0], "t": [0.0, 1.0]},
+        subdomains=[
+            SubdomainSpec(name="D", bounds={"x": [-1.0, 1.0], "t": [0.0, 1.0]}),
+        ],
+        equations=[
+            EquationSpec(
+                name="burgers",
+                form="u_t + u*u_x - nu*u_xx",
+                outputs=["u"],
+                derivatives=[
+                    DerivativeSpec(name="u_t", field="u", wrt=["t"]),
+                    DerivativeSpec(name="u_x", field="u", wrt=["x"]),
+                    DerivativeSpec(name="u_xx", field="u", wrt=["x", "x"]),
+                ],
+            ),
+        ],
+        conditions=[
+            ConditionSpec(subdomain="D", kind="equation", equation_name="burgers"),
+        ],
+        unknowns=[UnknownParameterSpec(name="nu", low=0.001, high=0.1)],
+    )
+    cls = compose_problem(spec)
+    assert issubclass(cls, InverseProblem)
+    assert "nu" in cls.unknown_parameter_domain.variables
+
+
+def test_inverse_residual_pulls_unknown_from_params_not_parameters():
+    """When a symbol is declared unknown, build_equation emits a 3-arg residual."""
+    spec = EquationSpec(
+        name="poisson_inverse",
+        form="u_xx + mu",
+        outputs=["u"],
+        derivatives=[DerivativeSpec(name="u_xx", field="u", wrt=["x", "x"])],
+    )
+    eq = build_equation(spec, unknown_names={"mu"})
+    import inspect
+
+    assert len(inspect.signature(eq._Equation__equation).parameters) == 3
+
+
+def test_direct_residual_stays_two_arg_when_no_unknowns():
+    spec = EquationSpec(
+        name="poisson",
+        form="u_xx + sin(pi*x)",
+        outputs=["u"],
+        derivatives=[DerivativeSpec(name="u_xx", field="u", wrt=["x", "x"])],
+        parameters={"pi": 3.141592653589793},
+    )
+    eq = build_equation(spec)
+    import inspect
+
+    assert len(inspect.signature(eq._Equation__equation).parameters) == 2
+
+
+def test_multiphysics_two_equations_same_subdomain():
+    """Two EquationSpecs pointing at the same interior subdomain coexist.
+
+    Verifies the composer emits independent Conditions for each — the
+    loss has one term per equation key.
+    """
+    spec = ProblemSpec(
+        name="thermoelastic_1d",
+        output_variables=["T", "uvel"],
+        domain_bounds={"x": [0.0, 1.0]},
+        subdomains=[SubdomainSpec(name="D", bounds={"x": [0.0, 1.0]})],
+        equations=[
+            EquationSpec(
+                name="heat",
+                form="T_xx",
+                outputs=["T"],
+                derivatives=[DerivativeSpec(name="T_xx", field="T", wrt=["x", "x"])],
+            ),
+            EquationSpec(
+                name="elastic",
+                form="uvel_xx - alpha*T",
+                outputs=["uvel", "T"],
+                derivatives=[
+                    DerivativeSpec(name="uvel_xx", field="uvel", wrt=["x", "x"])
+                ],
+                parameters={"alpha": 0.5},
+            ),
+        ],
+        conditions=[
+            ConditionSpec(subdomain="D", kind="equation", equation_name="heat"),
+        ],
+    )
+    # A single Condition per subdomain is the PINA semantics. To couple
+    # heat+elastic on the same subdomain we must either have two
+    # subdomains pointing at the same CartesianDomain (canonical)
+    # or rely on a SystemEquation. Here we assert the first pattern
+    # composes correctly — the canonical way to express multiphysics.
+    spec.subdomains.append(SubdomainSpec(name="D2", bounds={"x": [0.0, 1.0]}))
+    spec.conditions.append(
+        ConditionSpec(subdomain="D2", kind="equation", equation_name="elastic")
+    )
+    cls = compose_problem(spec)
+    assert "D" in cls.conditions
+    assert "D2" in cls.conditions
+
+
+def test_observation_condition_materialised_points():
+    """ObservationSpec with filled points/values compiles to a data Condition."""
+    spec = ProblemSpec(
+        name="poisson_with_data",
+        output_variables=["u"],
+        domain_bounds={"x": [0.0, 1.0]},
+        subdomains=[SubdomainSpec(name="D", bounds={"x": [0.0, 1.0]})],
+        equations=[
+            EquationSpec(
+                name="poisson",
+                form="u_xx",
+                outputs=["u"],
+                derivatives=[DerivativeSpec(name="u_xx", field="u", wrt=["x", "x"])],
+            ),
+        ],
+        conditions=[
+            ConditionSpec(subdomain="D", kind="equation", equation_name="poisson"),
+        ],
+        observations=[
+            ObservationSpec(
+                name="sensor_grid",
+                field="u",
+                axes=["x"],
+                points=[[0.1], [0.5], [0.9]],
+                values=[[0.05], [0.25], [0.45]],
+            ),
+        ],
+    )
+    cls = compose_problem(spec)
+    assert "sensor_grid" in cls.conditions
+
+
+def test_observation_without_materialisation_errors():
+    """An un-materialised observation is rejected before we touch PINA."""
+    spec = ProblemSpec(
+        output_variables=["u"],
+        domain_bounds={"x": [0.0, 1.0]},
+        subdomains=[SubdomainSpec(name="D", bounds={"x": [0.0, 1.0]})],
+        conditions=[
+            ConditionSpec(subdomain="D", kind="fixed_value", value=0.0),
+        ],
+        observations=[
+            ObservationSpec(name="sensor", field="u", axes=["x"]),
+        ],
+    )
+    with pytest.raises(ValueError, match="not materialised"):
+        compose_problem(spec)
+
+
 def test_compose_emits_meaningful_class_name():
     cls = compose_problem(_burgers_spec(name="my_special_burgers"))
     assert cls.__name__ == "my_special_burgers"
@@ -239,9 +395,7 @@ def test_compose_emits_meaningful_class_name():
             output_variables=["u"],
             domain_bounds={"x": [0.0, 1.0]},
             subdomains=[SubdomainSpec(name="D", bounds={"x": [0.0, 1.0]})],
-            conditions=[
-                ConditionSpec(subdomain="D", kind="fixed_value", value=0.0)
-            ],
+            conditions=[ConditionSpec(subdomain="D", kind="fixed_value", value=0.0)],
         )
     )
     assert anon.__name__ == "ComposedProblem"

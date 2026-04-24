@@ -10,8 +10,10 @@ The four workflow toolsets are thin wrappers over the corresponding
 logic lives in the toolset beyond MLflow-artifact bookkeeping.
 """
 
+from marimo_flow.agents.toolsets.control import control_toolset
 from marimo_flow.agents.toolsets.curator import curator_toolset
 from marimo_flow.agents.toolsets.data import data_toolset
+from marimo_flow.agents.toolsets.design import design_toolset
 from marimo_flow.agents.toolsets.lead import lead_toolset
 from marimo_flow.agents.toolsets.model import model_toolset
 from marimo_flow.agents.toolsets.problem import problem_toolset
@@ -21,8 +23,10 @@ from marimo_flow.agents.toolsets.training import training_toolset
 from marimo_flow.agents.toolsets.validation import validation_toolset
 
 __all__ = [
+    "control_toolset",
     "curator_toolset",
     "data_toolset",
+    "design_toolset",
     "lead_toolset",
     "model_toolset",
     "problem_toolset",

@@ -48,6 +48,4 @@ class PresetRecord(BaseModel):
     parent_name: str | None = None
     author: str = "user"
     status: PresetStatus = "active"
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

@@ -120,7 +120,9 @@ def test_load_config_reads_yaml(monkeypatch, tmp_path):
 
 def test_load_config_honours_marimo_flow_config_env(monkeypatch, tmp_path):
     cfg_path = tmp_path / "custom-spot.yaml"
-    cfg_path.write_text("models:\n  solver: anthropic:claude-sonnet-4-6\n", encoding="utf-8")
+    cfg_path.write_text(
+        "models:\n  solver: anthropic:claude-sonnet-4-6\n", encoding="utf-8"
+    )
     monkeypatch.setenv("MARIMO_FLOW_CONFIG", str(cfg_path))
     monkeypatch.chdir(tmp_path)
     assert load_config()["models"]["solver"] == "anthropic:claude-sonnet-4-6"
@@ -157,7 +159,9 @@ def test_marimo_mcp_url_default(monkeypatch):
 def test_marimo_mcp_url_from_config(monkeypatch):
     monkeypatch.delenv("MARIMO_MCP_URL", raising=False)
     cfg = {"marimo": {"mcp_url": "http://marimo.internal:2718/mcp/server"}}
-    assert resolve_marimo_mcp_url(config=cfg) == "http://marimo.internal:2718/mcp/server"
+    assert (
+        resolve_marimo_mcp_url(config=cfg) == "http://marimo.internal:2718/mcp/server"
+    )
 
 
 def test_marimo_mcp_url_env_wins_over_config(monkeypatch):

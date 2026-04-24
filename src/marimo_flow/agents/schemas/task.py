@@ -59,6 +59,4 @@ class TaskSpec(BaseModel):
     preferred_backend: str | None = None
     review_required: bool = False
     notes: str | None = None
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

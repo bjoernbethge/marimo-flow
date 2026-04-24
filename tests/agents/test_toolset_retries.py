@@ -53,9 +53,10 @@ def test_compose_problem_invalid_spec_becomes_model_retry():
     with pytest.raises(ModelRetry) as excinfo:
         compose(Ctx(deps), spec={"clearly": "not a valid problem spec"})
     # ProblemSpec.model_validate failure message gets wrapped in ModelRetry.
-    assert "ProblemSpec" in str(excinfo.value) or "validation" in str(
-        excinfo.value
-    ).lower()
+    assert (
+        "ProblemSpec" in str(excinfo.value)
+        or "validation" in str(excinfo.value).lower()
+    )
 
 
 def test_build_model_retries_when_no_problem():

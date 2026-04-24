@@ -17,9 +17,9 @@ from pina.optim import TorchOptimizer
 from pina.problem import AbstractProblem
 from pina.solver import (
     PINN,
+    RBAPINN,
     CausalPINN,
     GradientPINN,
-    RBAPINN,
     SupervisedSolver,
 )
 from pina.solver import SelfAdaptivePINN as SAPINN

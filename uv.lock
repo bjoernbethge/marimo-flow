@@ -2732,6 +2732,7 @@ dependencies = [
     { name = "flask" },
     { name = "langgraph" },
     { name = "marimo", extra = ["lsp", "mcp", "recommended", "sql"] },
+    { name = "meshio" },
     { name = "mlflow", extra = ["genai", "mcp"] },
     { name = "optuna" },
     { name = "optuna-integration", extra = ["pytorch-lightning"] },
@@ -2783,6 +2784,7 @@ requires-dist = [
     { name = "flask", specifier = ">=3.1.3" },
     { name = "langgraph", specifier = ">=1.1.8" },
     { name = "marimo", extras = ["lsp", "recommended", "sql", "mcp"], specifier = ">=0.23.1" },
+    { name = "meshio", specifier = ">=5.3.5" },
     { name = "mlflow", extras = ["genai", "mcp"], specifier = ">=3.11.1" },
     { name = "optuna", specifier = ">=4.8.0" },
     { name = "optuna-integration", extras = ["pytorch-lightning"], specifier = ">=4.8.0" },
@@ -3013,6 +3015,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
+]
+
+[[package]]
+name = "meshio"
+version = "5.3.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/20/1e/caa4f15c020de3e3486b4133ca689236bd3863a3d6dd0f58e97ce86a296a/meshio-5.3.5.tar.gz", hash = "sha256:f21f01abd9f29ba06ea119304b3d39e610421cfe93b9dd23362834919f87586d", size = 490922, upload-time = "2024-01-31T15:09:41.731Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/89/5f/39cbadc320cd78f4834b0a9f7a2fa3c980dca942bf193f315837eacb8870/meshio-5.3.5-py3-none-any.whl", hash = "sha256:0736c6e34ecc768f62f2cde5d8233a3529512a9399b25c68ea2ca0d5900cdc10", size = 166162, upload-time = "2024-01-31T15:09:36.691Z" },
 ]
 
 [[package]]

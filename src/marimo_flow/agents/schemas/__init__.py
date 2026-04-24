@@ -10,6 +10,12 @@ from marimo_flow.agents.schemas.artifacts import (
     ArtifactRef,
     DatasetBinding,
 )
+from marimo_flow.agents.schemas.control import (
+    ControlPlan,
+    ControlVariableSpec,
+    MPCSolver,
+    StateSpec,
+)
 from marimo_flow.agents.schemas.decisions import (
     AgentDecision,
     AgentRole,
@@ -20,9 +26,23 @@ from marimo_flow.agents.schemas.decisions import (
 from marimo_flow.agents.schemas.equation import (
     ConditionKind,
     ConditionSpec,
+    DerivativeKind,
     DerivativeSpec,
     EquationSpec,
     SubdomainSpec,
+)
+from marimo_flow.agents.schemas.mesh import CellKind, MeshFormat, MeshSpec
+from marimo_flow.agents.schemas.observation import (
+    ObservationSource,
+    ObservationSpec,
+    UnknownParameterSpec,
+)
+from marimo_flow.agents.schemas.optimization import (
+    ConstraintOp,
+    ConstraintSpec,
+    DesignVariableSpec,
+    OptimizationMethod,
+    OptimizationPlan,
 )
 from marimo_flow.agents.schemas.preset import (
     PresetFamily,
@@ -37,6 +57,7 @@ from marimo_flow.agents.schemas.run import (
     SolverKind,
     SolverPlan,
 )
+from marimo_flow.agents.schemas.stochastic import NoiseKind, NoiseSpec
 from marimo_flow.agents.schemas.task import ProblemKindHint, TaskSpec
 
 __all__ = [
@@ -44,15 +65,31 @@ __all__ = [
     "AgentRole",
     "ArtifactKind",
     "ArtifactRef",
+    "CellKind",
     "ConditionKind",
     "ConditionSpec",
+    "ConstraintOp",
+    "ConstraintSpec",
+    "ControlPlan",
+    "ControlVariableSpec",
     "DatasetBinding",
+    "DerivativeKind",
     "DerivativeSpec",
+    "DesignVariableSpec",
     "EquationSpec",
     "ExperimentRecord",
     "HandoffRecord",
+    "MeshFormat",
+    "MeshSpec",
+    "MPCSolver",
     "ModelKind",
     "ModelSpec",
+    "NoiseKind",
+    "NoiseSpec",
+    "ObservationSource",
+    "ObservationSpec",
+    "OptimizationMethod",
+    "OptimizationPlan",
     "PresetFamily",
     "PresetRecord",
     "PresetStatus",
@@ -61,7 +98,9 @@ __all__ = [
     "RunConfig",
     "SolverKind",
     "SolverPlan",
+    "StateSpec",
     "SubdomainSpec",
     "TaskSpec",
+    "UnknownParameterSpec",
     "ValidationReport",
 ]

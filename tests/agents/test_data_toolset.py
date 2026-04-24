@@ -136,3 +136,71 @@ def test_fetch_run_metrics(mlflow_runs, deps_with_task):
     fn = data_toolset.tools["fetch_run_metrics"].function
     metrics = fn(_Ctx(deps_with_task), run_id=mlflow_runs[0])
     assert metrics["train_loss"] == pytest.approx(0.1)
+
+
+def test_load_observations_from_csv(tmp_path, deps_with_task):
+    csv_path = tmp_path / "sensor.csv"
+    csv_path.write_text("x,t,u\n0.1,0.0,0.05\n0.5,0.0,0.25\n0.9,0.0,0.45\n")
+    fn = data_toolset.tools["load_observations_from_file"].function
+    obs = fn(
+        _Ctx(deps_with_task),
+        path=str(csv_path),
+        field="u",
+        axes=["x", "t"],
+    )
+    assert obs["n_points"] == 3
+    assert obs["points"] == [[0.1, 0.0], [0.5, 0.0], [0.9, 0.0]]
+    assert obs["values"] == [[0.05], [0.25], [0.45]]
+    assert obs["source"] == "data_file"
+    # Dataset binding got attached to the task spec.
+    assert any(b.name == "data" for b in deps_with_task.state.task_spec.available_data)
+
+
+def test_load_observations_csv_rejects_missing_column(tmp_path, deps_with_task):
+    csv_path = tmp_path / "bad.csv"
+    csv_path.write_text("x,u\n0.1,0.05\n")
+    fn = data_toolset.tools["load_observations_from_file"].function
+    with pytest.raises(ModelRetry):
+        fn(_Ctx(deps_with_task), path=str(csv_path), field="u", axes=["x", "t"])
+
+
+def test_load_observations_from_npz(tmp_path, deps_with_task):
+    import numpy as np
+
+    npz_path = tmp_path / "sensor.npz"
+    np.savez(
+        npz_path,
+        x=np.array([0.0, 1.0, 2.0]),
+        y=np.array([0.0, 0.5, 1.0]),
+        u=np.array([0.0, 0.25, 1.0]),
+    )
+    fn = data_toolset.tools["load_observations_from_file"].function
+    obs = fn(
+        _Ctx(deps_with_task),
+        path=str(npz_path),
+        field="u",
+        axes=["x", "y"],
+    )
+    assert obs["n_points"] == 3
+    assert obs["points"][1] == [1.0, 0.5]
+    assert obs["values"][2] == [1.0]
+
+
+def test_generate_synthetic_observations_smoke(deps_with_task):
+    fn = data_toolset.tools["generate_synthetic_observations"].function
+    obs = fn(
+        _Ctx(deps_with_task),
+        truth_form="sin(pi*x)",
+        axes=["x"],
+        field="u",
+        axis_bounds={"x": [0.0, 1.0]},
+        n_points=32,
+        noise_sigma=0.0,
+        true_parameters={"pi": 3.141592653589793},
+        seed=0,
+    )
+    assert obs["source"] == "synthetic"
+    assert obs["n_points"] == 32
+    # sin(pi*x) for x in [0,1] is in [0,1].
+    for (_v,) in obs["values"]:
+        assert 0.0 - 1e-6 <= _v <= 1.0 + 1e-6

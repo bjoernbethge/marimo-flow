@@ -51,16 +51,16 @@ DEFAULT_MARIMO_MCP_URL = "http://127.0.0.1:2718/mcp/server"
 DEFAULT_PROVENANCE_DB_PATH = "provenance.duckdb"
 
 DEFAULT_MODELS: dict[str, str] = {
-    "route":      "ollama:gemma4:31b-cloud",
-    "triage":     "ollama:gemma4:31b-cloud",
-    "notebook":   "ollama:qwen3-coder:480b-cloud",
-    "problem":    "ollama:qwen3-coder:480b-cloud",
-    "model":      "ollama:qwen3.5:cloud",
-    "solver":     "ollama:qwen3-coder:480b-cloud",
-    "training":   "ollama:qwen3-coder:480b-cloud",
+    "route": "ollama:gemma4:31b-cloud",
+    "triage": "ollama:gemma4:31b-cloud",
+    "notebook": "ollama:qwen3-coder:480b-cloud",
+    "problem": "ollama:qwen3-coder:480b-cloud",
+    "model": "ollama:qwen3.5:cloud",
+    "solver": "ollama:qwen3-coder:480b-cloud",
+    "training": "ollama:qwen3-coder:480b-cloud",
     "validation": "ollama:qwen3.5:cloud",
-    "mlflow":     "ollama:gpt-oss:20b-cloud",
-    "lead":       "ollama:kimi-k2.5:cloud",
+    "mlflow": "ollama:gpt-oss:20b-cloud",
+    "lead": "ollama:kimi-k2.5:cloud",
 }
 
 _CONFIG_CANDIDATES = (
