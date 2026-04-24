@@ -51,9 +51,18 @@ This combination eliminates the reproducibility issues of traditional notebooks 
 - **🎯 Interactive Development**: Real-time parameter tuning with instant visual feedback
 - **💾 SQLite Backend**: Lightweight, file-based storage for experiments
 
+### 🧠 PINA — composition-first (no hardcoded PDE factories)
+- **`compose_problem(ProblemSpec)`**: agents emit typed `EquationSpec` + `SubdomainSpec` + `ConditionSpec` and the composer compiles a `pina.Problem` subclass at runtime (`sympy.lambdify` + `pina.operator.grad/laplacian`). No `ProblemKind` enum — any PDE sympy can express is reachable.
+- **Inverse problems**: `UnknownParameterSpec` + data-fitting `ObservationSpec` → composer wires a `pina.LearnableParameter` and routes a 3-arg residual.
+- **Mesh geometry**: `MeshSpec` + `meshio` + `MeshDomain` barycentric sampling (tri/tetra/quad/hex). `SubdomainSpec.mesh_ref` picks cell groups.
+- **3D visualisation**: `core/viz3d.py` via plotly (`Mesh3d`, `Volume`, `Scatter3d`, `Isosurface`) — no 150 MB VTK stack.
+- **Design optimisation**: `OptimizationPlan` + `DesignVariableSpec` + `ConstraintSpec` driving Optuna TPE or scipy SLSQP with penalty / augmented-Lagrangian handling.
+- **Stochastic + non-local**: `NoiseSpec` (white / colored / fbm) wraps the residual; fractional Laplacian via Riesz-kernel Monte-Carlo quadrature.
+- **MPC**: `marimo_flow.control` — rolling-horizon scipy SLSQP on a trained PINN surrogate.
+- **Walrus foundation model** adapter for Poisson-class problems.
+
 ### 🐳 Deployment
 - **Docker**: docker-compose setup with CPU, CUDA, and XPU image variants
-- **🧠 PINA Integration**: Physics-informed neural networks with Walrus foundation model
 - **📚 MCP-Powered Docs**: Live documentation via Context7 and Marimo MCP servers
 
 ## Quick Start 🏃‍♂️
@@ -118,29 +127,36 @@ uv run marimo edit examples/
 All notebooks live in `examples/` and can be opened with `uv run marimo edit examples/<file>.py`.
 
 - **`01_pina_poisson_solver.py`** – Solve the Poisson equation with baseline PINNs or the Walrus foundation model. Training is tracked in MLflow with integrated Optuna sweep analytics and experiment history. Uses `marimo_flow.core` directly.
-- **`02_provenance_dashboard.py`** – Review surface over the DuckDB provenance store. Five tables (tasks, experiments, agent decisions, validation verdicts, handoffs) side-by-side. Uses `marimo_flow.agents.services.ProvenanceStore`.
+- **`02_provenance_dashboard.py`** – Review surface over the DuckDB provenance store. Five tables (tasks, experiments, agent decisions, validation verdicts, handoffs) side-by-side plus 3D preset preview. Uses `marimo_flow.agents.services.ProvenanceStore`.
+- **`03_navier_stokes_3d_cavity.py`** – 3D lid-driven cavity composed end-to-end from a declarative `ProblemSpec` (no hardcoded NS factory). Sliders for viscosity, lid speed, collocation-point count, hidden width, epochs. Renders the spatial domain + mid-plane velocity slice with **plotly**. Uses the composition-first `services/composer.py`.
+- **`04_mpc_heat_rod.py`** – Closed-loop MPC on a 1D heat-rod PINN surrogate. Trains a small surrogate via the composer, then drives a rolling-horizon scipy-SLSQP MPC loop from `marimo_flow.control` toward a user-set temperature setpoint.
 - **`lab.py`** – PINA multi-agent team chat demo (see [PINA Multi-Agent Team](#pina-multi-agent-team-marimo_flowagents-)). Requires Ollama running locally.
 
 ## Project Structure 📁
 
 ```
 marimo-flow/
-├── examples/                    # Marimo notebooks
-│   ├── 01_pina_poisson_solver.py   # Poisson PINN demo (uses core/)
-│   ├── 02_provenance_dashboard.py  # DuckDB review surface (uses agents/)
-│   └── lab.py                      # PINA team chat demo (uses agents/)
-├── src/marimo_flow/             # Installable package
-│   ├── core/                    # PINA solvers, training, visualization
-│   └── agents/                  # Multi-agent team (pydantic-graph + MLflow)
-│       ├── nodes/               # TriageNode, RouteNode, specialists, ValidationNode
-│       ├── schemas/             # TaskSpec / ProblemSpec / … Pydantic models
-│       ├── toolsets/            # FunctionToolset per role + data + validation
-│       └── services/            # DuckDB provenance, orchestrator policy, experiments
-├── tests/                       # Pytest suite (167 passing, 1 xfailed)
-├── docs/                        # Project documentation (see docs/INDEX.md)
-├── docker/                      # Dockerfiles + compose (CPU, CUDA, XPU)
-├── data/mlflow/                 # MLflow storage (artifacts, db)
-└── pyproject.toml               # Dependencies
+├── examples/                         # Marimo notebooks
+│   ├── 01_pina_poisson_solver.py        # Poisson PINN demo (uses core/)
+│   ├── 02_provenance_dashboard.py       # DuckDB review + 3D preset preview
+│   ├── 03_navier_stokes_3d_cavity.py    # 3D NS lid-driven cavity (composer)
+│   ├── 04_mpc_heat_rod.py               # Closed-loop MPC via scipy SLSQP
+│   └── lab.py                           # PINA team chat demo (uses agents/)
+├── src/marimo_flow/                  # Installable package
+│   ├── core/                         # PINA solvers, training, plotly viz3d
+│   ├── control/                      # Rolling-horizon MPC (scipy SLSQP)
+│   └── agents/                       # Multi-agent team (pydantic-graph + MLflow)
+│       ├── nodes/                    # TriageNode, RouteNode, specialists, ValidationNode
+│       ├── schemas/                  # TaskSpec / ProblemSpec / ObservationSpec /
+│       │                             #   MeshSpec / OptimizationPlan / ControlPlan / …
+│       ├── toolsets/                 # FunctionToolset per role (incl. design, control)
+│       └── services/                 # composer, mesh_domain, design aggregator,
+│                                     #   provenance (DuckDB 13 tables), experiments
+├── tests/                            # Pytest suite (216 passing, 1 xfailed)
+├── docs/                             # Project documentation (see docs/INDEX.md)
+├── docker/                           # Dockerfiles + compose (CPU, CUDA, XPU)
+├── data/mlflow/                      # MLflow storage (artifacts, db)
+└── pyproject.toml                    # Dependencies
 ```
 
 ### Two Workflows

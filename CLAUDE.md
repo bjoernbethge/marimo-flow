@@ -35,6 +35,28 @@ Pattern: `bash -c '...' 2>/dev/null || powershell ...`
 - No unnecessary wrappers - use core library features directly
 - Skills in `.claude/Skills/` are git-tracked
 
+## Composition-first PDEs (Phase A-0 + B-F, 2026-04-24)
+
+No hardcoded `ProblemKind`. Agents compose PDEs from primitives:
+
+- `services/composer.py::compose_problem(ProblemSpec)` — compiles
+  a `pina.Problem` subclass at runtime via `sympy.lambdify` +
+  `pina.operator.grad/laplacian`. Auto-detects forward vs inverse
+  by residual-signature length (2 vs 3 args).
+- `services/mesh_domain.py::MeshDomain` — PINA `DomainInterface`
+  adapter over `meshio`; barycentric sampling per cell kind.
+- `services/design.py::ConstraintAggregator` — penalty +
+  augmented-Lagrangian handler for PDE-constrained optimisation.
+- `src/marimo_flow/control/` — rolling-horizon scipy SLSQP MPC
+  (`run_mpc_step`, `simulate_closed_loop`). No casadi / do-mpc.
+- `core/viz3d.py` — plotly `Mesh3d`/`Volume`/`Scatter3d`/`Isosurface`
+  for 3D domain + field visualisation. **No pyvista** (avoid 150 MB
+  VTK stack).
+
+Demo notebooks: `examples/03_navier_stokes_3d_cavity.py` (3D NS via
+composer), `examples/04_mpc_heat_rod.py` (closed-loop MPC on a heat
+surrogate).
+
 ## Agents (`src/marimo_flow/agents/`)
 
 Multi-agent PINA team on `pydantic-graph` with 9 nodes:
@@ -42,17 +64,22 @@ Multi-agent PINA team on `pydantic-graph` with 9 nodes:
 `SolverNode`, `TrainingNode`, `ValidationNode`, `MLflowNode`, `NotebookNode`.
 
 Layout (SPEC-driven):
-- `schemas/` — 15 Pydantic models: `TaskSpec`, `ProblemSpec`, `DomainSpec`,
-  `BoundaryConditionSpec`, `InitialConditionSpec`, `MaterialSpec`, `ModelSpec`,
-  `SolverPlan`, `RunConfig`, `DatasetBinding`, `ArtifactRef`, `AgentDecision`,
-  `HandoffRecord`, `ValidationReport`, `ExperimentRecord`. Kinds are `Literal`s
-  tied 1:1 to `core.ProblemManager/ModelManager/SolverManager.available()`.
-- `toolsets/` — `problem`, `model`, `solver`, `training`, `validation`, `data`,
-  `skills`, `lead`. Each is a `FunctionToolset[FlowDeps]` singleton.
-- `services/` — `ProvenanceStore` (DuckDB, 13 tables), orchestrator policy
-  helpers (`check_escalation`, `default_experiment_status`,
-  `requires_human_review`), experiment lifecycle (`start_experiment`,
-  `complete_experiment`).
+- `schemas/` — typed Pydantic models for every handoff artefact:
+  `TaskSpec`, `ProblemSpec` (composition-first), `EquationSpec`,
+  `SubdomainSpec`, `ConditionSpec`, `DerivativeSpec`, `ObservationSpec`,
+  `UnknownParameterSpec`, `MeshSpec`, `NoiseSpec`, `OptimizationPlan`,
+  `DesignVariableSpec`, `ConstraintSpec`, `ControlPlan`,
+  `ControlVariableSpec`, `StateSpec`, `ModelSpec`, `SolverPlan`,
+  `RunConfig`, `DatasetBinding`, `ArtifactRef`, `AgentDecision`,
+  `HandoffRecord`, `ValidationReport`, `ExperimentRecord`.
+  Only `ModelKind` and `SolverKind` remain `Literal`s (finite PINA
+  built-ins); problem physics is free-form via `EquationSpec`.
+- `toolsets/` — `problem`, `model`, `solver`, `training`, `validation`,
+  `data`, `design`, `control`, `curator`, `skills`, `lead`. Each is
+  a `FunctionToolset[FlowDeps]` singleton.
+- `services/` — `ProvenanceStore` (DuckDB, 13 tables), orchestrator
+  policy helpers, experiment lifecycle, `composer`, `mesh_domain`,
+  `design`, `preset_catalog`.
 - `nodes/` — one module per graph node. `triage` builds a `TaskSpec` from
   free-form intent (fast-paths if one is already set). `validation` grades a
   training run and writes a `ValidationReport`. `route` emits `HandoffRecord`
@@ -79,7 +106,9 @@ Infrastructure:
   `model_dump(mode="json")` so snapshots round-trip through JSON.
 
 Testing:
-- `tests/agents/test_*.py` — 167 passing, 1 xfailed.
+- `tests/agents/test_*.py` — 216 passing, 1 xfailed (baseline 2026-04-25).
+- `test_demos_compose.py` smoke-tests the notebook spec paths so
+  schema drift breaks the test suite, not the user-facing demos.
 - Nodes that use MCP toolsets (Notebook, MLflow): stub `build_*_mcp` with
   `pydantic_ai.toolsets.FunctionToolset()` to avoid live server connections,
   and pin `TestModel(call_tools=[])`.

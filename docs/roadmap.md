@@ -1,13 +1,15 @@
 # Roadmap: beyond the current PINA presets
 
-Last updated: 2026-04-24.
+Last updated: 2026-04-25.
 
-**Status**: Phase A-0 complete and realigned as a composition-first
-catalog (no more hardcoded `ProblemKind`). The earlier plan for Phase A
-(Navier-Stokes / Maxwell / Elasticity as new hardcoded factories) has
-been dropped — the **composer** (`services/composer.py::compose_problem`)
-reaches those PDEs as soon as an agent writes a suitable `ProblemSpec`.
-No Python changes required per new PDE family.
+**Status**: **Phases A-0 through F shipped.** Composition-first
+architecture (`services/composer.py::compose_problem`) reaches
+Navier-Stokes / Maxwell / Elasticity / … the moment an agent writes a
+suitable `ProblemSpec`. Inverse problems, mesh geometry, 3D plotly
+viz, design optimisation, stochastic + non-local PDEs, and rolling-
+horizon MPC are all in the repo with tests.
+
+**Test baseline (2026-04-25):** 216 passed, 1 xfailed.
 
 ## Architecture pivot (2026-04-24)
 
@@ -57,12 +59,12 @@ Background context: [`CLAUDE.md`](../CLAUDE.md), [`README.md`](../README.md).
 | Phase | Theme | Effort | External deps | Depends on |
 |---|---|---|---|---|
 | **A-0** ✅ | Preset catalog + composer + curator_toolset | — | `sympy` | — |
-| **B** | Inverse path + multiphysics + Data agent | M | — | A-0 |
-| **C** | Mesh/CAD geometry + 3D visualisation | L | `meshio`, `pyvista` (opt.) | — |
+| **B** ✅ | Inverse path + multiphysics + Data agent | M | — | A-0 |
+| **C** ✅ | Mesh/CAD geometry + 3D plotly viz | L | `meshio` (only) | — |
 | **C2** | AMR (separate milestone) | XL | PINA upstream or custom | C |
-| **D** | PDE-constrained optimisation | M | `cvxpy` optional | A-0, B |
-| **E** | Stochastic + non-local PDEs | M | — | — |
-| **F** | Real-time control / MPC | L | `do-mpc` or `cvxpy` | D |
+| **D** ✅ | PDE-constrained optimisation | M | — (`optuna` already in) | A-0, B |
+| **E** ✅ | Stochastic + non-local PDEs | M | — | — |
+| **F** ✅ | Real-time control / MPC (scipy SLSQP) | L | — | D |
 
 Effort legend: S = 1–2 sessions, M = 2–3, L = 3–4, XL = 5+.
 
@@ -82,19 +84,19 @@ Composer-first catalog. What's shipped:
 
 ---
 
-## Phase B — Inverse problems, multiphysics, Data agent
+## Phase B — Inverse problems, multiphysics, Data agent — DONE (2026-04-24)
 
-Let agents handle parameter identification and coupled physics through
-the same composer, plus automate observation loading.
-
-| # | Title | Effort |
+| # | Title | Shipped |
 |---|---|---|
-| 12 | Recon: PINA inverse-problem pattern (LearnableParameter) | S |
-| 13 | Schemas: `ObservationSpec` + `UnknownParameterSpec` | M |
-| 30 | **Data agent: auto-ingest observations from file + synthetic generator** | M |
-| 14 | Composer support for inverse problems | M |
-| 15 | Multiphysics via multiple EquationSpecs on one ProblemSpec | M |
-| 16 | Skills: `pina-inverse`, `pina-multiphysics`, `pina-3d` | M |
+| 12 | PINA inverse-problem pattern recon | `InverseProblem` mixin + 3-arg residual auto-detect in `services/composer.py` |
+| 13 | `ObservationSpec` + `UnknownParameterSpec` | `agents/schemas/observation.py` |
+| 30 | Data agent: auto-ingest observations | `toolsets/data.py::load_observations_from_file` (CSV/NPZ/Parquet), `generate_synthetic_observations` |
+| 14 | Composer support for inverse problems | `services/composer.py::build_equation(unknown_names=…)` + `_compile_observation` data-fitting Conditions |
+| 15 | Multiphysics | two+ EquationSpec on one ProblemSpec → independent loss terms |
+| 16 | Skills | `.claude/Skills/pina-inverse/`, `pina-multiphysics/`, `pina-3d/` |
+
+Tests: `tests/agents/test_composer.py` (inverse + multiphysics paths),
+`tests/agents/test_data_toolset.py` (CSV/NPZ/synthetic fixtures).
 
 **Technical notes**
 
@@ -116,19 +118,19 @@ the same composer, plus automate observation loading.
 
 ---
 
-## Phase C — 3D geometry, mesh, CAD, visualisation
+## Phase C — 3D geometry, mesh, visualisation — DONE (2026-04-24)
 
-Move beyond CartesianDomain. Mesh import (STL/OBJ/VTK/GMSH), optional
-CAD bridge (STEP/IGES), interactive 3D rendering in the dashboard.
-
-| # | Title | Effort |
+| # | Title | Shipped |
 |---|---|---|
-| 17 | Recon: non-cartesian PINA domains + mesh integration | S |
-| 18 | `uv add meshio` + `MeshSpec` schema + `meshes` table | M |
-| 19 | `MeshDomain` adapter for the composer | L |
-| 20 | `pina-geometry` skill + CAD bridge via pyvista/OCCT | M |
-| 31 | 3D visualisation in the provenance dashboard (pyvista) | M |
-| 32 | Demo notebook: 3D Navier-Stokes lid-driven cavity | S |
+| 17 | Non-cartesian domain recon | `pina.domain.DomainInterface` confirmed, subclassed in `MeshDomain` |
+| 18 | `meshio==5.3.5` + `MeshSpec` | `uv add meshio`, `agents/schemas/mesh.py` |
+| 19 | `MeshDomain` adapter | `services/mesh_domain.py` — barycentric sampling (tri/tetra/quad/hex), `is_inside`, cell-tag lookup |
+| 20 | `pina-geometry` skill | `.claude/Skills/pina-geometry/` + `SubdomainSpec.mesh_ref` escape hatch |
+| 31 | 3D visualisation | `core/viz3d.py` — `domain_figure` / `scatter_samples` / `volume_figure` using **plotly** (`Mesh3d`, `Volume`, `Scatter3d`, `Isosurface`). **No pyvista** — plotly was already a transitive dep via marimo, no 150 MB VTK stack. |
+| 32 | Demo notebook | `examples/03_navier_stokes_3d_cavity.py` — sliders for ν / lid speed / grid / width / epochs |
+
+Tests: `tests/agents/test_mesh_domain.py`, `tests/agents/test_viz3d.py`,
+`tests/agents/test_demos_compose.py::test_ns3d_cavity_demo_composes`.
 
 **Separate milestone**
 
@@ -151,16 +153,15 @@ CAD bridge (STEP/IGES), interactive 3D rendering in the dashboard.
 
 ---
 
-## Phase D — PDE-constrained optimisation
+## Phase D — PDE-constrained optimisation — DONE (2026-04-24)
 
-Design loop over PINN composers — topology, shape, material optimisation
-with physical constraints. Binds to the existing Optuna stack in
-`core/visualization.py`.
-
-| # | Title | Effort |
+| # | Title | Shipped |
 |---|---|---|
-| 22 | Design agent + `OptimizationPlan` + `DesignVariableSpec` | M |
-| 23 | `design_toolset` with penalty / augmented-Lagrangian handler | M |
+| 22 | Design agent + schemas | `agents/schemas/optimization.py` — `DesignVariableSpec`, `ConstraintSpec`, `OptimizationPlan`; `"design"` added to `AgentRole` |
+| 23 | `design_toolset` | `toolsets/design.py` — `build_optimization_plan`, `apply_overrides`, `evaluate_constraints`, `run_design_sweep` (Optuna TPE / scipy SLSQP); penalty + augmented-Lagrangian via `services/design.py::ConstraintAggregator` |
+
+Tests: `tests/agents/test_design.py` (apply_overrides + constraint
+aggregator + toolset roundtrip).
 
 **Technical notes**
 
@@ -174,12 +175,14 @@ with physical constraints. Binds to the existing Optuna stack in
 
 ---
 
-## Phase E — Stochastic + non-local PDEs
+## Phase E — Stochastic + non-local PDEs — DONE (2026-04-24)
 
-| # | Title | Effort |
+| # | Title | Shipped |
 |---|---|---|
-| 24 | Stochastic PDEs: `NoiseSpec` + SDE solver variant | M |
-| 25 | Non-local / fractional PDEs | M |
+| 24 | Stochastic PDEs | `agents/schemas/stochastic.py::NoiseSpec` (white / colored / fbm); composer wraps residual with additive torch noise via `_build_noise_sampler` |
+| 25 | Non-local / fractional | `DerivativeKind` literal on `DerivativeSpec` + `alpha`, `quadrature_points`; `services/composer.py::_fractional_laplacian` uses autograd-traceable Riesz-kernel Monte-Carlo quadrature |
+
+Tests: `tests/agents/test_composer.py` (noise + fractional paths).
 
 **Technical notes**
 
@@ -194,16 +197,16 @@ with physical constraints. Binds to the existing Optuna stack in
 
 ---
 
-## Phase F — Real-time control / MPC
+## Phase F — Real-time control / MPC — DONE (2026-04-24)
 
-Use a trained PINN as a dynamics model inside an MPC loop — closed-loop
-control driven by a physics-informed surrogate.
-
-| # | Title | Effort |
+| # | Title | Shipped |
 |---|---|---|
-| 26 | Recon: MPC libraries (do-mpc / cvxpy / acados) | M |
-| 27 | `control/` module + `ControlAgent` + `ControlPlan` schema | L |
-| 28 | Closed-loop demo + `control_dashboard` | M |
+| 26 | MPC library recon | **scipy SLSQP** chosen over do-mpc/cvxpy/acados (no casadi / C++ stack). Rationale: for scalar-state lab demos the existing `scipy.optimize.minimize` is enough; do-mpc pulls ~50 MB casadi. |
+| 27 | `control/` module + schemas | `src/marimo_flow/control/` — `run_mpc_step`, `simulate_closed_loop` (rolling-horizon, warm-started); `agents/schemas/control.py::ControlPlan`, `ControlVariableSpec`, `StateSpec`; `"control"` added to `AgentRole`; `toolsets/control.py` exposes `build_control_plan`, `mpc_step`, `closed_loop_simulation` |
+| 28 | Closed-loop demo | `examples/04_mpc_heat_rod.py` — trains 1D heat surrogate, steers centre-temperature toward a setpoint |
+
+Tests: `tests/agents/test_control.py` (single-step + rollout),
+`tests/agents/test_demos_compose.py::test_heat_rod_demo_composes_and_mpc_step_runs`.
 
 **Technical notes**
 
@@ -220,38 +223,46 @@ control driven by a physics-informed surrogate.
 
 ---
 
-## Suggested sequence
+## How to reproduce / verify
 
-1. **Phase B** next — builds on the composer and adds inverse +
-   multiphysics with minimal new machinery. Task #30 (Data agent) is
-   the keystone so observables are truly agent-managed.
-2. **Phase C** in parallel or after — orthogonal to B. C2 (AMR) stays a
-   separate sprint.
-3. **Phase D** needs B (design-over-problem).
-4. **Phase E** orthogonal, any time.
-5. **Phase F** last — needs trained surrogates from A–D as the
-   dynamics model.
+```bash
+# Full test suite — must stay at 216 passed, 1 xfailed
+uv run pytest -q
 
-## Non-goals
+# Smoke-run the new demos outside marimo
+uv run pytest tests/agents/test_demos_compose.py -v
+
+# Launch demos interactively
+uv run marimo edit examples/03_navier_stokes_3d_cavity.py
+uv run marimo edit examples/04_mpc_heat_rod.py
+
+# Inspect provenance (all 13 DuckDB tables)
+uv run marimo edit examples/02_provenance_dashboard.py
+```
+
+## Non-goals (still)
 
 - **Shock-fitting / Riemann solvers** for hyperbolic conservation laws.
-  PINN is structurally poor at this; use FV/DG methods (dolfinx,
-  Clawpack, OpenFOAM) in a separate project.
-- **Volumetric rendering of tera-scale fields**. pyvista is fine for
-  lab scale; Paraview / Catalyst stays outside.
+  PINN is structurally poor at this; use FV/DG (dolfinx, Clawpack,
+  OpenFOAM) in a separate project.
+- **Volumetric rendering of tera-scale fields**. plotly covers lab
+  scale; Paraview / Catalyst stays outside.
 - **Real HPC parallelism**. Lightning covers DDP; SLURM / Horovod go
   out of scope.
+- **AMR (Phase C2)** — `RBAPINN` covers adaptive sampling today; real
+  h/p-AMR still blocks on PINA upstream support.
 
-## Open questions before kick-off
+## Open milestones
 
-- Phase C: pyvista vs. trimesh for point-sampling on meshes? Task #17
-  decides.
-- Phase D: own Optuna-objective wrapper vs. skopt vs. BoTorch? Recon
-  before Task #22.
-- Phase F: `control/` as a sibling module vs. a separate repo? The
-  scope test in Task #26 will tell.
+| # | Milestone | Status |
+|---|---|---|
+| 21 | Adaptive mesh refinement (Phase C2, XL) | not started |
+| — | MPC beyond scalar state (requires `do-mpc` / `acados`) | escalate before `uv add` |
+| — | CAD bridge (STEP / IGES via OCCT) | not yet needed |
 
 ---
 
-All 20 open tasks live under `TaskList`. Phase A-0 complete; Phase B is
-the next natural step.
+All 20 original roadmap tasks (B-F) completed in Phase B-F commits.
+Next natural step: decide whether C2 (AMR) is worth pulling in PINA
+upstream changes, or whether the `RBAPINN` adaptive-sampling path
+already covers the demands.
