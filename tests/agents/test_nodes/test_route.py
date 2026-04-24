@@ -60,3 +60,27 @@ def test_route_decision_schema_lists_all_options():
         "mlflow",
         "end",
     }
+
+
+async def test_route_increments_counter():
+    test_model = TestModel(
+        custom_output_args={"next_node": "problem", "rationale": "x"}
+    )
+    state = FlowState(user_intent="go")
+    assert state.route_count == 0
+    node = RouteNode(model_override=test_model)
+    ctx = GraphRunContext(state=state, deps=FlowDeps())
+    await node.run(ctx)
+    assert state.route_count == 1
+
+
+async def test_route_circuit_breaker_trips_when_exceeded():
+    test_model = TestModel(
+        custom_output_args={"next_node": "problem", "rationale": "x"}
+    )
+    state = FlowState(user_intent="go", max_route_steps=3, route_count=3)
+    node = RouteNode(model_override=test_model)
+    ctx = GraphRunContext(state=state, deps=FlowDeps())
+    result = await node.run(ctx)
+    assert isinstance(result, End)
+    assert "Circuit breaker" in result.data

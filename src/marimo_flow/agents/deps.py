@@ -8,18 +8,26 @@ cohere, bedrock, huggingface, ollama, deepseek, openrouter, vercel, azure,
 cerebras, xai, moonshotai, fireworks, together, heroku, github, litellm, nebius,
 ovhcloud, alibaba, sambanova, outlines, sentence-transformers, voyageai.
 
-Per-role model specs can be customised three ways (highest wins):
+Configuration resolution (highest wins):
 
-1. Env var ``MARIMO_FLOW_MODEL_<ROLE>=<provider>:<model>``
-2. YAML file — first of these that exists at CWD is used:
+1. Real shell-exported env vars
+2. Env vars from a local ``.env`` file (python-dotenv)
+3. YAML file — first of these that exists at CWD is used:
    ``$MARIMO_FLOW_CONFIG`` → ``config.yaml`` → ``config.yml`` →
-   ``marimo-flow.yaml`` → ``marimo-flow.yml``
-3. ``DEFAULT_MODELS`` (Ollama Cloud defaults shipped with the repo).
+   ``marimo-flow.yaml`` → ``marimo-flow.yml``.
+   Supported keys:
+     * ``models.<role>: "<provider>:<model>"``
+     * ``env.<KEY>: "<value>"``             — seeds missing env vars
+     * ``mlflow.tracking_uri: "<uri>"``     — MLflow backend
+     * ``marimo.mcp_url: "<url>"``          — marimo MCP endpoint
+4. ``DEFAULT_MODELS`` and the hardcoded URI defaults below.
+
+Per-role specs can additionally be overridden by
+``MARIMO_FLOW_MODEL_<ROLE>=<spec>`` env vars (the per-role env overrides
+always win — layered on top of whatever came from the yaml).
 
 Provider auth uses each provider's standard env var (``OPENAI_API_KEY``,
-``ANTHROPIC_API_KEY``, ``GROQ_API_KEY``, ``OLLAMA_BASE_URL``, ...). The yaml
-file may also carry an ``env:`` block to seed env vars without exporting them
-in every shell.
+``ANTHROPIC_API_KEY``, ``GROQ_API_KEY``, ``OLLAMA_BASE_URL``, ...).
 """
 
 from __future__ import annotations
@@ -30,12 +38,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import yaml
+from dotenv import load_dotenv
 from pydantic_ai.models import Model, infer_model
 
 if TYPE_CHECKING:
     from marimo_flow.agents.state import FlowState
 
 DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434/v1"
+DEFAULT_MLFLOW_TRACKING_URI = "sqlite:///mlruns.db"
+DEFAULT_MARIMO_MCP_URL = "http://127.0.0.1:2718/mcp/server"
 
 DEFAULT_MODELS: dict[str, str] = {
     "route":    "ollama:gemma4:31b-cloud",
@@ -55,6 +66,20 @@ _CONFIG_CANDIDATES = (
     "marimo-flow.yml",
 )
 
+# Tracks whether dotenv has been attempted this process so repeated config
+# lookups don't re-parse the .env every call.
+_DOTENV_LOADED = False
+
+
+def _load_dotenv_once() -> None:
+    """Load ``.env`` from CWD on first access. Existing env vars always win."""
+    global _DOTENV_LOADED
+    if _DOTENV_LOADED:
+        return
+    dotenv_path = os.environ.get("MARIMO_FLOW_DOTENV", ".env")
+    load_dotenv(dotenv_path, override=False)
+    _DOTENV_LOADED = True
+
 
 def _config_path() -> Path | None:
     env = os.environ.get("MARIMO_FLOW_CONFIG")
@@ -69,18 +94,29 @@ def _config_path() -> Path | None:
 
 
 def load_config() -> dict[str, Any]:
-    """Parse the marimo-flow yaml config if present. Empty dict otherwise."""
+    """Parse the marimo-flow yaml config if present. Empty dict otherwise.
+
+    Also loads ``.env`` (if any) and applies the ``env:`` block from the yaml
+    as a side effect, so ``os.environ`` is populated before callers read
+    provider auth vars.
+    """
+    _load_dotenv_once()
     p = _config_path()
     if p is None:
         return {}
     with p.open(encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
-    return data if isinstance(data, dict) else {}
+    if not isinstance(data, dict):
+        return {}
+    _apply_env_block(data)
+    return data
 
 
 def _apply_env_block(config: dict[str, Any]) -> None:
     """Seed os.environ from config['env'] without overriding existing values."""
     env_block = config.get("env") or {}
+    if not isinstance(env_block, dict):
+        return
     for key, value in env_block.items():
         if key not in os.environ and value is not None:
             os.environ[key] = str(value)
@@ -90,7 +126,8 @@ def resolve_models(config: dict[str, Any] | None = None) -> dict[str, str]:
     """Role → spec map, overlaying DEFAULT_MODELS with config and env vars."""
     if config is None:
         config = load_config()
-    _apply_env_block(config)
+    else:
+        _apply_env_block(config)
     models = dict(DEFAULT_MODELS)
     yaml_models = config.get("models") or {}
     if isinstance(yaml_models, dict):
@@ -100,6 +137,32 @@ def resolve_models(config: dict[str, Any] | None = None) -> dict[str, str]:
         if env_key in os.environ:
             models[role] = os.environ[env_key]
     return models
+
+
+def resolve_mlflow_tracking_uri(config: dict[str, Any] | None = None) -> str:
+    """MLflow URI: env MLFLOW_TRACKING_URI > config.mlflow.tracking_uri > default."""
+    if config is None:
+        config = load_config()
+    env_value = os.environ.get("MLFLOW_TRACKING_URI")
+    if env_value:
+        return env_value
+    mlflow_cfg = config.get("mlflow") or {}
+    if isinstance(mlflow_cfg, dict) and mlflow_cfg.get("tracking_uri"):
+        return str(mlflow_cfg["tracking_uri"])
+    return DEFAULT_MLFLOW_TRACKING_URI
+
+
+def resolve_marimo_mcp_url(config: dict[str, Any] | None = None) -> str:
+    """marimo MCP URL: env MARIMO_MCP_URL > config.marimo.mcp_url > default."""
+    if config is None:
+        config = load_config()
+    env_value = os.environ.get("MARIMO_MCP_URL")
+    if env_value:
+        return env_value
+    marimo_cfg = config.get("marimo") or {}
+    if isinstance(marimo_cfg, dict) and marimo_cfg.get("mcp_url"):
+        return str(marimo_cfg["mcp_url"])
+    return DEFAULT_MARIMO_MCP_URL
 
 
 def _ensure_ollama_base_url() -> None:
@@ -131,14 +194,59 @@ class FlowDeps:
     ``agent.run(..., deps=ctx.deps)`` so FunctionToolset tools can reach
     the current FlowState via ``ctx.deps.state``.
 
-    ``models`` is populated from ``resolve_models()``  (DEFAULT_MODELS overlaid
-    by ``config.yaml`` and ``MARIMO_FLOW_MODEL_<ROLE>`` env vars). You can
-    override an individual role at runtime with
-    ``deps.models[role] = "<provider>:<model>"``.
+    ``models``, ``mlflow_tracking_uri`` and ``marimo_mcp_url`` are populated
+    by the config resolver (``.env`` + ``config.yaml`` + env vars) at
+    construction time. Override any of them at runtime via direct
+    attribute assignment before calling ``graph.run(...)``.
+
+    ``model_cache`` stores resolved pydantic-ai ``Model`` objects keyed by
+    spec string so we re-use (and later close) their underlying HTTP
+    clients instead of leaking one per Node invocation.
     """
 
     models: dict[str, str] = field(default_factory=resolve_models)
     registry: dict[str, Any] = field(default_factory=dict)
-    mlflow_tracking_uri: str = "sqlite:///mlruns.db"
-    marimo_mcp_url: str = "http://127.0.0.1:2718/mcp/server"
+    mlflow_tracking_uri: str = field(default_factory=resolve_mlflow_tracking_uri)
+    marimo_mcp_url: str = field(default_factory=resolve_marimo_mcp_url)
     state: FlowState | None = None
+    model_cache: dict[str, Model] = field(default_factory=dict)
+
+    def model_for(self, role: str) -> Model:
+        """Return a cached pydantic-ai Model for ``role``.
+
+        Build the Model once per spec and reuse its provider client across
+        Node runs — this is what lets ``aclose()`` close every HTTP
+        connection on teardown.
+        """
+        spec = self.models[role]
+        cached = self.model_cache.get(spec)
+        if cached is not None:
+            return cached
+        model = get_model(role, override=spec)
+        self.model_cache[spec] = model
+        return model
+
+    async def aclose(self) -> None:
+        """Close every cached model's underlying HTTP client.
+
+        Call this at the end of ``graph.run(...)`` (or from an
+        ``AsyncExitStack``) to release sockets cleanly and silence the
+        ResourceWarnings we otherwise get at interpreter shutdown.
+        """
+        seen: set[int] = set()
+        for model in self.model_cache.values():
+            client = getattr(model, "client", None) or getattr(model, "_client", None)
+            if client is None or id(client) in seen:
+                continue
+            seen.add(id(client))
+            closer = getattr(client, "close", None) or getattr(client, "aclose", None)
+            if closer is None:
+                continue
+            result = closer()
+            # Both sync and async .close() variants exist across providers.
+            if hasattr(result, "__await__"):
+                try:
+                    await result
+                except Exception:  # noqa: BLE001 — cleanup best-effort
+                    pass
+        self.model_cache.clear()

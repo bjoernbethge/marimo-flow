@@ -18,7 +18,7 @@ import mlflow
 from pydantic_ai import Agent
 from pydantic_graph import BaseNode, GraphRunContext
 
-from marimo_flow.agents.deps import FlowDeps, get_model
+from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.skills import build_skill_instructions
 from marimo_flow.agents.state import FlowState
 
@@ -51,15 +51,14 @@ class SolverNode(BaseNode[FlowState, FlowDeps, str]):
         from marimo_flow.agents.nodes.route import RouteNode
         from marimo_flow.agents.toolsets.solver import solver_toolset
 
-        model = self.model_override or get_model(
-            "solver", override=ctx.deps.models["solver"]
-        )
+        model = self.model_override or ctx.deps.model_for("solver")
         ctx.deps.state = ctx.state
         agent = Agent(
             model,
             deps_type=FlowDeps,
             instructions=build_skill_instructions(SOLVER_SKILLS),
             toolsets=[solver_toolset],
+            retries=3,
         )
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"

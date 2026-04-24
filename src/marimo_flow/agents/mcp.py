@@ -20,15 +20,36 @@ from pydantic_ai.mcp import (
 DEFAULT_MARIMO_MCP_URL = "http://127.0.0.1:2718/mcp/server"
 
 
-def build_marimo_mcp(url: str = DEFAULT_MARIMO_MCP_URL) -> MCPServerStreamableHTTP:
-    return MCPServerStreamableHTTP(url=url)
+def build_marimo_mcp(
+    url: str = DEFAULT_MARIMO_MCP_URL,
+    *,
+    startup_timeout: float = 30.0,
+) -> MCPServerStreamableHTTP:
+    """Build the marimo MCP streamable-HTTP client.
+
+    ``startup_timeout`` widens the handshake window from pydantic-ai's default
+    of 5s — marimo's ``--mcp`` endpoint can take a few seconds to register
+    tools when a notebook has many cells.
+    """
+    return MCPServerStreamableHTTP(url=url, timeout=startup_timeout)
 
 
-def build_mlflow_mcp(tracking_uri: str = "sqlite:///mlruns.db") -> MCPServerStdio:
+def build_mlflow_mcp(
+    tracking_uri: str = "sqlite:///mlruns.db",
+    *,
+    startup_timeout: float = 60.0,
+) -> MCPServerStdio:
+    """Build the MLflow MCP stdio server.
+
+    ``startup_timeout`` is the handshake window for ``mlflow mcp run``. MLflow
+    initialises the store on startup (SQLite migrations, plugin loading) which
+    can exceed the pydantic-ai default of 5s on a cold run.
+    """
     return MCPServerStdio(
         command="mlflow",
         args=["mcp", "run"],
         env={"MLFLOW_TRACKING_URI": tracking_uri},
+        timeout=startup_timeout,
     )
 
 

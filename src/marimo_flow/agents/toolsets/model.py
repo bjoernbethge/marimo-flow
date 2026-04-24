@@ -11,8 +11,14 @@ from typing import Any
 
 from pydantic_ai import FunctionToolset, RunContext
 
+from pydantic_ai import ModelRetry
+
 from marimo_flow.agents.deps import FlowDeps
-from marimo_flow.agents.toolsets._registry import register_artifact, require_state
+from marimo_flow.agents.toolsets._registry import (
+    register_artifact,
+    require_state,
+    retry_on_value_error,
+)
 from marimo_flow.core import ModelManager
 
 model_toolset: FunctionToolset[FlowDeps] = FunctionToolset(id="model")
@@ -49,12 +55,16 @@ def build_model(
     """
     state = require_state(ctx.deps)
     if state.problem_artifact_uri is None:
-        raise RuntimeError(
-            "No problem registered. Call build_problem before build_model."
+        raise ModelRetry(
+            "No problem registered yet. Hand control back so the problem "
+            "agent can run first, then retry build_model."
         )
     problem = ctx.deps.registry[state.problem_artifact_uri]
     kwargs = kwargs or {}
-    model = ModelManager.create(kind, problem=problem, **kwargs)
+    model = retry_on_value_error(
+        lambda: ModelManager.create(kind, problem=problem, **kwargs),
+        available=ModelManager.available(),
+    )
     uri = register_artifact(
         deps=ctx.deps,
         state=state,

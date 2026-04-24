@@ -11,8 +11,14 @@ from typing import Any
 
 from pydantic_ai import FunctionToolset, RunContext
 
+from pydantic_ai import ModelRetry
+
 from marimo_flow.agents.deps import FlowDeps
-from marimo_flow.agents.toolsets._registry import register_artifact, require_state
+from marimo_flow.agents.toolsets._registry import (
+    register_artifact,
+    require_state,
+    retry_on_value_error,
+)
 from marimo_flow.core import SolverManager
 
 solver_toolset: FunctionToolset[FlowDeps] = FunctionToolset(id="solver")
@@ -49,15 +55,17 @@ def build_solver(
     """
     state = require_state(ctx.deps)
     if state.problem_artifact_uri is None or state.model_artifact_uri is None:
-        raise RuntimeError(
-            "build_solver requires both problem and model to be registered. "
-            f"Current state: problem={state.problem_artifact_uri}, "
-            f"model={state.model_artifact_uri}"
+        raise ModelRetry(
+            "build_solver needs both a problem and a model to be registered "
+            "first. Hand control back so those agents can run, then retry."
         )
     problem = ctx.deps.registry[state.problem_artifact_uri]
     model = ctx.deps.registry[state.model_artifact_uri]
     kwargs = kwargs or {}
-    solver = SolverManager.create(kind, problem=problem, model=model, **kwargs)
+    solver = retry_on_value_error(
+        lambda: SolverManager.create(kind, problem=problem, model=model, **kwargs),
+        available=SolverManager.available(),
+    )
     uri = register_artifact(
         deps=ctx.deps,
         state=state,

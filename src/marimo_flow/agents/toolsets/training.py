@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 import mlflow
-from pydantic_ai import FunctionToolset, RunContext
+from pydantic_ai import FunctionToolset, ModelRetry, RunContext
 
 from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.toolsets._registry import register_artifact, require_state
@@ -34,7 +34,10 @@ def discretise_domain(
     """
     state = require_state(ctx.deps)
     if state.problem_artifact_uri is None:
-        raise RuntimeError("No problem registered. Call build_problem first.")
+        raise ModelRetry(
+            "No problem registered yet. Hand control back so the problem "
+            "agent can run first, then retry discretise_domain."
+        )
     problem = ctx.deps.registry[state.problem_artifact_uri]
     problem.discretise_domain(n=n, mode=mode, domains="all")
     return f"Discretised domain: n={n}, mode={mode!r}."
@@ -58,7 +61,10 @@ def train(
     """
     state = require_state(ctx.deps)
     if state.solver_artifact_uri is None:
-        raise RuntimeError("No solver registered. Call build_solver first.")
+        raise ModelRetry(
+            "No solver registered yet. Hand control back so the solver "
+            "agent can run first, then retry train."
+        )
     solver = ctx.deps.registry[state.solver_artifact_uri]
 
     with mlflow.start_run(nested=True, run_name="training") as run:

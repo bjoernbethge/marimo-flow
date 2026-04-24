@@ -63,6 +63,8 @@ dependencies = [
     "plotly[express,kaleido]>=6.7.0",
     "pydantic-ai-slim[a2a,ag-ui]>=1.84.1",
     "pyyaml>=6.0.3",
+    "python-dotenv>=1.2.2",
+    "typer>=0.24.1",
 ]
 
 [project.optional-dependencies]
@@ -89,6 +91,9 @@ docs = [
 [project.urls]
 Homepage = "https://github.com/synapticore-io/marimo-flow"
 Repository = "https://github.com/synapticore-io/marimo-flow"
+
+[project.scripts]
+marimo-flow = "marimo_flow.cli:main"
 
 [tool.setuptools]
 include-package-data = true

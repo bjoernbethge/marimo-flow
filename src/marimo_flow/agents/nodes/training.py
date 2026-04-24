@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from pydantic_ai import Agent
 from pydantic_graph import BaseNode, GraphRunContext
 
-from marimo_flow.agents.deps import FlowDeps, get_model
+from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.skills import build_skill_instructions
 from marimo_flow.agents.state import FlowState
 
@@ -31,14 +31,14 @@ class TrainingNode(BaseNode[FlowState, FlowDeps, str]):
         from marimo_flow.agents.nodes.route import RouteNode
         from marimo_flow.agents.toolsets.training import training_toolset
 
-        role_model = ctx.deps.models.get("training")
-        model = self.model_override or get_model("training", override=role_model)
+        model = self.model_override or ctx.deps.model_for("training")
         ctx.deps.state = ctx.state
         agent = Agent(
             model,
             deps_type=FlowDeps,
             instructions=build_skill_instructions(TRAINING_SKILLS),
             toolsets=[training_toolset],
+            retries=3,
         )
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"

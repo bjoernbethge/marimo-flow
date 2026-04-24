@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from pydantic_ai import Agent
 from pydantic_graph import BaseNode, GraphRunContext
 
-from marimo_flow.agents.deps import FlowDeps, get_model
+from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.mcp import build_marimo_mcp
 from marimo_flow.agents.skills import build_skill_instructions
 from marimo_flow.agents.state import FlowState
@@ -32,15 +32,14 @@ class NotebookNode(BaseNode[FlowState, FlowDeps, str]):
     async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
 
-        model = self.model_override or get_model(
-            "notebook", override=ctx.deps.models["notebook"]
-        )
+        model = self.model_override or ctx.deps.model_for("notebook")
         ctx.deps.state = ctx.state
         agent = Agent(
             model,
             deps_type=FlowDeps,
             instructions=build_skill_instructions(NOTEBOOK_SKILLS),
             toolsets=[skills_toolset, build_marimo_mcp(url=ctx.deps.marimo_mcp_url)],
+            retries=3,
         )
         prompt = (
             f"User intent: {ctx.state.user_intent}\n"

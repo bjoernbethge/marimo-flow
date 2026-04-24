@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from pydantic_ai import Agent
 from pydantic_graph import BaseNode, GraphRunContext
 
-from marimo_flow.agents.deps import FlowDeps, get_model
+from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.mcp import build_mlflow_mcp
 from marimo_flow.agents.skills import build_skill_instructions
 from marimo_flow.agents.state import FlowState
@@ -26,15 +26,14 @@ class MLflowNode(BaseNode[FlowState, FlowDeps, str]):
     async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
 
-        model = self.model_override or get_model(
-            "mlflow", override=ctx.deps.models["mlflow"]
-        )
+        model = self.model_override or ctx.deps.model_for("mlflow")
         ctx.deps.state = ctx.state
         agent = Agent(
             model,
             deps_type=FlowDeps,
             instructions=build_skill_instructions(MLFLOW_SKILLS),
             toolsets=[build_mlflow_mcp(tracking_uri=ctx.deps.mlflow_tracking_uri)],
+            retries=3,
         )
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"

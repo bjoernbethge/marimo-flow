@@ -21,6 +21,12 @@ __marimo__/
 # Environment files
 .env
 
+# marimo-flow user config (checked-in templates end with .example)
+config.yaml
+config.yml
+marimo-flow.yaml
+marimo-flow.yml
+
 # IDE and editor configs (user-specific)
 .idea/
 .cursor/

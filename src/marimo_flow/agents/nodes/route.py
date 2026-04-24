@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_graph import BaseNode, End, GraphRunContext
 
-from marimo_flow.agents.deps import FlowDeps, get_model
+from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.state import FlowState
 
 if TYPE_CHECKING:
@@ -69,9 +69,16 @@ class RouteNode(BaseNode[FlowState, FlowDeps, str]):
         from marimo_flow.agents.nodes.solver import SolverNode
         from marimo_flow.agents.nodes.training import TrainingNode
 
-        model = self.model_override or get_model(
-            "route", override=ctx.deps.models["route"]
-        )
+        ctx.state.route_count += 1
+        if ctx.state.route_count > ctx.state.max_route_steps:
+            return End(
+                f"Circuit breaker: exceeded max_route_steps="
+                f"{ctx.state.max_route_steps}. Last node={ctx.state.last_node}. "
+                "The router looped without reaching 'end' — inspect the "
+                "FlowState history for why."
+            )
+
+        model = self.model_override or ctx.deps.model_for("route")
         agent = Agent(model, output_type=RouteDecision, instructions=ROUTE_INSTRUCTIONS)
         prompt = (
             f"User intent: {ctx.state.user_intent!r}\n"
@@ -80,7 +87,8 @@ class RouteNode(BaseNode[FlowState, FlowDeps, str]):
             f"model={'set' if ctx.state.model_artifact_uri else 'unset'}, "
             f"solver={'set' if ctx.state.solver_artifact_uri else 'unset'}, "
             f"training_run_id={ctx.state.training_run_id}, "
-            f"mlflow_run_id={ctx.state.mlflow_run_id}"
+            f"mlflow_run_id={ctx.state.mlflow_run_id}, "
+            f"step={ctx.state.route_count}/{ctx.state.max_route_steps}"
         )
         result = await agent.run(prompt)
         decision = result.output

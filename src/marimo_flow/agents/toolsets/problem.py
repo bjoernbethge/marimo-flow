@@ -13,7 +13,11 @@ from typing import Any
 from pydantic_ai import FunctionToolset, RunContext
 
 from marimo_flow.agents.deps import FlowDeps
-from marimo_flow.agents.toolsets._registry import register_artifact, require_state
+from marimo_flow.agents.toolsets._registry import (
+    register_artifact,
+    require_state,
+    retry_on_value_error,
+)
 from marimo_flow.core import ProblemManager
 
 problem_toolset: FunctionToolset[FlowDeps] = FunctionToolset(id="problem")
@@ -50,7 +54,10 @@ def build_problem(
     """
     state = require_state(ctx.deps)
     kwargs = kwargs or {}
-    problem_cls_or_instance = ProblemManager.create(kind, **kwargs)
+    problem_cls_or_instance = retry_on_value_error(
+        lambda: ProblemManager.create(kind, **kwargs),
+        available=ProblemManager.available(),
+    )
     # Presets return classes, supervised/from_dataframe return instances —
     # instantiate classes so downstream nodes always see a problem instance.
     problem = (

@@ -64,7 +64,7 @@ async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
     fake_solver = object()
     fake_trainer = type("FT", (), {"callback_metrics": {"train_loss": 0.1}})()
 
-    def fake_get_model(role, **_kw):
+    def fake_model_for(self, role):
         if role == "route":
             return TestModel(custom_output_args=next(decisions))
         if role in ("problem", "model", "solver"):
@@ -73,11 +73,9 @@ async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
             return TestModel(call_tools=["train"])
         return TestModel(call_tools=[])
 
-    monkeypatch.setattr("marimo_flow.agents.nodes.route.get_model", fake_get_model)
-    monkeypatch.setattr("marimo_flow.agents.nodes.problem.get_model", fake_get_model)
-    monkeypatch.setattr("marimo_flow.agents.nodes.model.get_model", fake_get_model)
-    monkeypatch.setattr("marimo_flow.agents.nodes.solver.get_model", fake_get_model)
-    monkeypatch.setattr("marimo_flow.agents.nodes.training.get_model", fake_get_model)
+    monkeypatch.setattr(
+        "marimo_flow.agents.deps.FlowDeps.model_for", fake_model_for
+    )
 
     # Stub Manager.create + register_artifact for each toolset module
     monkeypatch.setattr(

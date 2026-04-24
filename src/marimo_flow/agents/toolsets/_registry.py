@@ -13,13 +13,17 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 import mlflow
+from pydantic_ai import ModelRetry
 
 from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.state import FlowState
+
+T = TypeVar("T")
 
 
 def require_state(deps: FlowDeps) -> FlowState:
@@ -30,6 +34,31 @@ def require_state(deps: FlowDeps) -> FlowState:
             "to deps.state before running the agent."
         )
     return deps.state
+
+
+def retry_on_value_error(
+    call: Callable[[], T],
+    *,
+    hint: str | None = None,
+    available: Iterable[str] | None = None,
+) -> T:
+    """Convert ValueError into ModelRetry so pydantic-ai retries with feedback.
+
+    Nearly every manager entry point (``ProblemManager.create``, ``ModelManager``,
+    ``SolverManager``) raises ``ValueError`` with a readable message for bad
+    ``kind`` or unsupported combinations. Those are exactly the cases the LLM
+    can fix on its own if we tell it the valid options, so we raise
+    ``ModelRetry`` with the same message rather than crashing the graph.
+    """
+    try:
+        return call()
+    except ValueError as e:
+        parts = [str(e)]
+        if hint:
+            parts.append(hint)
+        if available is not None:
+            parts.append(f"Available: {', '.join(sorted(available))}.")
+        raise ModelRetry(" ".join(parts)) from e
 
 
 def register_artifact(

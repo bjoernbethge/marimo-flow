@@ -22,3 +22,9 @@ class FlowState:
     mlflow_run_id: str | None = None
     last_node: str | None = None
     history: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+
+    # Circuit breaker: how many RouteNode decisions have been made this run.
+    # Raised by RouteNode each pass; caps runaway loops where the router
+    # keeps picking the same branch without progress.
+    route_count: int = 0
+    max_route_steps: int = 12

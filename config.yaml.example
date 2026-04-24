@@ -16,9 +16,16 @@
 # real shell-exported values always win over anything set here.
 
 # Optional — pin provider endpoints / non-secret env without editing shells.
-# Do NOT commit API keys; keep those in a .env file or real env export.
+# Do NOT commit API keys here; put those in .env (gitignored) or export them.
 # env:
 #   OLLAMA_BASE_URL: http://localhost:11434/v1
+
+# Backend URIs — override the hardcoded defaults without touching code.
+# Env vars MLFLOW_TRACKING_URI / MARIMO_MCP_URL win over these.
+# mlflow:
+#   tracking_uri: sqlite:///mlruns.db
+# marimo:
+#   mcp_url: http://127.0.0.1:2718/mcp/server
 
 # Per-role model assignment. Missing roles fall back to DEFAULT_MODELS
 # (shipped with the repo, all point at Ollama Cloud).
