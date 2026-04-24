@@ -44,7 +44,7 @@ dependencies = [
     "mlflow[genai,mcp]>=3.11.1",
     "optuna>=4.8.0",
     "pina-mathlab>=0.2.6",
-    "transformers[accelerate,sentencepiece,tiktoken]>=5.5.4",
+    "transformers[accelerate,tiktoken]>=5.5.4",
     # security: explicit minimums for vulnerable transitive deps
     "authlib>=1.6.9",
     "pillow>=12.2.0",
