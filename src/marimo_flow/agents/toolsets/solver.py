@@ -7,11 +7,10 @@ and model registered earlier in the workflow.
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
-from pydantic_ai import FunctionToolset, RunContext
-
-from pydantic_ai import ModelRetry
+from pydantic_ai import FunctionToolset, ModelRetry, RunContext
 
 from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.toolsets._registry import (
@@ -19,6 +18,7 @@ from marimo_flow.agents.toolsets._registry import (
     require_state,
     retry_on_value_error,
 )
+from marimo_flow.agents.toolsets._specs import solver_plan_from
 from marimo_flow.core import SolverManager
 
 solver_toolset: FunctionToolset[FlowDeps] = FunctionToolset(id="solver")
@@ -75,4 +75,9 @@ def build_solver(
         instance=solver,
     )
     state.solver_artifact_uri = uri
+    with contextlib.suppress(Exception):
+        plan = solver_plan_from(kind, kwargs)
+        state.solver_plan = plan
+        task_id = state.task_spec.task_id if state.task_spec else "unknown"
+        ctx.deps.provenance().record_solver_plan(task_id, plan)
     return uri

@@ -6,6 +6,7 @@ training run to MLflow, and stashes the fitted Trainer in the registry.
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 import mlflow
@@ -13,6 +14,7 @@ from pydantic_ai import FunctionToolset, ModelRetry, RunContext
 
 from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.toolsets._registry import register_artifact, require_state
+from marimo_flow.agents.toolsets._specs import run_config_from
 from marimo_flow.core import train_solver
 
 training_toolset: FunctionToolset[FlowDeps] = FunctionToolset(id="training")
@@ -100,6 +102,23 @@ def train(
     )
     state.training_artifact_uri = uri
     state.training_run_id = training_run_id
+    cfg = run_config_from(
+        max_epochs=max_epochs,
+        accelerator=accelerator,
+        n_points=n_points,
+        sample_mode=sample_mode,
+    )
+    state.run_config = cfg
+    with contextlib.suppress(Exception):
+        task_id = state.task_spec.task_id if state.task_spec else "unknown"
+        ctx.deps.provenance().record_run_config(task_id, cfg)
+        if final_loss is not None:
+            ctx.deps.provenance().record_metric(
+                experiment_id=None,
+                run_id=training_run_id,
+                name="final_loss",
+                value=float(final_loss),
+            )
     return {
         "training_run_id": training_run_id,
         "final_loss": final_loss,

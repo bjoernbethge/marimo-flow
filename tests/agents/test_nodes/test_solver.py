@@ -33,7 +33,7 @@ async def test_solver_node_builds_and_registers_solver(monkeypatch):
     )
 
     test_model = TestModel(call_tools=["build_solver"])
-    deps = FlowDeps()
+    deps = FlowDeps(provenance_db_path=":memory:")
     deps.registry["runs:/fake/problem/spec.json"] = fake_problem
     deps.registry["runs:/fake/model/spec.json"] = fake_model
     state = FlowState(

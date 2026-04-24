@@ -32,6 +32,7 @@ Provider auth uses each provider's standard env var (``OPENAI_API_KEY``,
 
 from __future__ import annotations
 
+import contextlib
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -47,16 +48,19 @@ if TYPE_CHECKING:
 DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434/v1"
 DEFAULT_MLFLOW_TRACKING_URI = "sqlite:///mlruns.db"
 DEFAULT_MARIMO_MCP_URL = "http://127.0.0.1:2718/mcp/server"
+DEFAULT_PROVENANCE_DB_PATH = "provenance.duckdb"
 
 DEFAULT_MODELS: dict[str, str] = {
-    "route":    "ollama:gemma4:31b-cloud",
-    "notebook": "ollama:qwen3-coder:480b-cloud",
-    "problem":  "ollama:qwen3-coder:480b-cloud",
-    "model":    "ollama:qwen3.5:cloud",
-    "solver":   "ollama:qwen3-coder:480b-cloud",
-    "training": "ollama:qwen3-coder:480b-cloud",
-    "mlflow":   "ollama:gpt-oss:20b-cloud",
-    "lead":     "ollama:kimi-k2.5:cloud",
+    "route":      "ollama:gemma4:31b-cloud",
+    "triage":     "ollama:gemma4:31b-cloud",
+    "notebook":   "ollama:qwen3-coder:480b-cloud",
+    "problem":    "ollama:qwen3-coder:480b-cloud",
+    "model":      "ollama:qwen3.5:cloud",
+    "solver":     "ollama:qwen3-coder:480b-cloud",
+    "training":   "ollama:qwen3-coder:480b-cloud",
+    "validation": "ollama:qwen3.5:cloud",
+    "mlflow":     "ollama:gpt-oss:20b-cloud",
+    "lead":       "ollama:kimi-k2.5:cloud",
 }
 
 _CONFIG_CANDIDATES = (
@@ -165,6 +169,19 @@ def resolve_marimo_mcp_url(config: dict[str, Any] | None = None) -> str:
     return DEFAULT_MARIMO_MCP_URL
 
 
+def resolve_provenance_db_path(config: dict[str, Any] | None = None) -> str:
+    """Provenance DB path: env MARIMO_FLOW_PROVENANCE_DB > config.provenance.db_path > default."""
+    if config is None:
+        config = load_config()
+    env_value = os.environ.get("MARIMO_FLOW_PROVENANCE_DB")
+    if env_value:
+        return env_value
+    prov_cfg = config.get("provenance") or {}
+    if isinstance(prov_cfg, dict) and prov_cfg.get("db_path"):
+        return str(prov_cfg["db_path"])
+    return DEFAULT_PROVENANCE_DB_PATH
+
+
 def _ensure_ollama_base_url() -> None:
     """pydantic_ai.OllamaProvider reads OLLAMA_BASE_URL; seed a local default."""
     if "OLLAMA_BASE_URL" not in os.environ:
@@ -208,8 +225,41 @@ class FlowDeps:
     registry: dict[str, Any] = field(default_factory=dict)
     mlflow_tracking_uri: str = field(default_factory=resolve_mlflow_tracking_uri)
     marimo_mcp_url: str = field(default_factory=resolve_marimo_mcp_url)
+    provenance_db_path: str = field(default_factory=resolve_provenance_db_path)
     state: FlowState | None = None
     model_cache: dict[str, Model] = field(default_factory=dict)
+    _provenance_store: Any = None  # lazy ProvenanceStore — never touch disk
+    #                                  until someone calls provenance()
+    _preset_catalog: Any = None  # lazy PresetCatalog — memory of user compositions
+
+    def provenance(self) -> Any:
+        """Return a lazy DuckDB-backed ProvenanceStore.
+
+        Constructed on first access against ``self.provenance_db_path``;
+        reused for the lifetime of this FlowDeps. Closed by ``aclose()``.
+        Use ``provenance_db_path=":memory:"`` for ephemeral tests.
+        """
+        if self._provenance_store is None:
+            from marimo_flow.agents.services.provenance import ProvenanceStore
+
+            self._provenance_store = ProvenanceStore(self.provenance_db_path)
+        return self._provenance_store
+
+    def preset_catalog(self) -> Any:
+        """Return a lazy PresetCatalog over the provenance store.
+
+        The catalog is a persistent memory of *user-authored* compositions
+        (ProblemSpec / ModelSpec / SolverPlan recipes that worked before).
+        No built-in seeding — agents compose from PINA primitives via
+        ``services.composer.compose_problem`` and register successful
+        compositions here via ``curator_toolset.register_preset``.
+        Subsequent sessions can retrieve and clone them.
+        """
+        if self._preset_catalog is None:
+            from marimo_flow.agents.services.preset_catalog import PresetCatalog
+
+            self._preset_catalog = PresetCatalog(self.provenance())
+        return self._preset_catalog
 
     def model_for(self, role: str) -> Model:
         """Return a cached pydantic-ai Model for ``role``.
@@ -245,8 +295,10 @@ class FlowDeps:
             result = closer()
             # Both sync and async .close() variants exist across providers.
             if hasattr(result, "__await__"):
-                try:
+                with contextlib.suppress(Exception):
                     await result
-                except Exception:  # noqa: BLE001 — cleanup best-effort
-                    pass
         self.model_cache.clear()
+        if self._provenance_store is not None:
+            with contextlib.suppress(Exception):
+                self._provenance_store.close()
+            self._provenance_store = None

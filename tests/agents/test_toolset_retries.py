@@ -40,19 +40,22 @@ def test_retry_on_value_error_honours_hint():
     assert "layers" in str(excinfo.value)
 
 
-def test_build_problem_converts_bad_kind_to_retry():
+def test_compose_problem_invalid_spec_becomes_model_retry():
     from marimo_flow.agents.toolsets.problem import problem_toolset
 
-    deps = FlowDeps(state=FlowState())
+    deps = FlowDeps(state=FlowState(), provenance_db_path=":memory:")
 
     class Ctx:
         def __init__(self, d):
             self.deps = d
 
-    build = problem_toolset.tools["build_problem"].function
+    compose = problem_toolset.tools["compose_problem"].function
     with pytest.raises(ModelRetry) as excinfo:
-        build(Ctx(deps), kind="notreal", kwargs=None)
-    assert "Available" in str(excinfo.value)
+        compose(Ctx(deps), spec={"clearly": "not a valid problem spec"})
+    # ProblemSpec.model_validate failure message gets wrapped in ModelRetry.
+    assert "ProblemSpec" in str(excinfo.value) or "validation" in str(
+        excinfo.value
+    ).lower()
 
 
 def test_build_model_retries_when_no_problem():

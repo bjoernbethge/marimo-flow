@@ -49,6 +49,7 @@ class SolverNode(BaseNode[FlowState, FlowDeps, str]):
 
     async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
+        from marimo_flow.agents.toolsets.curator import curator_toolset
         from marimo_flow.agents.toolsets.solver import solver_toolset
 
         model = self.model_override or ctx.deps.model_for("solver")
@@ -57,15 +58,20 @@ class SolverNode(BaseNode[FlowState, FlowDeps, str]):
             model,
             deps_type=FlowDeps,
             instructions=build_skill_instructions(SOLVER_SKILLS),
-            toolsets=[solver_toolset],
+            toolsets=[curator_toolset, solver_toolset],
             retries=3,
         )
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"
             f"Problem URI: {ctx.state.problem_artifact_uri}\n"
             f"Model URI:   {ctx.state.model_artifact_uri}\n"
-            "Inspect the problem and model, then design a solver+trainer spec "
-            "and call define_solver.",
+            "Pick a solver for the registered Problem + Model. Solver "
+            "kinds are pinn / sapinn / causalpinn / gradientpinn / "
+            "rbapinn / supervised — a finite, enumerable choice. Use "
+            "search_presets(family='solver') first to see if an "
+            "existing tuned plan fits; clone_preset to reuse with "
+            "overrides. Otherwise build a SolverPlan from scratch and "
+            "register_preset after a successful validation.",
             deps=ctx.deps,
         )
         ctx.state.last_node = "solver"

@@ -32,6 +32,9 @@ class MLflowStatePersistence(FullStatePersistence):
         self.client = client or mlflow.MlflowClient()
 
     def _to_jsonable(self, state) -> dict:
+        to_jsonable = getattr(state, "to_jsonable", None)
+        if callable(to_jsonable):
+            return to_jsonable()
         return asdict(state) if is_dataclass(state) else dict(state)
 
     def _log_state(self, label: str, state) -> None:

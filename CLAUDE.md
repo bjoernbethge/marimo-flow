@@ -37,12 +37,55 @@ Pattern: `bash -c '...' 2>/dev/null || powershell ...`
 
 ## Agents (`src/marimo_flow/agents/`)
 
-Multi-agent PINA team:
+Multi-agent PINA team on `pydantic-graph` with 9 nodes:
+`TriageNode` (start) → `RouteNode` (dispatcher) → `ProblemNode`, `ModelNode`,
+`SolverNode`, `TrainingNode`, `ValidationNode`, `MLflowNode`, `NotebookNode`.
+
+Layout (SPEC-driven):
+- `schemas/` — 15 Pydantic models: `TaskSpec`, `ProblemSpec`, `DomainSpec`,
+  `BoundaryConditionSpec`, `InitialConditionSpec`, `MaterialSpec`, `ModelSpec`,
+  `SolverPlan`, `RunConfig`, `DatasetBinding`, `ArtifactRef`, `AgentDecision`,
+  `HandoffRecord`, `ValidationReport`, `ExperimentRecord`. Kinds are `Literal`s
+  tied 1:1 to `core.ProblemManager/ModelManager/SolverManager.available()`.
+- `toolsets/` — `problem`, `model`, `solver`, `training`, `validation`, `data`,
+  `skills`, `lead`. Each is a `FunctionToolset[FlowDeps]` singleton.
+- `services/` — `ProvenanceStore` (DuckDB, 13 tables), orchestrator policy
+  helpers (`check_escalation`, `default_experiment_status`,
+  `requires_human_review`), experiment lifecycle (`start_experiment`,
+  `complete_experiment`).
+- `nodes/` — one module per graph node. `triage` builds a `TaskSpec` from
+  free-form intent (fast-paths if one is already set). `validation` grades a
+  training run and writes a `ValidationReport`. `route` emits `HandoffRecord`
+  on every dispatch and short-circuits to `End` on escalate/reject verdicts.
+
+Infrastructure:
 - Orchestration: `pydantic-graph` (Graph + BaseNode + GraphRunContext)
-- Persistence + tracing: MLflow (`mlflow.pydantic_ai.autolog()` + `mlflow.pytorch.autolog()`)
-- LLMs: Ollama Cloud via `pydantic_ai.models.openai.OpenAIChatModel(base_url=...)`; defaults per role in `agents.deps.DEFAULT_MODELS`
-- Each sub-agent loads its skill from `.claude/Skills/<name>/SKILL.md` via `build_skill_instructions()` — lazy, no message-history bloat
-- Lead agent (`build_lead_agent`) exposed three ways: `mo.ui.chat`, `agent.to_a2a()`, `agent.to_ag_ui()`
-- State (`FlowState`) holds **only** MLflow URIs; live PINA/torch objects live in `FlowDeps.registry`
-- Sub-nodes use `_define_*(spec, deps, state)` private helpers — monkeypatch these in tests rather than relying on `TestModel` auto-arg generation
-- Tests for nodes that use MCP toolsets (Notebook, MLflow): stub `build_*_mcp` with `pydantic_ai.toolsets.FunctionToolset()` to avoid live server connections, and pin `TestModel(call_tools=[])`
+- Persistence + tracing: MLflow (`mlflow.pytorch.autolog()`; pydantic-ai
+  autolog is opt-in via `MLFLOW_PYDANTIC_AI_AUTOLOG=1` until mlflow >= 3.11.2)
+- Provenance: DuckDB at `./provenance.duckdb` (configurable via
+  `MARIMO_FLOW_PROVENANCE_DB` or `config.yaml`'s `provenance.db_path`).
+  DuckDB 1.5.2 ships transitively via `marimo[sql]` — no extra project dep.
+- LLMs: pydantic-ai `infer_model` with provider-prefixed specs; role→spec in
+  `agents.deps.DEFAULT_MODELS` (10 roles: route, triage, notebook, problem,
+  model, solver, training, validation, mlflow, lead).
+- Each sub-agent loads its skill from `.claude/Skills/<name>/SKILL.md` via
+  `build_skill_instructions()` — lazy, no message-history bloat.
+- Lead agent (`build_lead_agent`) exposed three ways: `mo.ui.chat`,
+  `agent.to_a2a()`, `agent.to_ag_ui()`. `run_pina_workflow` wraps every
+  graph run in an `ExperimentRecord` (running → completed / failed).
+- `FlowState` holds MLflow URIs **and** the typed specs; live
+  PINA/torch objects live in `FlowDeps.registry` keyed by URI.
+  `FlowState.to_jsonable()` renders Pydantic fields via
+  `model_dump(mode="json")` so snapshots round-trip through JSON.
+
+Testing:
+- `tests/agents/test_*.py` — 167 passing, 1 xfailed.
+- Nodes that use MCP toolsets (Notebook, MLflow): stub `build_*_mcp` with
+  `pydantic_ai.toolsets.FunctionToolset()` to avoid live server connections,
+  and pin `TestModel(call_tools=[])`.
+- Toolset unit tests: call `toolset.tools["name"].function(ctx, ...)` directly
+  with a plain `ctx` wrapper and `FlowDeps(provenance_db_path=":memory:")`
+  — no graph, no LLM.
+- Spec-setting in the build-* toolsets is wrapped in `contextlib.suppress`
+  so TestModel's dummy kinds (e.g. `"a"`) don't break the MLflow-only path.
+- Use `provenance_db_path=":memory:"` in tests to avoid leaving DB files.

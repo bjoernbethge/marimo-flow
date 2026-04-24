@@ -48,6 +48,7 @@ class ModelNode(BaseNode[FlowState, FlowDeps, str]):
 
     async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
+        from marimo_flow.agents.toolsets.curator import curator_toolset
         from marimo_flow.agents.toolsets.model import model_toolset
 
         model = self.model_override or ctx.deps.model_for("model")
@@ -56,13 +57,21 @@ class ModelNode(BaseNode[FlowState, FlowDeps, str]):
             model,
             deps_type=FlowDeps,
             instructions=build_skill_instructions(MODEL_SKILLS),
-            toolsets=[model_toolset],
+            toolsets=[curator_toolset, model_toolset],
             retries=3,
         )
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"
             f"Problem URI: {ctx.state.problem_artifact_uri}\n"
-            "Inspect the problem and design an architecture, then call define_model.",
+            "Pick an architecture sized to the registered problem. The "
+            "kinds available in ModelManager are feedforward / residual / "
+            "fno / deeponet / mionet / pirate / walrus — these are finite "
+            "and enumerable. Before picking, call search_presets("
+            "family='model') to see if a previously-tuned configuration "
+            "in the catalog already fits; if so, clone_preset it with "
+            "your overrides. Otherwise build a ModelSpec from scratch "
+            "and, after it trains successfully, register_preset for "
+            "future reuse.",
             deps=ctx.deps,
         )
         ctx.state.last_node = "model"

@@ -20,11 +20,13 @@ from marimo_flow.agents.deps import (
 def test_default_models_cover_all_roles():
     expected_roles = {
         "route",
+        "triage",
         "notebook",
         "problem",
         "model",
         "solver",
         "training",
+        "validation",
         "mlflow",
         "lead",
     }

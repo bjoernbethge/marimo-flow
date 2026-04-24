@@ -7,11 +7,10 @@ Thin wrapper on `marimo_flow.core.ModelManager`. Tools build real
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
-from pydantic_ai import FunctionToolset, RunContext
-
-from pydantic_ai import ModelRetry
+from pydantic_ai import FunctionToolset, ModelRetry, RunContext
 
 from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.toolsets._registry import (
@@ -19,6 +18,7 @@ from marimo_flow.agents.toolsets._registry import (
     require_state,
     retry_on_value_error,
 )
+from marimo_flow.agents.toolsets._specs import model_spec_from
 from marimo_flow.core import ModelManager
 
 model_toolset: FunctionToolset[FlowDeps] = FunctionToolset(id="model")
@@ -74,4 +74,9 @@ def build_model(
         instance=model,
     )
     state.model_artifact_uri = uri
+    with contextlib.suppress(Exception):
+        spec = model_spec_from(kind, kwargs)
+        state.model_spec = spec
+        task_id = state.task_spec.task_id if state.task_spec else "unknown"
+        ctx.deps.provenance().record_model_spec(task_id, spec)
     return uri

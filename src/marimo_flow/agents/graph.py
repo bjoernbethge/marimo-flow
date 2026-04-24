@@ -1,4 +1,4 @@
-"""Graph assembly — seven nodes, RouteNode as start."""
+"""Graph assembly — TriageNode is the start, RouteNode dispatches the rest."""
 
 from __future__ import annotations
 
@@ -12,6 +12,8 @@ from marimo_flow.agents.nodes import problem as _problem_mod
 from marimo_flow.agents.nodes import route as _route_mod
 from marimo_flow.agents.nodes import solver as _solver_mod
 from marimo_flow.agents.nodes import training as _training_mod
+from marimo_flow.agents.nodes import triage as _triage_mod
+from marimo_flow.agents.nodes import validation as _validation_mod
 from marimo_flow.agents.nodes.mlflow_node import MLflowNode
 from marimo_flow.agents.nodes.model import ModelNode
 from marimo_flow.agents.nodes.notebook import NotebookNode
@@ -19,6 +21,8 @@ from marimo_flow.agents.nodes.problem import ProblemNode
 from marimo_flow.agents.nodes.route import RouteNode
 from marimo_flow.agents.nodes.solver import SolverNode
 from marimo_flow.agents.nodes.training import TrainingNode
+from marimo_flow.agents.nodes.triage import TriageNode
+from marimo_flow.agents.nodes.validation import ValidationNode
 from marimo_flow.agents.state import FlowState
 
 
@@ -30,11 +34,13 @@ def build_graph() -> Graph[FlowState, FlowDeps, str]:
     # resolves. We patch the module namespace at runtime to keep the
     # source-level `if TYPE_CHECKING:` imports cycle-free.
     for mod in (
+        _triage_mod,
         _notebook_mod,
         _problem_mod,
         _model_mod,
         _solver_mod,
         _training_mod,
+        _validation_mod,
         _mlflow_node_mod,
     ):
         mod.__dict__.setdefault("RouteNode", RouteNode)
@@ -44,21 +50,24 @@ def build_graph() -> Graph[FlowState, FlowDeps, str]:
         ModelNode=ModelNode,
         SolverNode=SolverNode,
         TrainingNode=TrainingNode,
+        ValidationNode=ValidationNode,
         MLflowNode=MLflowNode,
     )
     return Graph(
         nodes=(
+            TriageNode,
             RouteNode,
             NotebookNode,
             ProblemNode,
             ModelNode,
             SolverNode,
             TrainingNode,
+            ValidationNode,
             MLflowNode,
         ),
         state_type=FlowState,
     )
 
 
-def start_node() -> RouteNode:
-    return RouteNode()
+def start_node() -> TriageNode:
+    return TriageNode()

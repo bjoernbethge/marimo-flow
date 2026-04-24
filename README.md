@@ -118,6 +118,7 @@ uv run marimo edit examples/
 All notebooks live in `examples/` and can be opened with `uv run marimo edit examples/<file>.py`.
 
 - **`01_pina_poisson_solver.py`** – Solve the Poisson equation with baseline PINNs or the Walrus foundation model. Training is tracked in MLflow with integrated Optuna sweep analytics and experiment history. Uses `marimo_flow.core` directly.
+- **`02_provenance_dashboard.py`** – Review surface over the DuckDB provenance store. Five tables (tasks, experiments, agent decisions, validation verdicts, handoffs) side-by-side. Uses `marimo_flow.agents.services.ProvenanceStore`.
 - **`lab.py`** – PINA multi-agent team chat demo (see [PINA Multi-Agent Team](#pina-multi-agent-team-marimo_flowagents-)). Requires Ollama running locally.
 
 ## Project Structure 📁
@@ -126,11 +127,16 @@ All notebooks live in `examples/` and can be opened with `uv run marimo edit exa
 marimo-flow/
 ├── examples/                    # Marimo notebooks
 │   ├── 01_pina_poisson_solver.py   # Poisson PINN demo (uses core/)
+│   ├── 02_provenance_dashboard.py  # DuckDB review surface (uses agents/)
 │   └── lab.py                      # PINA team chat demo (uses agents/)
 ├── src/marimo_flow/             # Installable package
 │   ├── core/                    # PINA solvers, training, visualization
 │   └── agents/                  # Multi-agent team (pydantic-graph + MLflow)
-├── tests/                       # Pytest suite (48 passing, 1 xfailed)
+│       ├── nodes/               # TriageNode, RouteNode, specialists, ValidationNode
+│       ├── schemas/             # TaskSpec / ProblemSpec / … Pydantic models
+│       ├── toolsets/            # FunctionToolset per role + data + validation
+│       └── services/            # DuckDB provenance, orchestrator policy, experiments
+├── tests/                       # Pytest suite (167 passing, 1 xfailed)
 ├── docs/                        # Project documentation (see docs/INDEX.md)
 ├── docker/                      # Dockerfiles + compose (CPU, CUDA, XPU)
 ├── data/mlflow/                 # MLflow storage (artifacts, db)
@@ -255,15 +261,42 @@ chat = mo.ui.chat(lead_chat(deps=deps))
 chat
 ```
 
-**Roles** (each loads its `.claude/Skills/<name>/SKILL.md` as `instructions=`):
+**Roles** (each loads its `.claude/Skills/<name>/SKILL.md` as `instructions=`
+where applicable):
+- `triage` — parses free-form user intent into a typed `TaskSpec` (start node)
 - `notebook` — marimo MCP cell ops (skills: `marimo`, `marimo-pair`)
-- `problem` — defines a PINA Problem from an open spec (skill: `pina`)
-- `model` — designs a neural architecture for the problem (skill: `pina`)
-- `solver` — wires Solver + Trainer config (skill: `pina`)
+- `problem` — defines a PINA Problem from an open spec (skill: `pina-problem`)
+- `model` — designs a neural architecture for the problem (skill: `pina-model`)
+- `solver` — wires Solver + Trainer config (skill: `pina-solver`)
+- `training` — runs `pina.Trainer.fit()` via the training toolset (skill: `pina-training`)
+- `validation` — grades the run against `task_spec.constraints` and records a
+  `ValidationReport` with an `accept/retry/escalate/reject` verdict
 - `mlflow` — MLflow MCP tracking + registry (skill: `mlflow`)
+- `lead` — chat/A2A/AG-UI front-end; wraps the whole graph as one tool
 
-A `RouteNode` classifier dispatches between sub-nodes; the lead agent wraps the
-graph as a single tool so the same backend powers marimo chat, A2A, and AG-UI.
+`TriageNode` runs first and produces the `TaskSpec`. `RouteNode` then dispatches
+between specialists, emits a `HandoffRecord` on every dispatch, and short-circuits
+to `End` when the validation verdict is `escalate` / `reject` (SPEC §13 HITL).
+
+**Typed specs + provenance (SPEC §8, §12):**
+Every graph run builds typed `ProblemSpec` / `ModelSpec` / `SolverPlan` /
+`RunConfig` on `FlowState` and mirrors them — plus `AgentDecision`,
+`HandoffRecord`, `ValidationReport`, `ExperimentRecord`, `ArtifactRef`,
+and lineage edges — into a DuckDB provenance store
+(`./provenance.duckdb` by default, or `MARIMO_FLOW_PROVENANCE_DB`).
+MLflow still owns the binary artifacts; DuckDB owns the queryable index.
+DuckDB 1.5.2 ships transitively via `marimo[sql]`.
+
+```python
+from marimo_flow.agents.services import ProvenanceStore
+
+store = ProvenanceStore("provenance.duckdb")
+print(store.query("SELECT title, verdict FROM tasks t "
+                  "LEFT JOIN validation_reports v USING (task_id) "
+                  "ORDER BY t.created_at DESC LIMIT 10"))
+```
+
+See `examples/02_provenance_dashboard.py` for a marimo review surface.
 
 **Models:** provider-prefixed specs (`"<provider>:<model>"`) resolved through
 pydantic-ai's `infer_model`. Defaults in

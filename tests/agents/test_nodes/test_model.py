@@ -31,7 +31,7 @@ async def test_model_node_builds_and_registers_model(monkeypatch):
     )
 
     test_model = TestModel(call_tools=["build_model"])
-    deps = FlowDeps()
+    deps = FlowDeps(provenance_db_path=":memory:")
     problem_uri = "runs:/fake/problem/spec.json"
     deps.registry[problem_uri] = fake_problem
     state = FlowState(

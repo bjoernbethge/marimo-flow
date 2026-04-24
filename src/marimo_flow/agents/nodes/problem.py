@@ -49,6 +49,7 @@ class ProblemNode(BaseNode[FlowState, FlowDeps, str]):
 
     async def run(self, ctx: GraphRunContext[FlowState, FlowDeps]) -> RouteNode:
         from marimo_flow.agents.nodes.route import RouteNode
+        from marimo_flow.agents.toolsets.curator import curator_toolset
         from marimo_flow.agents.toolsets.problem import problem_toolset
 
         model = self.model_override or ctx.deps.model_for("problem")
@@ -57,12 +58,37 @@ class ProblemNode(BaseNode[FlowState, FlowDeps, str]):
             model,
             deps_type=FlowDeps,
             instructions=build_skill_instructions(PROBLEM_SKILLS),
-            toolsets=[problem_toolset],
+            toolsets=[curator_toolset, problem_toolset],
             retries=3,
+        )
+        task_title = (
+            ctx.state.task_spec.title if ctx.state.task_spec else "(no task_spec)"
         )
         result = await agent.run(
             f"User intent: {ctx.state.user_intent}\n"
-            "Define the Problem and call define_problem with the spec.",
+            f"Task title: {task_title}\n"
+            "You COMPOSE problems from primitives — you never pick a hardcoded "
+            "kind. Workflow:\n"
+            "1. search_presets(family='problem', query=<equation family or "
+            "   descriptive term>) — check if a similar composition is already "
+            "   in the catalog.\n"
+            "2a. If a match exists → describe_preset + clone_preset with any "
+            "    parameter overrides, then compose_problem(spec) using the "
+            "    merged spec_json.\n"
+            "2b. Otherwise → build a ProblemSpec from scratch:\n"
+            "    - output_variables (list of field names)\n"
+            "    - domain_bounds (axis → [min, max]; include 't' for "
+            "      time-dependent)\n"
+            "    - subdomains (named walls / initial slices / interior)\n"
+            "    - equations (EquationSpec per residual — form is a sympy "
+            "      expression over derivatives, parameters, outputs, axes; "
+            "      derivatives MUST be declared explicitly with field + wrt)\n"
+            "    - conditions (each subdomain → fixed_value OR equation reference)\n"
+            "    Call compose_problem(spec) to build + register.\n"
+            "3. If the composition succeeded and is worth keeping, call "
+            "   register_preset to persist it for future runs.\n"
+            "4. Call inspect_problem to sanity-check what you built before handing "
+            "   back to the router.",
             deps=ctx.deps,
         )
         ctx.state.last_node = "problem"

@@ -18,6 +18,7 @@ from pydantic_ai.models.test import TestModel
 from marimo_flow.agents.deps import FlowDeps
 from marimo_flow.agents.graph import build_graph, start_node
 from marimo_flow.agents.persistence import MLflowStatePersistence
+from marimo_flow.agents.schemas import TaskSpec
 from marimo_flow.agents.state import FlowState
 
 
@@ -59,7 +60,6 @@ async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
         ]
     )
 
-    fake_problem = object()
     fake_model = object()
     fake_solver = object()
     fake_trainer = type("FT", (), {"callback_metrics": {"train_loss": 0.1}})()
@@ -67,7 +67,9 @@ async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
     def fake_model_for(self, role):
         if role == "route":
             return TestModel(custom_output_args=next(decisions))
-        if role in ("problem", "model", "solver"):
+        if role == "problem":
+            return TestModel(call_tools=["compose_problem"])
+        if role in ("model", "solver"):
             return TestModel(call_tools=[f"build_{role}"])
         if role == "training":
             return TestModel(call_tools=["train"])
@@ -77,10 +79,29 @@ async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
         "marimo_flow.agents.deps.FlowDeps.model_for", fake_model_for
     )
 
-    # Stub Manager.create + register_artifact for each toolset module
+    # Stub the composer and Manager.create + register_artifact for each
+    # toolset module. Problem goes through the composer now, not a kind
+    # dispatcher, so we stub compose_problem to return a fake class.
+    fake_problem_cls = type("FakeProblem", (), {})
+
+    def _fake_compose(spec):  # noqa: ARG001 — we ignore spec shape in the test
+        return fake_problem_cls
+
     monkeypatch.setattr(
-        "marimo_flow.agents.toolsets.problem.ProblemManager.create",
-        lambda kind, **_kw: fake_problem,
+        "marimo_flow.agents.toolsets.problem._compose", _fake_compose
+    )
+    # ProblemSpec validation still runs; TestModel auto-generates kwargs
+    # for compose_problem and that dict won't parse as a ProblemSpec.
+    # Monkeypatch ProblemSpec.model_validate to return a minimal valid spec.
+    from marimo_flow.agents.schemas import ProblemSpec
+
+    _valid_spec = ProblemSpec(
+        output_variables=["u"],
+        domain_bounds={"x": [0.0, 1.0]},
+    )
+    monkeypatch.setattr(
+        "marimo_flow.agents.toolsets.problem.ProblemSpec.model_validate",
+        classmethod(lambda cls, _data: _valid_spec),  # noqa: ARG005
     )
     monkeypatch.setattr(
         "marimo_flow.agents.toolsets.model.ModelManager.create",
@@ -112,8 +133,22 @@ async def test_full_workflow_reaches_end(tmp_mlflow, monkeypatch):
     )
 
     graph = build_graph()
-    state = FlowState(user_intent="solve burgers 1d", mlflow_run_id=tmp_mlflow)
-    deps = FlowDeps()
+    # Pre-populate task_spec so TriageNode fast-paths to RouteNode
+    # without needing a live triage LLM in the test.
+    state = FlowState(
+        user_intent="solve burgers 1d",
+        mlflow_run_id=tmp_mlflow,
+        task_spec=TaskSpec(
+            title="Burgers 1D",
+            description="Test e2e path",
+            problem_kind="forward",
+            equation_family="burgers",
+            boundary_conditions=["u=0 on left and right walls"],
+            initial_conditions=["u(x,0) = -sin(pi*x)"],
+            material_properties={"viscosity": 0.01},
+        ),
+    )
+    deps = FlowDeps(provenance_db_path=":memory:")
     persistence = MLflowStatePersistence(run_id=tmp_mlflow)
     persistence.set_graph_types(graph)
 
