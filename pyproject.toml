@@ -134,5 +134,12 @@ indent-style = "space"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+filterwarnings = [
+    # MLflow filesystem backend is deprecated as of Feb 2026, but switching
+    # tests to a SQLite tracking URI runs alembic migrations per fixture and
+    # makes the suite ~5x slower. The file backend is still supported; the
+    # warning is a production-code hint, not a test-relevant signal.
+    "ignore:The filesystem tracking backend.*is deprecated:FutureWarning:mlflow.tracking._tracking_service.utils",
+]
 
 [tool.uv.sources]
