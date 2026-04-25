@@ -8,6 +8,7 @@ loading/saving so that resuming a chat = resuming an MLflow run.
 from __future__ import annotations
 
 import json
+import re
 import tempfile
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -17,6 +18,17 @@ from pathlib import Path
 import mlflow
 from pydantic_graph import BaseNode, End
 from pydantic_graph.persistence.in_mem import FullStatePersistence
+
+# Characters not allowed in Windows filenames (NTFS reserves <>:"/\|?*).
+# pydantic-graph snapshot IDs are "{node_id}:{uuid4().hex}", so the colon
+# would crash any local-filesystem MLflow artifact root on Windows.
+_WIN_INVALID = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+def _safe_filename(label: str) -> str:
+    """Replace filesystem-reserved chars so the same file path works on
+    both Windows and POSIX."""
+    return _WIN_INVALID.sub("_", label)
 
 
 class MLflowStatePersistence(FullStatePersistence):
@@ -39,7 +51,7 @@ class MLflowStatePersistence(FullStatePersistence):
 
     def _log_state(self, label: str, state) -> None:
         with tempfile.TemporaryDirectory() as td:
-            path = Path(td) / f"{label}.json"
+            path = Path(td) / f"{_safe_filename(label)}.json"
             path.write_text(json.dumps(self._to_jsonable(state), default=str, indent=2))
             self.client.log_artifact(
                 self.run_id, str(path), artifact_path=self.ARTIFACT_DIR
