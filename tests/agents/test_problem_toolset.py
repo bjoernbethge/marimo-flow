@@ -22,8 +22,7 @@ class _Ctx:
 
 
 @pytest.fixture
-def deps_and_state(tmp_path):
-    mlflow.set_tracking_uri(f"file:///{tmp_path.as_posix()}/mlruns")
+def deps_and_state():
     mlflow.set_experiment("composer-toolset-test")
     with mlflow.start_run() as run:
         state = FlowState(

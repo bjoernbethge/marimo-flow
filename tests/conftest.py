@@ -14,8 +14,21 @@ from __future__ import annotations
 import pytest
 
 
+@pytest.fixture(scope="session")
+def _mlflow_session_db(tmp_path_factory):
+    """One SQLite tracking DB shared across the whole test session.
+
+    Per-fixture file backends emit a FutureWarning ("filesystem tracking
+    backend is deprecated as of Feb 2026"). Switching to SQLite per-test
+    runs Alembic migrations on every fresh DB and turns a 27 s suite into
+    a 113 s suite. A session-scoped DB lets Alembic run once.
+    """
+    db = tmp_path_factory.mktemp("mlflow") / "tracking.db"
+    return f"sqlite:///{db.as_posix()}"
+
+
 @pytest.fixture(autouse=True)
-def _isolate_marimo_flow_config(monkeypatch, tmp_path):
+def _isolate_marimo_flow_config(monkeypatch, tmp_path, _mlflow_session_db):
     """Run every test in a scratch CWD with no config/env spill-in.
 
     We chdir into ``tmp_path`` so the config resolver can't find a
@@ -27,11 +40,11 @@ def _isolate_marimo_flow_config(monkeypatch, tmp_path):
     for var in (
         "MARIMO_FLOW_CONFIG",
         "MARIMO_FLOW_DOTENV",
-        "MLFLOW_TRACKING_URI",
         "MARIMO_MCP_URL",
         "MLFLOW_PYDANTIC_AI_AUTOLOG",
     ):
         monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", _mlflow_session_db)
     # Per-role model overrides inspected by resolve_models.
     for role in (
         "ROUTE",

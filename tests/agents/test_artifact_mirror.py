@@ -16,10 +16,9 @@ from marimo_flow.agents.toolsets._registry import register_artifact
 
 
 @pytest.fixture
-def deps_and_state(tmp_path):
+def deps_and_state():
     import mlflow
 
-    mlflow.set_tracking_uri(f"file:///{tmp_path.as_posix()}/mlruns")
     mlflow.set_experiment("artifact-mirror-test")
     with mlflow.start_run() as run:
         state = FlowState(

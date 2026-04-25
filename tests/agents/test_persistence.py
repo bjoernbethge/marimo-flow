@@ -20,8 +20,7 @@ class StartNode(BaseNode[FlowState, None, str]):
 
 
 @pytest.fixture
-def tmp_mlflow(tmp_path):
-    mlflow.set_tracking_uri(f"file:///{tmp_path.as_posix()}/mlruns")
+def tmp_mlflow():
     mlflow.set_experiment("agents-test")
     with mlflow.start_run() as run:
         yield run.info.run_id

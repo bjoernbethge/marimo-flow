@@ -114,8 +114,7 @@ def test_persist_artifact_ref_roundtrips(deps_with_task):
 
 
 @pytest.fixture
-def mlflow_runs(tmp_path):
-    mlflow.set_tracking_uri(f"file:///{tmp_path.as_posix()}/mlruns")
+def mlflow_runs():
     mlflow.set_experiment("data-toolset-test")
     run_ids: list[str] = []
     for loss in (0.1, 0.05):

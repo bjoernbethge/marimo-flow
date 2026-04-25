@@ -135,11 +135,31 @@ indent-style = "space"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 filterwarnings = [
-    # MLflow filesystem backend is deprecated as of Feb 2026, but switching
-    # tests to a SQLite tracking URI runs alembic migrations per fixture and
-    # makes the suite ~5x slower. The file backend is still supported; the
-    # warning is a production-code hint, not a test-relevant signal.
-    "ignore:The filesystem tracking backend.*is deprecated:FutureWarning:mlflow.tracking._tracking_service.utils",
+    # ─── Upstream-only warnings (cannot be fixed in this repo) ───
+    # PINA hard-disables torch.compile on Windows / Python ≥ 3.14 and warns
+    # unconditionally. The else-branch never runs on Windows, so the only
+    # way to suppress this is upstream — see pina.trainer:114.
+    "ignore:Compilation is disabled for Python 3.14\\+ and for Windows:UserWarning:pina.trainer",
+    # Same shape: PINA disables compilation for torch ≥ 2.8 and warns
+    # unconditionally. Tracked at https://github.com/mathLab/PINA/issues/621.
+    "ignore:Compilation is disabled for torch >= 2.8:UserWarning:pina.solver.physics_informed_solver.pinn_interface",
+    # Lightning emits PossibleUserWarning whenever a model defines
+    # validation_step without an attached val_dataloader. PINA's PINN
+    # solver always defines validation_step (for residual computation),
+    # but our composer-built problems don't ship a val dataloader. Setting
+    # limit_val_batches=0 / num_sanity_val_steps=0 doesn't suppress it
+    # because the warning fires before the limits are read.
+    "ignore:You defined a `validation_step` but have no `val_dataloader`:lightning.pytorch.utilities.warnings.PossibleUserWarning",
+    # torch_geometric.distributed self-deprecation — fires once at import
+    # time. The warn() uses stacklevel=2 so the recorded module is the
+    # caller (torch_geometric.llm.utils.backend_utils).
+    "ignore:`torch_geometric.distributed` has been deprecated:DeprecationWarning:torch_geometric.llm.utils.backend_utils",
+    # torch.jit.script deprecation fired by torch itself at import; will be
+    # gone once torch.compile / torch.export migration completes upstream.
+    "ignore:`torch.jit.script` is deprecated:DeprecationWarning:torch.jit._script",
+    # Lightning ↔ torch._pytree version skew — Lightning still uses the
+    # legacy LeafSpec API that torch ≥ 2.7 deprecates.
+    "ignore:`isinstance\\(treespec, LeafSpec\\)` is deprecated:FutureWarning:lightning.pytorch.utilities._pytree",
 ]
 
 [tool.uv.sources]

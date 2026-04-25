@@ -17,8 +17,7 @@ from marimo_flow.agents.toolsets.validation import validation_toolset
 
 
 @pytest.fixture
-def mlflow_run_with_metrics(tmp_path):
-    mlflow.set_tracking_uri(f"file:///{tmp_path.as_posix()}/mlruns")
+def mlflow_run_with_metrics():
     mlflow.set_experiment("validation-test")
     with mlflow.start_run() as run:
         mlflow.log_metric("train_loss", 0.05)

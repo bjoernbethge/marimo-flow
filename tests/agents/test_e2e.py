@@ -23,8 +23,7 @@ from marimo_flow.agents.state import FlowState
 
 
 @pytest.fixture
-def tmp_mlflow(tmp_path):
-    mlflow.set_tracking_uri(f"file:///{tmp_path.as_posix()}/mlruns")
+def tmp_mlflow():
     mlflow.set_experiment("agents-e2e")
     with mlflow.start_run() as run:
         yield run.info.run_id
