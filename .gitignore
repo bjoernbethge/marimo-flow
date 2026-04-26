@@ -48,12 +48,16 @@ models/
 
 # MLflow data
 data/mlflow/db/
+data/mlflow/artifacts/
 mlruns/
 mlflow/
 mlruns.db
 mlflow.db
 mlartifacts/
-/1/
+# MLflow experiment-id directories from the legacy "no artifact_location"
+# fallback (./<exp_id>/<run_id>/...). The lead agent now pins artifacts to
+# data/mlflow/artifacts/, but ignore stragglers from older runs.
+/[0-9]*/
 
 # Lightning / PyTorch training artifacts
 lightning_logs/
