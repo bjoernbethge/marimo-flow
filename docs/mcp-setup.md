@@ -41,14 +41,22 @@ marimo-flow provides **three MCP servers** for AI-powered development:
 
 ### 1. Start Development Environment
 
-```bash
-# Start all services (MLflow + Marimo with MCP)
-./scripts/start-dev.sh
+Run each service in its own terminal:
 
-# Or individually:
-./scripts/start-dev.sh --mlflow-only
-./scripts/start-dev.sh --marimo-only
+```bash
+# Terminal A — MLflow tracking + UI
+uv run mlflow server \
+  --host 0.0.0.0 --port 5000 \
+  --backend-store-uri sqlite:///data/mlflow/db/mlflow.db \
+  --default-artifact-root data/mlflow/artifacts \
+  --serve-artifacts
+
+# Terminal B — Marimo with MCP
+uv run marimo edit examples/ --mcp --no-token --headless --port 2718
 ```
+
+For the full Docker stack instead, see [README → Quick Start with
+Docker](../README.md#with-docker-recommended).
 
 This starts:
 - **MLflow Server**: http://localhost:5000
@@ -211,30 +219,38 @@ env = { MLFLOW_TRACKING_URI = "http://localhost:5000" }
 
 #### Start Services
 ```bash
-# Option 1: All-in-one script (recommended)
-./scripts/start-dev.sh
-
-# Option 2: Manual start
-# Terminal 1 - MLflow
+# Terminal 1 - MLflow tracking server + UI
 uv run mlflow server \
-  --host 0.0.0.0 \
-  --port 5000 \
+  --host 0.0.0.0 --port 5000 \
   --backend-store-uri sqlite:///data/mlflow/db/mlflow.db \
-  --default-artifact-root ./data/mlflow/artifacts \
+  --default-artifact-root data/mlflow/artifacts \
   --serve-artifacts
 
 # Terminal 2 - Marimo with MCP
 export MLFLOW_TRACKING_URI=http://localhost:5000
-uv run marimo edit examples/ --mcp --port 2718
+uv run marimo edit examples/ --mcp --no-token --port 2718
 
-# Terminal 3 - MLflow MCP (optional, for Claude Desktop)
+# Terminal 3 - MLflow MCP (optional, for IDEs that need stdio)
 export MLFLOW_TRACKING_URI=http://localhost:5000
 uv run mlflow mcp run
 ```
 
+VSCode users: each command above is also a task in
+[`.vscode/tasks.json`](../.vscode/tasks.json) (Ctrl+Shift+P →
+"Tasks: Run Task").
+
 #### Stop Services
+
+`Ctrl+C` in each terminal. To kill stragglers by port:
+
 ```bash
-./scripts/start-dev.sh --stop
+# Linux/macOS
+lsof -ti :5000 :2718 | xargs kill
+
+# Windows (PowerShell)
+Get-NetTCPConnection -LocalPort 5000,2718 |
+  Select-Object -ExpandProperty OwningProcess |
+  ForEach-Object { Stop-Process -Id $_ -Force }
 ```
 
 ---
@@ -243,24 +259,16 @@ uv run mlflow mcp run
 
 Claude Desktop has **full MCP support** out of the box.
 
-#### 1. Automatic Setup (Recommended)
+#### 1. Locate the config
 
-```bash
-./scripts/setup-claude-desktop.sh
-```
+| OS | Path |
+|---|---|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Linux | `~/.config/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
 
-This script will:
-- Backup your existing config
-- Add marimo-flow MCP servers
-- Show next steps
+#### 2. Add the marimo-flow MCP servers
 
-#### 2. Manual Setup
-
-**Config Location**:
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Linux: `~/.config/Claude/claude_desktop_config.json`
-
-**Config Content**:
 ```json
 {
   "mcpServers": {
@@ -284,9 +292,14 @@ This script will:
 }
 ```
 
-#### 3. Test Connection
+The same config (with one extra `serena` entry) lives at
+[`.vscode/mcp.json`](../.vscode/mcp.json) for Claude Code / VS Code
+users — copy that as a starting point.
 
-1. Start services: `./scripts/start-dev.sh`
+#### 3. Test the connection
+
+1. Make sure both terminals from
+   [Quick Start](#1-start-development-environment) are still running
 2. Restart Claude Desktop
 3. In Claude Desktop, try:
    ```
@@ -372,7 +385,7 @@ Cursor has **advanced AI features** with custom rules support.
 #### Usage
 
 1. **Open Cursor** in project root
-2. **Start Services**: `./scripts/start-dev.sh`
+2. **Start Services**: see [Quick Start](#1-start-development-environment)
 3. **Use Cursor AI** (`Cmd+K` or `Cmd+L`):
    ```
    @marimo List active notebooks
@@ -669,8 +682,10 @@ ls -la data/mlflow/db/mlflow.db
 mkdir -p data/mlflow/db
 touch data/mlflow/db/mlflow.db
 
-# 4. Restart MLflow
-./scripts/start-dev.sh --mlflow-only
+# 4. Restart MLflow (Ctrl+C in its terminal, then re-run)
+uv run mlflow server --host 0.0.0.0 --port 5000 \
+  --backend-store-uri sqlite:///data/mlflow/db/mlflow.db \
+  --default-artifact-root data/mlflow/artifacts --serve-artifacts
 ```
 
 ### MLflow MCP Server Fails
@@ -709,8 +724,8 @@ ls -la ~/.config/Claude/claude_desktop_config.json
 # 2. Validate JSON syntax
 cat ~/.config/Claude/claude_desktop_config.json | jq .
 
-# 3. Check services are running
-./scripts/start-dev.sh
+# 3. Check services are running (both MLflow on :5000 and Marimo on :2718)
+curl -s http://localhost:5000/health && curl -sI http://localhost:2718
 
 # 4. Restart Claude Desktop completely
 # Quit app, then reopen
@@ -793,15 +808,19 @@ MLFLOW_MCP_DEBUG=1 mlflow mcp run
 
 **Quick Commands**:
 ```bash
-# Start everything
-./scripts/start-dev.sh
+# Terminal A — MLflow
+uv run mlflow server --host 0.0.0.0 --port 5000 \
+  --backend-store-uri sqlite:///data/mlflow/db/mlflow.db \
+  --default-artifact-root data/mlflow/artifacts --serve-artifacts
 
-# Setup Claude Desktop
-./scripts/setup-claude-desktop.sh
+# Terminal B — Marimo with MCP
+uv run marimo edit examples/ --mcp --no-token --port 2718
 
-# Stop all services
-./scripts/start-dev.sh --stop
+# Stop: Ctrl+C in each terminal
 ```
+
+For Claude Desktop, copy [`.vscode/mcp.json`](../.vscode/mcp.json) into
+`claude_desktop_config.json` (paths above) and restart the app.
 
 **MCP Endpoints**:
 - Marimo: `http://localhost:2718/mcp/server`

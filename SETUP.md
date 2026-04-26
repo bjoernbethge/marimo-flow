@@ -1,263 +1,145 @@
 # Quick Setup Guide for marimo-flow
 
-Get started with marimo-flow in 5 minutes! This guide covers the essential steps to get your MCP-enabled ML development environment running.
+Get started with marimo-flow in 5 minutes — no shell-scripts, no
+platform-specific tooling, just `uv` and a couple of long-running
+services.
 
 ## Prerequisites
 
 - **Python 3.11+**
-- **uv** - Fast Python package installer ([Install](https://github.com/astral-sh/uv))
+- **uv** — Fast Python package installer ([install](https://github.com/astral-sh/uv))
 - **Git**
 
-## 1️⃣ Clone & Install
+For the full Docker stack (CPU / CUDA / XPU images, single-command
+start), see [README → Quick Start with Docker](README.md#with-docker-recommended).
+This guide covers the **bare-metal local-dev path** for hacking on the
+package itself.
+
+## 1. Install
 
 ```bash
-# Clone repository
-git clone https://github.com/bjoernbethge/marimo-flow.git
+git clone https://github.com/synapticore-io/marimo-flow.git
 cd marimo-flow
-
-# Install dependencies (includes marimo[mcp], mlflow[mcp])
 uv sync
 ```
 
-## 2️⃣ Start Services
+`uv sync` materialises `.venv/` and installs marimo, mlflow, PINA,
+torch, and the agent toolchain. First run takes 1–2 minutes.
+
+## 2. Start the services
+
+You need two long-running processes. Open two terminals (or use a tool
+like `tmux` / `pm2` / Windows Terminal tabs).
+
+**Terminal A — MLflow tracking + UI** (`http://localhost:5000`):
 
 ```bash
-# Start all services (MLflow + Marimo with MCP)
-./scripts/start-dev.sh
+uv run mlflow server \
+  --host 0.0.0.0 \
+  --port 5000 \
+  --backend-store-uri sqlite:///data/mlflow/db/mlflow.db \
+  --default-artifact-root data/mlflow/artifacts \
+  --serve-artifacts
 ```
 
-This starts:
-- **MLflow Server**: http://localhost:5000 (experiment tracking)
-- **Marimo Server**: http://localhost:2718 (reactive notebooks)
-- **Marimo MCP**: http://localhost:2718/mcp/server (AI assistance)
-
-## 3️⃣ Verify Setup
+**Terminal B — marimo notebook UI + MCP** (`http://localhost:2718`):
 
 ```bash
-# Check if everything is working
-./scripts/verify-mcp-setup.sh
+uv run marimo edit examples/ --mcp --no-token --headless --port 2718
 ```
 
-Should show all green checkmarks ✓
+The `--mcp` flag exposes marimo's MCP server at
+`http://localhost:2718/mcp/server` so AI-assisted IDEs (Claude Code,
+Cursor, etc.) can introspect cells and metrics.
 
-## 4️⃣ Choose Your IDE
+`uv run` activates the project's `.venv/` automatically — no manual
+`source .venv/bin/activate` needed.
 
-### VSCode
+## 3. Open a notebook
 
-Already configured! Just open the project:
+Browse to <http://localhost:2718> and open one of:
+
+- `examples/01_pina_poisson_solver.py` — Poisson PDE with a baseline
+  PINN or the Walrus foundation model. MLflow auto-tracks every run.
+- `examples/02_provenance_dashboard.py` — DuckDB review surface over
+  the agent provenance store + 3D preset preview.
+- `examples/03_navier_stokes_3d_cavity.py` — 3D lid-driven cavity
+  composed end-to-end from a declarative `ProblemSpec` (no hardcoded
+  Navier-Stokes factory).
+- `examples/04_mpc_heat_rod.py` — closed-loop MPC on a 1D heat-rod
+  PINN surrogate via `marimo_flow.control`.
+- `examples/lab.py` — multi-agent PINA team chat (needs Ollama on
+  `http://localhost:11434`).
+
+## Common commands
 
 ```bash
-code .
-```
-
-**Tasks available** (`Ctrl+Shift+P` → "Tasks: Run Task"):
-- Start All Services
-- Start MLflow Server
-- Start Marimo with MCP
-- Run Tests
-
-### Cursor
-
-Already configured with AI rules!
-
-```bash
-cursor .
-```
-
-**Features**:
-- Custom project rules in `.cursorrules`
-- AI chat with `Cmd+L` or `Cmd+K`
-- MCP-aware suggestions
-
-### Claude Desktop
-
-```bash
-# Configure Claude Desktop for MCP
-./scripts/setup-claude-desktop.sh
-```
-
-Then restart Claude Desktop and try:
-```
-List active marimo notebooks
-Search MLflow experiments
-Get docs for polars DataFrame
-```
-
-## 5️⃣ Open Your First Notebook
-
-```bash
-# Open in browser (auto-opens at http://localhost:2718)
-# Or click any .py file in examples/ if using VSCode
-
-# Try these notebooks:
-# - examples/01_mlflow_experiment_console.py
-# - examples/02_pina_walrus_solver.py
-# - examples/03_pina_live_monitoring.py
-```
-
-## 🚀 Quick Test
-
-**1. Check MLflow UI**
-```bash
-open http://localhost:5000
-```
-
-**2. Check Marimo UI**
-```bash
-open http://localhost:2718
-```
-
-**3. Test MCP** (in Claude Desktop)
-```
-List all active marimo notebooks
-Show me MLflow experiments
-Get polars documentation for lazy evaluation
-```
-
-## 📚 What's Next?
-
-### Learn Marimo
-- **Reactive Notebooks**: Change one cell → entire notebook updates
-- **Git-Friendly**: Notebooks are `.py` files, not `.ipynb`
-- **UI Elements**: Interactive sliders, dropdowns, forms
-- **Docs**: https://docs.marimo.io
-
-### Learn MLflow
-- **Track Experiments**: Log params, metrics, artifacts
-- **Model Registry**: Version and deploy models
-- **Compare Runs**: Visualize experiment results
-- **Docs**: https://mlflow.org/docs
-
-### Explore Examples
-- `01_mlflow_experiment_console.py` - MLflow experiment viewer
-- `02_pina_walrus_solver.py` - Physics-Informed Neural Networks
-- `03_pina_live_monitoring.py` - Live training monitoring
-
-### Use MCP Servers
-- **Marimo MCP**: Introspect running notebooks, find errors
-- **Context7 MCP**: Get live docs for Python libraries
-- **MLflow MCP**: Query experiments, track metrics
-
-## 🔧 Common Commands
-
-```bash
-# Start everything
-./scripts/start-dev.sh
-
-# Stop everything
-./scripts/start-dev.sh --stop
-
-# Verify setup
-./scripts/verify-mcp-setup.sh
-
-# Run tests
+# Run the test suite (222 tests, ~25 s on CPU)
 uv run pytest
 
-# Format code
-ruff format . && ruff check --fix .
+# Format + lint
+uv run ruff format . && uv run ruff check --fix .
 
-# Start only MLflow
-./scripts/start-dev.sh --mlflow-only
+# Build a wheel
+uv build
 
-# Start only Marimo
-./scripts/start-dev.sh --marimo-only
+# Stop services: Ctrl+C in each terminal
+# Or kill by port:
+#   Linux/macOS: lsof -ti :5000 | xargs kill
+#   Windows:     netstat -ano | findstr :5000  → taskkill /PID <pid> /F
 ```
 
-## 🐛 Troubleshooting
+## MCP setup for AI-assisted IDEs
 
-### Services won't start?
+| Tool | Where the config lives | Notes |
+|---|---|---|
+| **marimo** (in-notebook chat) | `.marimo.toml` | already in the repo, includes `marimo` + `context7` presets and the `mlflow` MCP server. |
+| **VS Code / Claude Code** | `.vscode/mcp.json` | already in the repo. Lists `marimo` (HTTP), `mlflow` (stdio), `context7` (stdio), `serena` (stdio). |
+| **Cursor / Claude Desktop / others** | their respective config file | use `.vscode/mcp.json` as a reference and adapt for the schema your tool expects. |
 
-```bash
-# Check if ports are in use
-lsof -i :5000  # MLflow
-lsof -i :2718  # Marimo
+For the marimo MCP server to be reachable from external IDEs, terminal
+B above must be running with `--mcp`. The MLflow MCP server is started
+on demand by the IDE (stdio command: `mlflow mcp run` with
+`MLFLOW_TRACKING_URI=http://localhost:5000`).
 
-# Kill processes if needed
-./scripts/start-dev.sh --stop
+For details see [`docs/mcp-setup.md`](docs/mcp-setup.md).
 
-# Try again
-./scripts/start-dev.sh
-```
+## Where data lives
 
-### MCP not working?
+| Path | Contents |
+|---|---|
+| `data/mlflow/db/mlflow.db` | SQLite tracking DB (experiments, runs, metrics, params) |
+| `data/mlflow/artifacts/<run_id>/artifacts/` | logged model artifacts, JSON state snapshots |
+| `provenance.duckdb` | DuckDB provenance store for the agent team (override via `MARIMO_FLOW_PROVENANCE_DB`) |
 
-```bash
-# Check if marimo started with --mcp flag
-ps aux | grep marimo
-# Should see: marimo edit examples/ --mcp
+The lead agent (`marimo_flow.agents.lead`) auto-creates
+`data/mlflow/{db,artifacts}/` on first import and pins a `marimo-flow`
+experiment so artifacts always land under `data/mlflow/artifacts/`,
+not the legacy CWD-relative `./mlruns/` fallback.
 
-# Restart with MCP
-pkill -f marimo
-marimo edit examples/ --mcp --port 2718
+## Troubleshooting
 
-# Test MCP endpoint
-curl http://localhost:2718/mcp/server
-```
+**MLflow says "filesystem tracking backend is deprecated"** — you're
+on a `file://` URI. The SQLite default above silences it.
 
-### Dependencies issues?
+**Port already in use** — kill the previous process (see "Common
+commands") or change `--port`.
 
-```bash
-# Reinstall dependencies
-uv sync --reinstall
+**Ollama not found** (when running `examples/lab.py`) — install
+[Ollama](https://ollama.com), then `ollama pull qwen2.5:7b` (or any
+model from `marimo_flow.agents.deps.DEFAULT_MODELS`).
 
-# Clear cache
-rm -rf .venv
-uv sync
-```
+**`uv sync` is slow** — the first run materialises ~1.5 GB of torch +
+Lightning + meshio + transformers. Subsequent runs hit the cache and
+finish in seconds.
 
-## 📖 Full Documentation
+## What's next
 
-- **[MCP Setup Guide](docs/mcp-setup.md)** - Complete MCP configuration for all IDEs
-- **[README.md](README.md)** - Full project documentation
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines
-
-## 🎯 Environment-Specific Setup
-
-### Local Development
-- Configuration: `.marimo.toml`
-- Services: `./scripts/start-dev.sh`
-
-### VSCode
-- Settings: `.vscode/settings.json`
-- Tasks: `.vscode/tasks.json`
-- Marimo extension auto-starts
-
-### Cursor
-- Settings: `.cursor/settings.json`
-- Rules: `.cursorrules`
-- AI chat with project context
-
-### Claude Desktop
-- Setup: `./scripts/setup-claude-desktop.sh`
-- Config: `~/.config/Claude/claude_desktop_config.json` (Linux)
-- Config: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
-
-### GitHub Actions
-- Workflow: `.github/workflows/claude-code.yml`
-- Trigger: `@claude` in issues/PRs
-- Secret: `ANTHROPIC_API_KEY` required
-
-## 🌊 Project Philosophy
-
-**marimo-flow** combines three powerful paradigms:
-
-1. **Reactive Development** (Marimo)
-   - No hidden state
-   - Automatic dependency tracking
-   - Instant feedback
-
-2. **Experiment Tracking** (MLflow)
-   - Version everything
-   - Compare experiments
-   - Deploy models
-
-3. **AI-First Development** (MCP)
-   - Live documentation
-   - Notebook introspection
-   - Context-aware assistance
-
----
-
-**Ready to build?** Start with `./scripts/start-dev.sh` and explore `examples/`!
-
-For detailed MCP setup, see **[docs/mcp-setup.md](docs/mcp-setup.md)**.
+- [README.md](README.md) — full project documentation, Docker variants,
+  multi-agent team architecture.
+- [docs/roadmap.md](docs/roadmap.md) — phases A-0 → F status with
+  pointers to every shipped feature.
+- [CLAUDE.md](CLAUDE.md) — guidance for AI agents working in the repo
+  (Claude Code, Cursor, etc.).
+- [CONTRIBUTING.md](CONTRIBUTING.md) — development workflow, code
+  style, test expectations.
