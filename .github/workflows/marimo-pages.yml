@@ -100,9 +100,11 @@ jobs:
           notebooks = []
 
           descriptions = {
-              "01_mlflow_experiment_console": "MLflow experiment tracking and visualization",
-              "02_pina_walrus_solver": "Physics-Informed Neural Networks with PINA",
-              "03_pina_live_monitoring": "Live training monitoring and visualization",
+              "01_pina_poisson_solver": "Solve Poisson PDE with PINN / Walrus + MLflow tracking",
+              "02_provenance_dashboard": "Agent provenance store review (DuckDB) + 3D preset preview",
+              "03_navier_stokes_3d_cavity": "3D lid-driven cavity composed from a declarative ProblemSpec",
+              "04_mpc_heat_rod": "Closed-loop MPC on a 1D heat-rod PINN surrogate",
+              "lab": "Multi-agent PINA team chat (requires Ollama)",
           }
 
           for html_file in sorted(site_dir.glob("*.html")):

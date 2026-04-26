@@ -214,11 +214,18 @@ jobs:
             ### When Working with ML
             - Check MLflow experiments before creating new ones
             - Log all hyperparameters and metrics to MLflow
-            - Follow patterns in `examples/01_mlflow_experiment_console.py`
+            - Follow patterns in `examples/01_pina_poisson_solver.py`
+              (baseline PINN + Walrus foundation model + Optuna sweep)
+            - For agent-driven workflows, see `examples/lab.py`
 
             ### When Working with PINA
-            - See `examples/02_pina_walrus_solver.py` for PINA solver setup
-            - See `examples/03_pina_live_monitoring.py` for live training monitoring
+            - `examples/01_pina_poisson_solver.py` — Poisson PDE end-to-end
+            - `examples/03_navier_stokes_3d_cavity.py` — composer-driven
+              3D Navier–Stokes (no hardcoded factory)
+            - `examples/04_mpc_heat_rod.py` — closed-loop MPC on a PINN
+              surrogate via `marimo_flow.control`
+            - `examples/02_provenance_dashboard.py` — DuckDB review surface
+              for the agent provenance store
 
             ### When Creating Visualizations
             - **Altair** for declarative charts
@@ -229,7 +236,7 @@ jobs:
             - Use unique variable names to avoid conflicts
             - Include type hints for all functions
             - Use NumPy-style docstrings
-            - Format with Black (line length 79 for local, 88 for docker)
+            - Format with Ruff (`uv run ruff format . && uv run ruff check --fix .`)
 
             ### Directory Structure
             - `examples/`: Production notebooks (01-03)

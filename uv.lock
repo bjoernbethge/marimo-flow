@@ -2762,7 +2762,6 @@ all = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "black" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -2811,7 +2810,6 @@ provides-extras = ["all"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "black", specifier = ">=26.3.1" },
     { name = "mypy", specifier = ">=1.20.1" },
     { name = "pre-commit", specifier = ">=4.5.1" },
     { name = "pytest", specifier = ">=9.0.3" },
