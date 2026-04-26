@@ -46,7 +46,12 @@ if TYPE_CHECKING:
     from marimo_flow.agents.state import FlowState
 
 DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434/v1"
-DEFAULT_MLFLOW_TRACKING_URI = "sqlite:///mlruns.db"
+# Local-development MLflow defaults — match the docker-compose layout
+# (docker/docker-compose.yaml) so the same paths work in container + host.
+DEFAULT_MLFLOW_LAYOUT_ROOT = "data/mlflow"
+DEFAULT_MLFLOW_TRACKING_URI = "sqlite:///data/mlflow/db/mlflow.db"
+DEFAULT_MLFLOW_ARTIFACT_ROOT = "data/mlflow/artifacts"
+DEFAULT_MLFLOW_EXPERIMENT_NAME = "marimo-flow"
 DEFAULT_MARIMO_MCP_URL = "http://127.0.0.1:2718/mcp/server"
 DEFAULT_PROVENANCE_DB_PATH = "provenance.duckdb"
 

@@ -252,7 +252,7 @@ Docker setup (configured in `docker/docker-compose.yaml`):
 - `OLLAMA_BASE_URL`: `http://host.docker.internal:11434` (requires Ollama on host)
 
 Local development:
-- `MLFLOW_TRACKING_URI`: `http://localhost:5000` (default)
+- `MLFLOW_TRACKING_URI`: defaults to `sqlite:///data/mlflow/db/mlflow.db` (lead agent auto-creates `data/mlflow/{db,artifacts}/` and pins the marimo-flow experiment's artifact root). Set to `http://localhost:5000` if you run a separate MLflow server.
 
 ### Docker Services
 
@@ -272,7 +272,7 @@ optionally as A2A and AG-UI ASGI servers.
 from marimo_flow.agents import lead_chat, FlowDeps
 import marimo as mo
 
-deps = FlowDeps(mlflow_tracking_uri="sqlite:///mlruns.db")
+deps = FlowDeps()  # uses sqlite:///data/mlflow/db/mlflow.db by default
 chat = mo.ui.chat(lead_chat(deps=deps))
 chat
 ```

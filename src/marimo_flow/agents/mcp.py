@@ -35,7 +35,7 @@ def build_marimo_mcp(
 
 
 def build_mlflow_mcp(
-    tracking_uri: str = "sqlite:///mlruns.db",
+    tracking_uri: str = "sqlite:///data/mlflow/db/mlflow.db",
     *,
     startup_timeout: float = 60.0,
 ) -> MCPServerStdio:
