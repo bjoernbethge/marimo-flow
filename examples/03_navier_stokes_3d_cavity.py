@@ -141,10 +141,10 @@ def _compose(spec):
 def _show_domain(mo, problem):
     from marimo_flow.core.viz3d import domain_figure
 
-    fig = domain_figure(problem)
+    domain_fig = domain_figure(problem)
     mo.md("## Spatial domain")
-    mo.ui.plotly(fig)
-    return (fig,)
+    mo.ui.plotly(domain_fig)
+    return (domain_fig,)
 
 
 @app.cell
@@ -190,10 +190,10 @@ def _predict_slice(mo, solver):
 
     import plotly.graph_objects as go
 
-    fig = go.Figure(data=go.Heatmap(x=xs, y=ys, z=ux_slice, colorscale="Viridis"))
-    fig.update_layout(title="u_x at z = 0.5 after training")
-    mo.ui.plotly(fig)
-    return (fig, ux_slice)
+    slice_fig = go.Figure(data=go.Heatmap(x=xs, y=ys, z=ux_slice, colorscale="Viridis"))
+    slice_fig.update_layout(title="u_x at z = 0.5 after training")
+    mo.ui.plotly(slice_fig)
+    return (slice_fig, ux_slice)
 
 
 if __name__ == "__main__":

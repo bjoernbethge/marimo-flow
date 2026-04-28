@@ -135,12 +135,11 @@ def _wire_surrogate_callable(solver):
             traj[k, 0] = float(state[0] + u * base)
         return traj
 
-    return (surrogate,)
+    return (surrogate, np)
 
 
 @app.cell
-def _run_mpc(mo, surrogate, setpoint, horizon, n_steps):
-    import numpy as np
+def _run_mpc(mo, surrogate, np, setpoint, horizon, n_steps):
     from marimo_flow.agents.schemas import (
         ControlPlan,
         ControlVariableSpec,
