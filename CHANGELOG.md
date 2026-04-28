@@ -7,14 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-04-28
+
+### Added
+- **Composition-first PDE architecture** (`services/composer.py::compose_problem`) — agents emit typed `EquationSpec` + `SubdomainSpec` + `ConditionSpec` and the composer compiles a `pina.Problem` subclass at runtime via `sympy.lambdify` + `pina.operator.grad/laplacian`. No hardcoded `ProblemKind` enum.
+- **Phase B-F feature set**:
+  - Inverse problems via `UnknownParameterSpec` + `ObservationSpec` (data-fitting → `pina.LearnableParameter` + 3-arg residual).
+  - Mesh geometry via `MeshSpec` + `meshio` + `services/mesh_domain.py::MeshDomain` (barycentric sampling for tri/tetra/quad/hex).
+  - Design optimisation via `OptimizationPlan` + `DesignVariableSpec` + `ConstraintSpec` (Optuna TPE / scipy SLSQP with penalty + augmented-Lagrangian handling in `services/design.py`).
+  - Stochastic / non-local residuals via `NoiseSpec` (white / colored / fbm); fractional Laplacian via Riesz-kernel Monte-Carlo quadrature.
+  - **MPC**: new `marimo_flow.control` package — rolling-horizon scipy SLSQP (`run_mpc_step`, `simulate_closed_loop`) on a trained PINN surrogate.
+- `TriageNode` (start node) — parses free-form intent into a typed `TaskSpec`.
+- `ValidationNode` — grades runs against `task_spec.constraints` and emits a `ValidationReport` with `accept/retry/escalate/reject` verdict; `RouteNode` short-circuits to `End` on `escalate/reject` (HITL).
+- `services/provenance.py` — DuckDB `ProvenanceStore` with 13 tables (tasks, experiments, agent decisions, validation verdicts, handoffs, lineage, artifacts, …). DuckDB 1.5.2 ships transitively via `marimo[sql]`.
+- `core/viz3d.py` — 3D plotly visualisation (`Mesh3d`, `Volume`, `Scatter3d`, `Isosurface`). No pyvista / VTK dependency.
+- New demo notebooks: `02_provenance_dashboard.py` (DuckDB review surface), `03_navier_stokes_3d_cavity.py` (3D NS via composer), `04_mpc_heat_rod.py` (closed-loop MPC on a PINN surrogate).
+- `marimo-flow` CLI entry point (`marimo_flow.cli:main`) with retries + safety-suppression around spec-setting.
+- Provider-agnostic model config — `config.yaml` (see `config.yaml.example`) and `MARIMO_FLOW_MODEL_<ROLE>` env vars; any pydantic-ai provider works (openai, anthropic, groq, mistral, google-gla, bedrock, together, fireworks, openrouter, deepseek, cerebras, xai, ollama, huggingface, …).
+- E2E regression test for Windows NTFS snapshot-id sanitization (`tests/agents/test_persistence_*`).
+
 ### Changed
+- Multi-agent team now **drives PINA end-to-end** via the toolset layer instead of merely answering questions; nine graph nodes (`TriageNode` → `RouteNode` → `Problem`/`Model`/`Solver`/`Training`/`Validation`/`MLflow`/`Notebook`).
+- MLflow local default pinned to `data/mlflow/{db,artifacts}/`; `./mlruns/` no longer used.
 - `Dockerfile.xpu`: switched base from archived `intel/intel-extension-for-pytorch:2.8.10-xpu` (IPEX archived 2026-03-30) to `ubuntu:22.04` + Intel GPU runtime (`libze-intel-gpu1`, `libze1`, `intel-opencl-icd`); torch/torchvision/torchaudio/triton-xpu installed from the official PyTorch XPU index per Intel's "use PyTorch directly" guidance.
 - `Dockerfile` (CPU): bumped PyG wheel URL from `torch-2.10.0+cpu` to `torch-2.11.0+cpu` to match the locked torch version.
 - `uv` base image bumped to `ghcr.io/astral-sh/uv:0.11.7` across all three Dockerfiles.
+- Documentation: `docs/INDEX.md` expanded; `scripts/` bash helpers dropped, docs reference direct `uv` commands; repo root cleaned, `.gitignore` hardened against MLflow stragglers.
 
 ### Fixed
+- **Persistence on Windows**: snapshot IDs are now sanitized before being used as filenames (NTFS forbids `:`); previously `MLflowStatePersistence` could fail to write graph snapshots on Windows hosts.
 - `python-publish.yml` now dispatches `docker-publish.yml` after creating the GitHub Release; previously the release was created via `GITHUB_TOKEN`, which by GitHub policy does not trigger downstream workflows, so Docker images were not built automatically.
+- `python-publish.yml` `github-release` job now has `actions: write` permission (required by `gh workflow run docker-publish.yml`); the previous job-level `permissions:` block silently dropped it.
 - `docker-publish.yml` removed dead Docker Hub login (workflow only pushes to GHCR); the `if: ${{ secrets.DOCKERHUB_USERNAME != '' }}` pattern was rejected by GitHub's workflow validator.
+- `Dockerfile.xpu`: defensive `getent` guard around `groupadd` / `useradd` (mirrors `Dockerfile.cuda`); ubuntu:22.04 currently has no UID 1000, but base images change.
+- Examples: `marimo export html` revealed that `02_provenance_dashboard.py`, `03_navier_stokes_3d_cavity.py`, `04_mpc_heat_rod.py` violated marimo's single-definition constraint (multiple cells defining `pd`/`rows`/`df`/`fig`/`np`) and `02` had inner returns that tripped marimo's static analyser. Variables now cell-unique, pandas dropped from `02` (mo.ui.table accepts list-of-dicts, ProvenanceStore.query returns dicts), `np` shared via cell-argument in `04`, single-return-point in `_problem_3d_view`.
+- `core.train_solver`: pin Lightning's `default_root_dir` so `checkpoints/` and `lightning_logs/` no longer leak into the working directory. When an MLflow run is active and uses a local file-store, point Lightning at the run's artifact directory — checkpoints land *inside* the run and show up in the MLflow artifacts tab. Otherwise fall back to `data/mlflow/lightning/` next to the MLflow backend store. Override via the new `default_root_dir=` parameter.
+- All 26 pytest warnings cleaned — 216 passing, 0 warnings (mlflow filesystem-backend FutureWarning, PINA Lightning val-dataloader noise, torch_geometric self-deprecation, etc., either fixed at the call site or pinned in `[tool.pytest.ini_options].filterwarnings`).
+
+### Removed
+- `transformers[sentencepiece]` extra (unused, triggered SWIG `DeprecationWarning`).
+- Dead `Black` dev dependency (replaced by `ruff format`).
+- Phantom notebook references in docs (notebooks that were renamed/removed during the Phase B-F restructuring).
+- `scripts/` bash helper directory — docs now reference direct `uv` commands instead.
 
 ## [0.3.0] - 2026-04-22
 
@@ -154,6 +188,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **0.3.1** (2026-04-28) - Composition-first PDEs, Phases B-F (inverse, mesh, design, stochastic, MPC), Triage/Validation nodes, DuckDB provenance, plotly 3D viz, Windows persistence fix
 - **0.3.0** (2026-04-21) - Multi-agent PINA team (`pydantic-graph` + MLflow + Ollama Cloud), CITATION.cff
 - **0.2.0** (2026-03-26) - Multi-platform Docker, PINA integration, MCP servers, simplified deps
 - **0.1.3** (2025-11-23) - Major restructuring, advanced examples, comprehensive docs
@@ -161,7 +196,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **0.1.1** (2025-07-14) - Docker and CI/CD improvements
 - **0.1.0** (2025-07-08) - Initial release
 
-[Unreleased]: https://github.com/synapticore-io/marimo-flow/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/synapticore-io/marimo-flow/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/synapticore-io/marimo-flow/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/synapticore-io/marimo-flow/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/synapticore-io/marimo-flow/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/synapticore-io/marimo-flow/compare/v0.1.2...v0.1.3

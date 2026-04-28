@@ -66,6 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write  # required for `gh workflow run docker-publish.yml`
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4.1.3

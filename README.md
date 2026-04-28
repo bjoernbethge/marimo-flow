@@ -6,7 +6,7 @@
 [![MLflow](https://img.shields.io/badge/MLflow-Latest-blue?logo=mlflow&logoColor=white)](https://mlflow.org)
 [![MCP](https://img.shields.io/badge/MCP-Enabled-green?logo=anthropic&logoColor=white)](https://docs.marimo.io/guides/editor_features/mcp/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)](https://docker.com)
-[![Version](https://img.shields.io/badge/Version-0.3.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.3.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/synapticore-io/marimo-flow)
 [![Contributing](https://img.shields.io/badge/Contributing-Welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -357,7 +357,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for comprehensive guidelines.
 
 See [CHANGELOG.md](CHANGELOG.md) for a detailed version history and release notes.
 
-**Current Version:** 0.3.0
+**Current Version:** 0.3.1
 
 ## License 📄
 

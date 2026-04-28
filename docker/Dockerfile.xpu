@@ -26,18 +26,20 @@ COPY --from=ghcr.io/astral-sh/uv:0.11.7 /uv /uvx /bin/
 
 WORKDIR /app
 
-RUN groupadd --gid 1000 marimo-flow \
-    && useradd --uid 1000 --gid marimo-flow --shell /bin/bash --create-home marimo-flow
+# Defensive: ubuntu:22.04 today doesn't ship a UID/GID 1000 user, but base
+# images do change. Mirror the CUDA Dockerfile pattern.
+RUN (getent group 1000 >/dev/null || groupadd --gid 1000 marimo-flow) \
+    && (getent passwd 1000 >/dev/null || useradd --uid 1000 --gid 1000 --shell /bin/bash --create-home marimo-flow)
 
-COPY --chown=marimo-flow:marimo-flow pyproject.toml uv.lock README.md ./
-COPY --chown=marimo-flow:marimo-flow src/ ./src/
+COPY --chown=1000:1000 pyproject.toml uv.lock README.md ./
+COPY --chown=1000:1000 src/ ./src/
 
-RUN mkdir -p /app/data && chown -R marimo-flow:marimo-flow /app
+RUN mkdir -p /app/data && chown -R 1000:1000 /app
 
-COPY --chown=marimo-flow:marimo-flow ./docker/start.sh ./docker/.marimo.toml ./docker/custom.css ./
+COPY --chown=1000:1000 ./docker/start.sh ./docker/.marimo.toml ./docker/custom.css ./
 RUN chmod +x ./start.sh
 
-USER marimo-flow
+USER 1000
 
 # Project deps without torch (torch is overridden below from the XPU index).
 RUN uv sync --no-dev --extra all
