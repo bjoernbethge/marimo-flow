@@ -9,7 +9,6 @@ Project-specific documentation for marimo-flow.
 | [roadmap.md](roadmap.md) | Phase A-0 → F status with file/test pointers; reproduction CLI |
 | [mcp-setup.md](mcp-setup.md) | MCP server configuration for marimo, MLflow, Context7, Serena across IDEs |
 | [pydantic-ai-toolsets-reference.md](pydantic-ai-toolsets-reference.md) | API reference for the per-role agent toolsets in `src/marimo_flow/agents/toolsets/` |
-| [integration-patterns.md](integration-patterns.md) | Cross-library patterns: marimo + polars + plotly + PINA |
 
 ## Top-level guides
 
