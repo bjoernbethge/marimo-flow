@@ -6,6 +6,7 @@ Project-specific documentation for marimo-flow.
 
 | File | Description |
 |------|-------------|
+| [agents.md](agents.md) | Multi-agent team architecture: 9 graph nodes, role/skill mapping, typed specs + DuckDB provenance, server transports (chat / A2A / AG-UI) |
 | [roadmap.md](roadmap.md) | Phase A-0 → F status with file/test pointers; reproduction CLI |
 | [mcp-setup.md](mcp-setup.md) | MCP server configuration for marimo, MLflow, Context7, Serena across IDEs |
 | [pydantic-ai-toolsets-reference.md](pydantic-ai-toolsets-reference.md) | API reference for the per-role agent toolsets in `src/marimo_flow/agents/toolsets/` |

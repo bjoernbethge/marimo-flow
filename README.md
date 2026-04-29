@@ -26,343 +26,185 @@ https://github.com/user-attachments/assets/3bc24463-ff42-44a7-ae61-5d500d29688c
 </div>
 
 
-## Why Marimo Flow is Powerful 🚀
+## What is marimo-flow? 🚀
 
-**Marimo Flow** combines reactive notebook development with AI-powered assistance and robust ML experiment tracking:
+**Reactive marimo notebooks for physics-informed ML.**
+A composition-first PINA stack with MLflow tracking, plus an optional
+multi-agent team that drives PINA workflows end-to-end. Reactive
+dataflow, MCP-powered AI assistance in your notebook, and a Docker
+deployment story for CPU / NVIDIA / Intel GPUs.
 
-- **🤖 AI-First Development with MCP**: Model Context Protocol (MCP) integration brings live documentation, code examples, and AI assistance directly into your notebooks - access up-to-date library docs for Marimo, Polars, Plotly, and more without leaving your workflow
-- **🔄 Reactive Execution**: Marimo's dataflow graph ensures your notebooks are always consistent - change a parameter and watch your entire pipeline update automatically
-- **📊 Seamless ML Pipeline**: MLflow integration tracks every experiment, model, and metric without breaking your flow
-- **🎯 Interactive Development**: Real-time parameter tuning with instant feedback and beautiful visualizations
+## 🧠 PINA — composition-first (no hardcoded PDE factories)
 
-This combination eliminates the reproducibility issues of traditional notebooks while providing AI-enhanced, enterprise-grade experiment tracking.
+The core idea: **agents emit typed `EquationSpec` + `SubdomainSpec` +
+`ConditionSpec` and the composer compiles a `pina.Problem` subclass at
+runtime** via `sympy.lambdify` + `pina.operator.grad/laplacian`. There
+is no `ProblemKind` enum — any PDE sympy can express is reachable.
+
+| Capability | What it gives you | Spec(s) |
+|---|---|---|
+| **Composition-first PDEs** | `compose_problem(ProblemSpec)` builds the Problem class on demand. | `EquationSpec`, `SubdomainSpec`, `ConditionSpec`, `DerivativeSpec` |
+| **Inverse problems** | data-fitting → `pina.LearnableParameter`, 3-arg residual auto-routed. | `UnknownParameterSpec`, `ObservationSpec` |
+| **Mesh geometry** | unstructured STL/OBJ/VTK/GMSH meshes as the spatial domain. Barycentric sampling per cell kind (tri/tetra/quad/hex). | `MeshSpec` + `services/mesh_domain.py` |
+| **3D visualisation** | plotly `Mesh3d` / `Volume` / `Scatter3d` / `Isosurface`. **No** pyvista / 150 MB VTK stack. | `core/viz3d.py` |
+| **Design optimisation** | Optuna TPE / scipy SLSQP with penalty + augmented-Lagrangian handling. | `OptimizationPlan`, `DesignVariableSpec`, `ConstraintSpec` |
+| **Stochastic + non-local** | white / colored / fbm noise; fractional Laplacian via Riesz-kernel Monte-Carlo quadrature. | `NoiseSpec` |
+| **MPC** | rolling-horizon scipy SLSQP on a trained PINN surrogate. | `marimo_flow.control` package |
+| **Walrus foundation model** | adapter for Poisson-class problems. | `core.FoundationModelAdapter` |
+
+Code lives in [`src/marimo_flow/core/`](src/marimo_flow/core/) (PINA
+solvers + training + viz3d), [`src/marimo_flow/control/`](src/marimo_flow/control/)
+(MPC), and [`src/marimo_flow/agents/services/`](src/marimo_flow/agents/services/)
+(composer, mesh-domain, design aggregator).
 
 ## Features ✨
 
-### 🤖 AI-Powered Development (MCP)
-- **Model Context Protocol Integration**: Live documentation and AI assistance in your notebooks
-- **Context7 Server**: Access up-to-date docs for any Python library without leaving marimo
-- **Marimo MCP Server**: Specialized assistance for marimo patterns and best practices
-- **Local LLM Support**: Ollama integration for privacy-focused AI code completion
-
-### 📊 ML Development Workflow
-- **📓 Reactive Notebooks**: Git-friendly `.py` notebooks with automatic dependency tracking
-- **🔬 MLflow Tracking**: Complete ML lifecycle management with model registry
-- **🎯 Interactive Development**: Real-time parameter tuning with instant visual feedback
-- **💾 SQLite Backend**: Lightweight, file-based storage for experiments
-
-### 🧠 PINA — composition-first (no hardcoded PDE factories)
-- **`compose_problem(ProblemSpec)`**: agents emit typed `EquationSpec` + `SubdomainSpec` + `ConditionSpec` and the composer compiles a `pina.Problem` subclass at runtime (`sympy.lambdify` + `pina.operator.grad/laplacian`). No `ProblemKind` enum — any PDE sympy can express is reachable.
-- **Inverse problems**: `UnknownParameterSpec` + data-fitting `ObservationSpec` → composer wires a `pina.LearnableParameter` and routes a 3-arg residual.
-- **Mesh geometry**: `MeshSpec` + `meshio` + `MeshDomain` barycentric sampling (tri/tetra/quad/hex). `SubdomainSpec.mesh_ref` picks cell groups.
-- **3D visualisation**: `core/viz3d.py` via plotly (`Mesh3d`, `Volume`, `Scatter3d`, `Isosurface`) — no 150 MB VTK stack.
-- **Design optimisation**: `OptimizationPlan` + `DesignVariableSpec` + `ConstraintSpec` driving Optuna TPE or scipy SLSQP with penalty / augmented-Lagrangian handling.
-- **Stochastic + non-local**: `NoiseSpec` (white / colored / fbm) wraps the residual; fractional Laplacian via Riesz-kernel Monte-Carlo quadrature.
-- **MPC**: `marimo_flow.control` — rolling-horizon scipy SLSQP on a trained PINN surrogate.
-- **Walrus foundation model** adapter for Poisson-class problems.
-
-### 🐳 Deployment
-- **Docker**: docker-compose setup with CPU, CUDA, and XPU image variants
-- **📚 MCP-Powered Docs**: Live documentation via Context7 and Marimo MCP servers
+- **📓 Reactive notebooks** — Git-friendly `.py` notebooks with
+  automatic dependency tracking.
+- **🔬 MLflow tracking** — every run, model, and metric tracked under
+  `data/mlflow/{db,artifacts}/`. Lightning checkpoints land *inside*
+  the active run.
+- **🤖 MCP-powered AI** — `marimo`, `mlflow`, `context7`, `serena` MCP
+  servers wired up; live library docs without leaving your notebook.
+- **🐳 Multi-platform Docker** — CPU, CUDA, Intel XPU images on GHCR.
+- **🧑‍🚀 Optional multi-agent team** — composes PINA workflows from
+  free-form intent (see [docs/agents.md](docs/agents.md)).
 
 ## Quick Start 🏃‍♂️
 
 ### With Docker (Recommended)
 
 ```bash
-# Clone repository
 git clone https://github.com/synapticore-io/marimo-flow.git
 cd marimo-flow
-
-# Build and start services
 docker compose -f docker/docker-compose.yaml up --build -d
 
-# Access services
-# Marimo: http://localhost:2718
-# MLflow: http://localhost:5000
-
-# View logs
-docker compose -f docker/docker-compose.yaml logs -f
-
-# Stop services
-docker compose -f docker/docker-compose.yaml down
+# Marimo:  http://localhost:2718
+# MLflow:  http://localhost:5000
 ```
 
-#### Docker Image Variants
+#### Image Variants
 
 | Variant | Image Tag | Use Case |
-|---------|-----------|----------|
+|---|---|---|
 | **CPU** | `ghcr.io/synapticore-io/marimo-flow:latest` | No GPU (lightweight) |
 | **CUDA** | `ghcr.io/synapticore-io/marimo-flow:cuda` | NVIDIA GPUs |
-| **XPU** | `ghcr.io/synapticore-io/marimo-flow:xpu` | Intel Arc/Data Center GPUs |
+| **XPU** | `ghcr.io/synapticore-io/marimo-flow:xpu` | Intel Arc / Data Center GPUs |
 
-```bash
-# NVIDIA GPU (requires nvidia-docker)
-docker compose -f docker/docker-compose.cuda.yaml up -d
-
-# Intel GPU (requires Intel GPU drivers)
-docker compose -f docker/docker-compose.xpu.yaml up -d
-```
+GPU compose files: `docker-compose.cuda.yaml` (requires nvidia-docker)
+and `docker-compose.xpu.yaml` (requires Intel GPU drivers).
 
 ### Local Development
 
-```bash
-# Install dependencies
-uv sync
-
-# Start MLflow server (in background or separate terminal)
-uv run mlflow server \
-  --host 0.0.0.0 \
-  --port 5000 \
-  --backend-store-uri sqlite:///data/mlflow/db/mlflow.db \
-  --default-artifact-root ./data/mlflow/artifacts \
-  --serve-artifacts
-
-# Start Marimo (in another terminal)
-uv run marimo edit examples/
-```
+→ See **[SETUP.md](SETUP.md)** — bare-metal `uv` path, MLflow + marimo
+processes, MCP setup table, troubleshooting. Five minutes from clone
+to running notebook.
 
 ## Example Notebooks 📚
 
-All notebooks live in `examples/` and can be opened with `uv run marimo edit examples/<file>.py`.
+All notebooks live in `examples/` and open with
+`uv run marimo edit examples/<file>.py`.
 
-- **`01_pina_poisson_solver.py`** – Solve the Poisson equation with baseline PINNs or the Walrus foundation model. Training is tracked in MLflow with integrated Optuna sweep analytics and experiment history. Uses `marimo_flow.core` directly.
-- **`02_provenance_dashboard.py`** – Review surface over the DuckDB provenance store. Five tables (tasks, experiments, agent decisions, validation verdicts, handoffs) side-by-side plus 3D preset preview. Uses `marimo_flow.agents.services.ProvenanceStore`.
-- **`03_navier_stokes_3d_cavity.py`** – 3D lid-driven cavity composed end-to-end from a declarative `ProblemSpec` (no hardcoded NS factory). Sliders for viscosity, lid speed, collocation-point count, hidden width, epochs. Renders the spatial domain + mid-plane velocity slice with **plotly**. Uses the composition-first `services/composer.py`.
-- **`04_mpc_heat_rod.py`** – Closed-loop MPC on a 1D heat-rod PINN surrogate. Trains a small surrogate via the composer, then drives a rolling-horizon scipy-SLSQP MPC loop from `marimo_flow.control` toward a user-set temperature setpoint.
-- **`lab.py`** – PINA multi-agent team chat demo (see [PINA Multi-Agent Team](#pina-multi-agent-team-marimo_flowagents-)). Requires Ollama running locally.
+| Notebook | What it does |
+|---|---|
+| **`01_pina_poisson_solver.py`** | Poisson PDE with baseline PINN or Walrus foundation model. MLflow + Optuna sweep analytics. Uses `marimo_flow.core` directly. |
+| **`02_provenance_dashboard.py`** | DuckDB review surface over the agent provenance store. Five tables (tasks, experiments, decisions, validation, handoffs) + 3D preset preview. |
+| **`03_navier_stokes_3d_cavity.py`** | 3D lid-driven cavity composed end-to-end from a declarative `ProblemSpec`. No hardcoded NS factory. Plotly mid-plane velocity slice. |
+| **`04_mpc_heat_rod.py`** | Closed-loop MPC on a 1D heat-rod PINN surrogate. Trains the surrogate, then drives a rolling-horizon scipy-SLSQP MPC loop toward a temperature setpoint. |
+| **`lab.py`** | Multi-agent PINA team chat demo (requires Ollama running locally). |
 
 ## Project Structure 📁
 
 ```
 marimo-flow/
-├── examples/                         # Marimo notebooks
-│   ├── 01_pina_poisson_solver.py        # Poisson PINN demo (uses core/)
-│   ├── 02_provenance_dashboard.py       # DuckDB review + 3D preset preview
-│   ├── 03_navier_stokes_3d_cavity.py    # 3D NS lid-driven cavity (composer)
-│   ├── 04_mpc_heat_rod.py               # Closed-loop MPC via scipy SLSQP
-│   └── lab.py                           # PINA team chat demo (uses agents/)
-├── src/marimo_flow/                  # Installable package
-│   ├── core/                         # PINA solvers, training, plotly viz3d
-│   ├── control/                      # Rolling-horizon MPC (scipy SLSQP)
-│   └── agents/                       # Multi-agent team (pydantic-graph + MLflow)
-│       ├── nodes/                    # TriageNode, RouteNode, specialists, ValidationNode
-│       ├── schemas/                  # TaskSpec / ProblemSpec / ObservationSpec /
-│       │                             #   MeshSpec / OptimizationPlan / ControlPlan / …
-│       ├── toolsets/                 # FunctionToolset per role (incl. design, control)
-│       └── services/                 # composer, mesh_domain, design aggregator,
-│                                     #   provenance (DuckDB 13 tables), experiments
-├── tests/                            # Pytest suite (216 passing, 1 xfailed)
-├── docs/                             # Project documentation (see docs/INDEX.md)
-├── docker/                           # Dockerfiles + compose (CPU, CUDA, XPU)
-├── data/mlflow/                      # MLflow storage (artifacts, db)
-└── pyproject.toml                    # Dependencies
+├── examples/                     # Demo notebooks
+├── src/marimo_flow/
+│   ├── core/                     # PINA solvers, training, plotly viz3d
+│   ├── control/                  # Rolling-horizon MPC (scipy SLSQP)
+│   └── agents/                   # Multi-agent team (pydantic-graph + MLflow)
+│       ├── nodes/                # 9 graph nodes
+│       ├── schemas/              # Typed Pydantic specs (ProblemSpec, …)
+│       ├── toolsets/             # FunctionToolset per role
+│       └── services/             # composer, mesh_domain, design,
+│                                 #   provenance (DuckDB, 13 tables)
+├── tests/                        # 226 passing, 1 xfailed
+├── docker/                       # Dockerfiles + compose (CPU/CUDA/XPU)
+├── docs/                         # Project documentation (see docs/INDEX.md)
+└── data/mlflow/                  # MLflow storage (db + artifacts)
 ```
 
-### Two Workflows
+## Two Workflows
 
 | Workflow | Import | Use Case |
-|----------|--------|----------|
+|---|---|---|
 | **Classic** (`core/`) | `from marimo_flow.core import ...` | You know the PDE, pick a solver, log to MLflow. See `examples/01_pina_poisson_solver.py`. |
 | **Agents** (`agents/`) | `from marimo_flow.agents import lead_chat, FlowDeps` | Describe the problem in natural language; a multi-agent team composes Problem + Model + Solver. See `examples/lab.py`. |
 
-Both write to the same MLflow backend (`data/mlflow/`). The two packages do not depend on each other — pick whichever matches the task.
+Both write to the same MLflow backend (`data/mlflow/`). The two
+packages do not depend on each other — pick whichever matches the task.
 
-### The `marimo_flow.core` Package
+## PINA Multi-Agent Team 🧑‍🚀
 
-```python
-from marimo_flow.core import (
-    ProblemManager,           # Define PDE problems and domains
-    SolverManager,            # Configure PINN / SAPINN solvers
-    FoundationModelAdapter,   # Walrus foundation model adapter
-    create_model_for_problem, # Build a PINA neural-network model for a Problem
-    train_solver,             # Run training via PINA's Trainer
-    build_optuna_history_figure,
-    build_optuna_param_importance_figure,
-    build_optuna_parallel_figure,
-    build_trials_scatter_chart,
-    study_trials_dataframe,
-)
-```
-
-## MCP (Model Context Protocol) Integration 🔌
-
-marimo and AI-assisted IDEs share MCP servers for live documentation and notebook operations. For the full configuration reference see [`docs/mcp-setup.md`](docs/mcp-setup.md).
-
-### marimo (in-notebook AI)
-
-Pre-configured in `.marimo.toml`:
-
-```toml
-[mcp]
-presets = ["marimo", "context7"]
-
-[mcp.mcpServers.mlflow]
-command = "mlflow"
-args = ["mcp", "run"]
-
-[mcp.mcpServers.mlflow.env]
-MLFLOW_TRACKING_URI = "http://localhost:5000"
-
-[ai.ollama]
-model = "gpt-oss:20b-cloud"
-base_url = "http://localhost:11434/v1"
-```
-
-The Docker container uses a separate `docker/.marimo.toml` without MCP presets — containerized sessions run only the notebook UI; MCP servers run on the host and are reached over `host.docker.internal`.
-
-### VS Code / Claude Code
-
-Four MCP servers configured in `.vscode/mcp.json`:
-
-| Server | Purpose |
-|--------|---------|
-| **marimo** | Notebook inspection, linting (HTTP on port 2718) |
-| **mlflow** | Trace search, feedback, evaluation (stdio via `mlflow mcp run`) |
-| **context7** | Live library documentation (stdio via npx) |
-| **serena** | Semantic code search (stdio via uvx) |
-
-Start the marimo MCP server (required for the `marimo` tool):
-
-```bash
-uv tool install "marimo[lsp,recommended,sql,mcp]>=0.18.0"
-marimo edit --mcp --no-token --port 2718 --headless
-```
-
-### Claude Code skills & hooks
-
-Three domain skills in `.claude/Skills/` (`marimo`, `mlflow`, `pina`) provide expert guidance and pre-resolved context7 library IDs (`/marimo-team/marimo`, `/mlflow/mlflow`, `/mathlab/pina`).
-
-Automated cross-platform hooks in `.claude/settings.json`:
-
-| Hook | Trigger | Action |
-|------|---------|--------|
-| **PostToolUse** | Edit/Write `.py` files | Auto-format with ruff |
-| **PreToolUse** | Edit `uv.lock` | Block (protection) |
-
-## Configuration ⚙️
-
-### Environment Variables
-
-Docker setup (configured in `docker/docker-compose.yaml`):
-- `MLFLOW_BACKEND_STORE_URI`: `sqlite:////app/data/mlflow/db/mlflow.db`
-- `MLFLOW_DEFAULT_ARTIFACT_ROOT`: `/app/data/mlflow/artifacts`
-- `MLFLOW_HOST`: `0.0.0.0` (allows external access)
-- `MLFLOW_PORT`: `5000`
-- `OLLAMA_BASE_URL`: `http://host.docker.internal:11434` (requires Ollama on host)
-
-Local development:
-- `MLFLOW_TRACKING_URI`: defaults to `sqlite:///data/mlflow/db/mlflow.db` (lead agent auto-creates `data/mlflow/{db,artifacts}/` and pins the marimo-flow experiment's artifact root). Set to `http://localhost:5000` if you run a separate MLflow server.
-
-### Docker Services
-
-The Docker container runs both services via `docker/start.sh`:
-- **Marimo**: Port 2718 - Interactive notebook environment
-- **MLflow**: Port 5000 - Experiment tracking UI
-
-**GPU Support**: Use `docker-compose.cuda.yaml` for NVIDIA GPUs or `docker-compose.xpu.yaml` for Intel GPUs. The default `docker-compose.yaml` is CPU-only.
-
-## PINA Multi-Agent Team (`marimo_flow.agents`) 🧑‍🚀🧑‍🚀🧑‍🚀
-
-Reactive multi-agent team that orchestrates PINA workflows via `pydantic-graph`,
-backed by MLflow for tracing + persistence, exposed via marimo's chat UI and
-optionally as A2A and AG-UI ASGI servers.
+Reactive multi-agent team that **drives PINA workflows end-to-end**:
+free-form intent → typed `TaskSpec` → composed `ProblemSpec` →
+trained surrogate → validation verdict, all logged to MLflow + a
+DuckDB provenance store.
 
 ```python
 from marimo_flow.agents import lead_chat, FlowDeps
 import marimo as mo
 
-deps = FlowDeps()  # uses sqlite:///data/mlflow/db/mlflow.db by default
+deps = FlowDeps()
 chat = mo.ui.chat(lead_chat(deps=deps))
 chat
 ```
 
-**Roles** (each loads its `.claude/Skills/<name>/SKILL.md` as `instructions=`
-where applicable):
-- `triage` — parses free-form user intent into a typed `TaskSpec` (start node)
-- `notebook` — marimo MCP cell ops (skills: `marimo`, `marimo-pair`)
-- `problem` — defines a PINA Problem from an open spec (skill: `pina-problem`)
-- `model` — designs a neural architecture for the problem (skill: `pina-model`)
-- `solver` — wires Solver + Trainer config (skill: `pina-solver`)
-- `training` — runs `pina.Trainer.fit()` via the training toolset (skill: `pina-training`)
-- `validation` — grades the run against `task_spec.constraints` and records a
-  `ValidationReport` with an `accept/retry/escalate/reject` verdict
-- `mlflow` — MLflow MCP tracking + registry (skill: `mlflow`)
-- `lead` — chat/A2A/AG-UI front-end; wraps the whole graph as one tool
+Nine graph nodes (`pydantic-graph`), provider-agnostic LLM config,
+and three transport options (in-notebook chat, A2A server, AG-UI
+server).
 
-`TriageNode` runs first and produces the `TaskSpec`. `RouteNode` then dispatches
-between specialists, emits a `HandoffRecord` on every dispatch, and short-circuits
-to `End` when the validation verdict is `escalate` / `reject` (SPEC §13 HITL).
+→ Full architecture, role list, provenance schema, and config docs in
+**[docs/agents.md](docs/agents.md)**.
 
-**Typed specs + provenance (SPEC §8, §12):**
-Every graph run builds typed `ProblemSpec` / `ModelSpec` / `SolverPlan` /
-`RunConfig` on `FlowState` and mirrors them — plus `AgentDecision`,
-`HandoffRecord`, `ValidationReport`, `ExperimentRecord`, `ArtifactRef`,
-and lineage edges — into a DuckDB provenance store
-(`./provenance.duckdb` by default, or `MARIMO_FLOW_PROVENANCE_DB`).
-MLflow still owns the binary artifacts; DuckDB owns the queryable index.
-DuckDB 1.5.2 ships transitively via `marimo[sql]`.
+## MCP Integration 🔌
 
-```python
-from marimo_flow.agents.services import ProvenanceStore
+marimo and AI-assisted IDEs share MCP servers for live documentation
+and notebook operations. Pre-configured in `.marimo.toml` (in-notebook)
+and `.vscode/mcp.json` (VS Code / Claude Code).
 
-store = ProvenanceStore("provenance.duckdb")
-print(store.query("SELECT title, verdict FROM tasks t "
-                  "LEFT JOIN validation_reports v USING (task_id) "
-                  "ORDER BY t.created_at DESC LIMIT 10"))
-```
+→ Full configuration reference in **[docs/mcp-setup.md](docs/mcp-setup.md)**.
 
-See `examples/02_provenance_dashboard.py` for a marimo review surface.
+## Documentation 📚
 
-**Models:** provider-prefixed specs (`"<provider>:<model>"`) resolved through
-pydantic-ai's `infer_model`. Defaults in
-`marimo_flow.agents.deps.DEFAULT_MODELS` all point at Ollama Cloud
-(`http://localhost:11434/v1`, `:cloud`-suffixed tags).
-
-Override per role either via `config.yaml` at the repo root
-(see `config.yaml.example`) or with `MARIMO_FLOW_MODEL_<ROLE>=<spec>`
-env vars. Any provider in the pydantic-ai catalogue works — openai,
-anthropic, groq, mistral, google-gla, bedrock, together, fireworks,
-openrouter, deepseek, cerebras, xai, ollama, huggingface, ...
-
-**Standalone servers:**
-
-```bash
-uv run python -m marimo_flow.agents.server.a2a    # A2A on :8000
-uv run python -m marimo_flow.agents.server.ag_ui  # AG-UI on :8001
-```
-
-See `examples/lab.py` for the full demo notebook.
+| File | What's in it |
+|---|---|
+| [SETUP.md](SETUP.md) | Bare-metal local-dev path (5 min, no Docker) |
+| [docs/INDEX.md](docs/INDEX.md) | Index of project documentation |
+| [docs/agents.md](docs/agents.md) | Multi-agent team architecture, roles, provenance schema |
+| [docs/mcp-setup.md](docs/mcp-setup.md) | MCP server configuration across IDEs |
+| [docs/pydantic-ai-toolsets-reference.md](docs/pydantic-ai-toolsets-reference.md) | Per-role agent toolset API |
+| [docs/roadmap.md](docs/roadmap.md) | Phase A-0 → F status with file/test pointers |
+| [CHANGELOG.md](CHANGELOG.md) | Release history (Keep a Changelog) |
+| [CLAUDE.md](CLAUDE.md) | Guidance for AI agents working in this repo |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow, code style, test expectations |
 
 ## Contributing 🤝
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for
+development setup, code standards, and the PR process.
 
-- Development setup and workflow
-- Code standards and style guide
-- Testing requirements
-- Pull request process
-
-**Quick Start for Contributors:**
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes following the [coding standards](CONTRIBUTING.md#code-standards)
-4. Test your changes: `uv run pytest`
-5. Submit a pull request
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for comprehensive guidelines.
-
-## Changelog 📋
-
-See [CHANGELOG.md](CHANGELOG.md) for a detailed version history and release notes.
-
-**Current Version:** 0.3.1
+```bash
+# Quick path
+git checkout -b my-feature
+uv run pytest                         # 226 passing
+uv run ruff format . && uv run ruff check --fix .
+# open a PR
+```
 
 ## License 📄
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
 
 ---
 
-**Built with ❤️ using Marimo and MLflow**
+**Built with ❤️ using marimo, MLflow, and PINA.**
