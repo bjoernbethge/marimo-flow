@@ -72,6 +72,11 @@ jobs:
         with:
           images: |
             ghcr.io/${{ env.IMAGE_NAME }}
+          # docker/metadata-action defaults `flavor: latest=auto`, which
+          # would race against build-cpu for the :latest tag. Only the
+          # CPU image is documented as :latest in the README.
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=cuda
             type=semver,pattern={{version}}-cuda
@@ -110,6 +115,11 @@ jobs:
         with:
           images: |
             ghcr.io/${{ env.IMAGE_NAME }}
+          # docker/metadata-action defaults `flavor: latest=auto`, which
+          # would race against build-cpu for the :latest tag. Only the
+          # CPU image is documented as :latest in the README.
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=xpu
             type=semver,pattern={{version}}-xpu
